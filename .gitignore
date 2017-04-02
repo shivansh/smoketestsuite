@@ -1,0 +1,5 @@
+# Exclude object files
+*.o
+
+# Exclude binaries
+*functional_test
