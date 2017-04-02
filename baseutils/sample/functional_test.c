@@ -26,5 +26,5 @@ main(int argc, char *argv[])
         break;
     }
   }
-  return flag;
+  return 0;
 }

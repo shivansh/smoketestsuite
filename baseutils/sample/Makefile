@@ -3,8 +3,8 @@
 # Makefile for building functional tests
 
 CC = gcc
-
 objects = functional_test.o
+
 functional_test: $(objects)
 	$(CC) -o functional_test $(objects)
 
