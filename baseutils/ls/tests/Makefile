@@ -8,7 +8,7 @@ objects = functional_test.o
 functional_test: $(objects)
 	$(CC) -o functional_test $(objects)
 
-functional_test.o: functional_test.h
+functional_test.o: functional_test.c functional_test.h
 	$(CC) -c functional_test.c
 
 .PHONY: clean

@@ -5,8 +5,8 @@
 .
 ├── baseutils
 │   ├── ........................:: Base utilities
-│   └── sample .................:: Example base utility
-│       └── tests ..............:: Sample functional tests
+│   └── ls
+│       └── tests ..............:: Smoke tests
 └── parse.py ...................:: Argument parsing script (to be updated)
 ```
 - - -
@@ -14,12 +14,12 @@
 ## Test Plan
 
 ### Test 1: Checking valid arguments
-* The file [functional_test.c](baseutils/sample/tests/functional_test.c) is an example test file which checks whether a program supports `--version` and `--help` as parameters. <br>
-  **Note 1:** These are just sample arguments. <br>
-  **Note 2:** This file is a sample test which checks basic functionality of a utility, namely the supported arguments.
+* The file [functional_test.c](baseutils/ls/tests/functional_test.c) is an example test file which checks whether `ls` program supports `--version` and `--help` as parameters. <br>
+  **Note 1:** This file is a WIP test which checks basic functionality of `ls` utility, namely the supported arguments.
+  **Note 2:** This file provides an example workflow.
 
-* Suppose we have some utility and we pass the string `<utility> --version` as an argument when executing [functional_test.c](baseutils/sample/tests/functional_test.c). The test file will check whether the utility supports the passed argument (in this case `--version`) by looking up available options in `long_options[]`.
-  Since we don't know yet whether the utility supports `--version`, `long_options[]` needs to be correctly populated with the list of supported arguments.
+* Suppose we pass the string `ls --version` as an argument when executing [functional_test.c](baseutils/ls/tests/functional_test.c). The test file will check whether `ls` supports the passed option (in this case `--version`) by looking up available options in `long_options[]`.
+  In case `ls` is not properly linked, `ls --version` will fail to execute and error will be returned.
 
 #### Approaches for populating `long_options[]`
 * We parse the man pages for getting the available arguments.
