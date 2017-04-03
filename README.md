@@ -7,20 +7,32 @@
 │   ├── ........................:: Base utilities
 │   └── ls
 │       └── tests ..............:: Smoke tests
-└── parse.py ...................:: Argument parsing script (to be updated)
+└── parse_options.py ...........:: Options parsing script (to be updated)
 ```
 - - -
 
 ## Test Plan
 
 ### Test 1: Checking valid arguments
-* The file [functional_test.c](baseutils/ls/tests/functional_test.c) is an example test file which checks whether `ls` program supports `--version` and `--help` as parameters. <br>
-  **Note 1:** This file is a WIP test which checks basic functionality of `ls` utility, namely the supported arguments.
-  **Note 2:** This file provides an example workflow.
+The file [functional_test.c](baseutils/ls/tests/functional_test.c) is a simple test file which checks whether the `ls` program is properly linked by running trivial commands. The arguments supported by ls are stored in `long_options[]`.
+**Note 1:** This file is a WIP test which checks basic functionality of `ls` utility, namely the supported arguments.
+**Note 2:** This file provides an example workflow.
 
-* Suppose we pass the string `ls --version` as an argument when executing [functional_test.c](baseutils/ls/tests/functional_test.c). The test file will check whether `ls` supports the passed option (in this case `--version`) by looking up available options in `long_options[]`. If it does, then the command will be executed.
-  In case `ls` is not properly linked, `ls --version` will fail to execute and an error messaged will be generated.
+The smoke tests can be run as follows from inside **baseutils/_utility_/tests** -
+```
+>> make
+>> ./functional_test <utility> --<option1> --<option2> ...
+```
 
-#### Approaches for populating `long_options[]`
-* We parse the man pages for getting the available arguments.
-* We pass an invalid argument to the utility. This might produce a usage message which can be parsed.
+It should be noted that finally the tests will be automated with appropriately passed options. The above commands will not have to be run for testing individual programs.
+
+The test file uses `getopt()` and `getopt_long()` for testing the validity of the passed options. If a valid option is passed, the command `<utility> --<option(i)>` is executed.
+In case the command fails to execute for a valid option, this will imply that the utility under test is not properly linked.
+
+#### Populating `short_options[]` and `long_options[]`
+
+`short_options[]` and `long_options[]` need to be initially populated with a few supported options for all the base utilities. This can be done by using either one of the following available approaches -
+* Parse man pages for each utility to get the supported options.
+* Pass an unsupported option to the utility. This might generate a usage message which can then be parsed. **Note:** The unsupported option will be chosen experimentally.
+
+An automation script [parse_options.py](parse_options.py) will be written which will populate `short_options[]` and `long_options[]` by following the above mentioned approaches and will generate the relevant test files.
