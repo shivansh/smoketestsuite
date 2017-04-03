@@ -8,12 +8,13 @@ int opt;
 int option_index = 0;     /* longindex */
 int ret;                  /* return value of command */
 FILE *fp;
-char command[20];         /* TODO choose a safe limit for command length */
-char path[1035];
+char command[50];         /* TODO choose a safe limit for command length */
 
 char short_options[] = "";
 
-const struct option long_options[] = {
+static struct option long_options[] = {
   { "version", no_argument, 0, 0 },
-  { "help",    no_argument, 0, 0 }
+  { "help",    no_argument, 0, 0 },
+  { 0,         0,           0, 0 }
+
 };
