@@ -21,7 +21,7 @@ The file [functional_test.c](baseutils/ls/tests/functional_test.c) is a simple t
 The smoke tests can be run as follows from inside **baseutils/_utility_/tests** -
 ```
 >> make
->> ./functional_test <utility> --<option1> --<option2> ...
+>> make test
 ```
 
 It should be noted that finally the tests will be automated with appropriately passed options. The above commands will not have to be run for testing individual programs.
