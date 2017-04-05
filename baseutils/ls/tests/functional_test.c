@@ -7,6 +7,7 @@
 #include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/wait.h>
 #include "functional_test.h"
 
 int
