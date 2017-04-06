@@ -10,7 +10,7 @@ check_utils() {
   do
     (
       cd "$dir" || exit
-      if [ ! -d "tests" ]; then
+      if grep -q -s 'PROG\|PROG_CXX' "Makefile" ; then
         basename "$dir"
       fi
     )
