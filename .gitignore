@@ -2,4 +2,6 @@
 *.o
 
 # Exclude binaries
-*functional_test
+functional_test
+
+utils_list
