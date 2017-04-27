@@ -14,9 +14,10 @@
 ## Test Plan
 
 ### Test 1: Checking valid arguments
-The file [functional_test.c](baseutils/ls/tests/functional_test.c) is a simple test file which checks whether the `ls` program is properly linked by running trivial commands. The arguments supported by ls are stored in `long_options[]`.
-**Note 1:** This file is a WIP test which checks basic functionality of `ls` utility, namely the supported arguments.
-**Note 2:** This file provides an example workflow.
+The file [functional_test.c](baseutils/ls/tests/functional_test.c) is a simple test file which checks whether the `ls` program is properly linked by running trivial commands. The arguments supported by ls are stored in `long_options[]`.<br>
+
+**Note 1:** This file is a WIP test which checks basic functionality of `ls` utility, namely the supported arguments.<br>
+**Note 2:** This file provides an example workflow.<br>
 
 The smoke tests can be run as follows from inside **baseutils/_utility_/tests** -
 ```
@@ -35,4 +36,6 @@ In case the command fails to execute for a valid option, this will imply that th
 * Parse man pages for each utility to get the supported options.
 * Pass an unsupported option to the utility. This might generate a usage message which can then be parsed. **Note:** The unsupported option will be chosen experimentally.
 
-An automation script [parse_options.py](parse_options.py) will be written which will populate `short_options[]` and `long_options[]` by following the above mentioned approaches and will generate the relevant test files.
+### Initial setup
+* An automation script [parse_options.py](parse_options.py) will be written which will populate `short_options[]` and `long_options[]` by following the above mentioned approaches and will generate the relevant test files.
+* The script [fetch_utils.sh](scripts/fetch_utils.sh) will be used for filtering the list of appropriate base utilities from the src tree.

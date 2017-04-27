@@ -1,26 +1,14 @@
 #!/usr/bin/env sh
-# Script for listing all the base utilities currently without tests
+# Script for listing all the base utilities
 
-check_utils() {
-  printf "=========\n"
-  basename "$path"
-  printf "=========\n"
+set -e
+
+fetch_utils() {
   cd "$path" || exit
-  for dir in */;
-  do
-    (
-      cd "$dir" || exit
-      if grep -q -s 'PROG\|PROG_CXX' "Makefile" ; then
-        basename "$dir"
-      fi
-    )
-  done
+  find . -name Makefile | xargs grep -l 'PROG\|PROG_CXX' | sed -e 's|/Makefile$||' | cut -c 3-
 }
 
 rm -f utils_list
 
 path="$HOME/source-codes/freebsd/bin"
-(check_utils) >> utils_list
-
-path="$HOME/source-codes/freebsd/sbin"
-(check_utils) >> utils_list
+(fetch_utils) >> utils_list

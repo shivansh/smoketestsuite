@@ -2,4 +2,4 @@
 
 Script Name | Functionality
 ----------- | -------------
-[fetch_utils.sh](fetch_utils.sh) | Lists all the base utilities currently without tests and saves in **utils_list**
+[fetch_utils.sh](fetch_utils.sh) | Saves all the base utilities in the src tree in **utils_list**
