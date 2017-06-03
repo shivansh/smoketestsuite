@@ -1,5 +1,8 @@
 # Smoke testing of base utilities
 
+This repo is currently a subset of a broader task which is to be done during [Google Summer of Code '17 with FreeBSD](https://summerofcode.withgoogle.com/projects/#6426676740227072).  
+**Refer the [FreeBSD wiki](https://wiki.freebsd.org/SummerOfCode2017/SmokeTestingOfBaseUtilities) for an overview and updates.**
+
 ## Directory Structure
 ```
 .
