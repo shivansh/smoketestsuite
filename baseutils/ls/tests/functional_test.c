@@ -20,21 +20,23 @@ main(int argc, char *argv[])
         /* generate the valid command for execution */
         snprintf(command, sizeof(command),
                 "/bin/ls --%s > /dev/null", long_options[option_index].name);
-        ret = system(command);
+        ret = system(command);    /* execute the command */
 
         if (ret == -1) {
+          failed++;
           fprintf(stderr, "Failed to create child process\n");
           exit(EXIT_FAILURE);
         }
-
-        if (!WIFEXITED(ret)) {
+        else if (!WIFEXITED(ret)) {
+          failed++;
           fprintf(stderr, "Child process failed to terminate normally\n");
           exit(EXIT_FAILURE);
         }
-
-        if (WEXITSTATUS(ret))
+        else if (WEXITSTATUS(ret)) {
+          failed++;
           fprintf(stderr, "\nValid option '--%s' failed to execute\n",
-                  long_options[option_index].name);
+                          long_options[option_index].name);
+        }
         else
           printf("Successful: '--%s'\n", long_options[option_index].name);
 
@@ -47,6 +49,7 @@ main(int argc, char *argv[])
         printf("getopt_long returned character code %o\n", opt);
     }
   }
+  printf("Failed: %d\n", failed);
 
   exit(EXIT_SUCCESS);
 }
