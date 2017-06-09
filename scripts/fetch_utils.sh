@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#! /bin/sh
 # Script for listing all the base utilities
 
 set -e
