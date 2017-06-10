@@ -3,3 +3,6 @@
 
 # Exclude binaries
 functional_test
+
+# Exclude logs
+error.log

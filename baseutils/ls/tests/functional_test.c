@@ -28,48 +28,55 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/wait.h>
+#include <unistd.h>
 #include "functional_test.h"
+#include "log.h"
 
 int
 main(int argc, char *argv[])
 {
-  while ((opt = getopt_long(argc, argv, short_options,
-                  long_options, &option_index)) != -1) {
-    switch(opt) {
-      case 0:     /* valid long option */
-        /* generate the valid command for execution */
-        snprintf(command, sizeof(command),
-                "/bin/ls --%s > /dev/null", long_options[option_index].name);
-        ret = system(command);    /* execute the command */
+	/* Exit if 'error.log' wasn't unlinked. */
+	if (unlink("error.log") != 0)
+		log_error("Failed to unlink log file\n");
 
-        if (ret == -1) {
-          failed++;
-          fprintf(stderr, "Failed to create child process\n");
-          exit(EXIT_FAILURE);
-        }
-        else if (!WIFEXITED(ret)) {
-          failed++;
-          fprintf(stderr, "Child process failed to terminate normally\n");
-          exit(EXIT_FAILURE);
-        }
-        else if (WEXITSTATUS(ret)) {
-          failed++;
-          fprintf(stderr, "\nValid option '--%s' failed to execute\n",
-                          long_options[option_index].name);
-        }
-        else
-          printf("Successful: '--%s'\n", long_options[option_index].name);
+	int ret; 		/* Return value of command. */
+	int failed = 0;         /* Number of options which failed to execute. */
 
-        break;
+	while ((opt = getopt_long(argc, argv, short_options,
+					long_options, &option_index)) != -1) {
+		switch(opt) {
+			case 0: /* Valid long option.
+				 * Generate the valid command: <utility> --<options...>
+				 * with short/long options for execution.
+				 */
+				snprintf(command, sizeof(command),
+					"/bin/ls --%s > /dev/null 2>> error.log",
+					long_options[option_index].name);
+				ret = system(command);    /* Execute the command. */
 
-      case '?':   /* invalid long option */
-        break;
+				if (ret == -1) {
+					failed++;
+					log_error("Failed to create child process\n");
+				} else if (!WIFEXITED(ret)) {
+					failed++;
+					log_error("Child process failed to terminate normally\n");
+				} else if (WEXITSTATUS(ret)) {
+					failed++;
+					fprintf(stderr, "Valid option '--%s' failed to execute\n",
+						long_options[option_index].name);
+				} else
+					printf("Successful: '--%s'\n", long_options[option_index].name);
 
-      default:
-        printf("getopt_long returned character code %o\n", opt);
-    }
-  }
-  printf("Failed: %d\n", failed);
+				break;
 
-  exit(EXIT_SUCCESS);
+			case '?':   /* Invalid long option. */
+				break;
+
+			default:
+				printf("getopt_long returned character code %o\n", opt);
+		}
+	}
+	printf("Failed: %d\n", failed);
+
+	return 0;
 }

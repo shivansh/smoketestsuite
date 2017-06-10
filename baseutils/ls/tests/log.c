@@ -24,15 +24,37 @@
  * SUCH DAMAGE.
  */
 
-int opt;
-int option_index = 0;     /* longindex */
-char command[50];         /* TODO choose a safe limit for command length */
+#include <stdio.h>
+#include <stdlib.h>
+#include "log.h"
 
-char short_options[] = "";
+bool log_created = false;
 
-static struct option long_options[] = {
-	/* These are valid options in Linux, will fail in FreeBSD */
-	{ "version", no_argument, 0, 0 },
-	{ "help",    no_argument, 0, 0 },
-	{ 0,         0,           0, 0 }
-};
+void
+log_message (char *message)
+{
+	FILE *fp;
+
+	if (!log_created) {
+		fp = fopen(LOGFILE, "w");
+		log_created = true;
+	} else
+		fp = fopen(LOGFILE, "w");
+
+	if (fp == NULL) {
+		log_created = false;
+		return;
+	} else {
+		fputs(message, fp);
+	}
+
+	fclose(fp);
+}
+
+void
+log_error (char *message)
+{
+	log_message(message);
+	log_message("\n");
+	exit(EXIT_FAILURE);
+}

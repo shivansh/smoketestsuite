@@ -24,15 +24,11 @@
  * SUCH DAMAGE.
  */
 
-int opt;
-int option_index = 0;     /* longindex */
-char command[50];         /* TODO choose a safe limit for command length */
+#include <stdbool.h>
+#define LOGFILE "error.log"
 
-char short_options[] = "";
 
-static struct option long_options[] = {
-	/* These are valid options in Linux, will fail in FreeBSD */
-	{ "version", no_argument, 0, 0 },
-	{ "help",    no_argument, 0, 0 },
-	{ 0,         0,           0, 0 }
-};
+extern bool log_created;
+
+void log_message (char *message);       /* logs a message to LOGFILE */
+void log_error (char *message); /* logs error, execution is terminated */
