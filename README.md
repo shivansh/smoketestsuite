@@ -15,6 +15,7 @@ This repo is currently a subset of a broader task which is to be done during [Go
 - - -
 
 ## Test Plan
+More details concerning automated generation of test scripts available [here](https://shivrai.github.io/assets/tmp/GSoC17Automation.pdf).
 
 ### Test 1: Checking valid arguments
 The file [functional_test.c](baseutils/ls/tests/functional_test.c) is a simple test file which checks whether the `ls` program is properly linked by running trivial commands. The arguments supported by ls are stored in `long_options[]`.<br>
@@ -37,7 +38,8 @@ In case the command fails to execute for a valid option, this will imply that th
 
 `short_options[]` and `long_options[]` need to be initially populated with a few supported options for all the base utilities. This can be done by using either one of the following available approaches -
 * Parse man pages for each utility to get the supported options.
-* Pass an unsupported option to the utility. This might generate a usage message which can then be parsed. **Note:** The unsupported option will be chosen experimentally.
+* Pass an unsupported option to the utility. This might generate a usage message which can then be parsed.  
+  **Note:** The unsupported option will be chosen experimentally.
 
 ### Initial setup
 * An automation script [parse_options.py](parse_options.py) will be written which will populate `short_options[]` and `long_options[]` by following the above mentioned approaches and will generate the relevant test files.
