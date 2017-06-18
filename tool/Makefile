@@ -2,15 +2,15 @@
 #
 # Makefile for building automation tool
 
-CC 	= gcc
-CFLAGS 	= -I.
+CC 	= g++
+CFLAGS 	= -I. -std=c++11
 OBJS 	= tool.o
 
 tool 	: $(OBJS)
 	$(CC) $(CFLAGS) -o $(.TARGET) $(.ALLSRC)
 
-$(OBJS) : $(.PREFIX).c $(.PREFIX).h
-	$(CC) $(CFLAGS) -c $(.PREFIX).c
+$(OBJS) : $(.PREFIX).cpp $(.PREFIX).hpp
+	$(CC) $(CFLAGS) -c $(.PREFIX).cpp
 
 .PHONY: clean run
 
