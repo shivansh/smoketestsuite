@@ -17,6 +17,7 @@ namespace tool {
   std::unordered_map<std::string, opt_def>::iterator opt_map_iter;
 
   class insert_opts {
-    insert_opts();
+    public:
+      insert_opts();
   };
 }

@@ -31,6 +31,7 @@ main()
 {
   using namespace tool;
 
+  insert_opts();
   // An example man-page for ln(1).
   std::ifstream infile("ln.1");
 
