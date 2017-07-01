@@ -13,14 +13,15 @@ add_testcase(const char& option, string utility,
              ofstream& test_script, string output)
 {
   // Add testcase name.
-  test_script << "atf_add_test_case ";
+  test_script << "atf_test_case ";
   string testcase_name = string(1, option);
   testcase_name.append("_flag");
   test_script << testcase_name << "\n";
 
-  if (output.empty()) {
-    // Empty `output` denotes that `option` is a known one
-    // and a EXIT_SUCCESS will be encountered when executing it.
+  if (output.find("usage:") == string::npos) {
+    // Present of the string "usage:" in `output` denotes
+    // that the `option` is a known one and EXIT_SUCCESS
+    // will be encountered when it is executed.
 
     // Add testcase description.
     test_script << testcase_name
@@ -52,9 +53,13 @@ add_testcase(const char& option, string utility,
 
     // Add body of the testcase.
     test_script << testcase_name
-                << "_body()\n{\n\tatf_check -s exit:1 -e inline:\""
+                << "_body()\n{\n\tatf_check -s exit:1 -e inline:\'"
                 << output
-                << "\"\n}\n\n";
+                << "\' "
+                << utility
+                << " -"
+                << string(1, option)
+                << "\n}\n\n";
   }
 }
 
@@ -69,8 +74,6 @@ exec(const char* cmd)
         if (fgets(buffer.data(), 128, pipe.get()) != NULL)
             result += buffer.data();
     }
-    if (result.back() == '\n')
-      result.erase(result.end() - 1);
 
     return result;
 }
@@ -94,25 +97,37 @@ generate_test()
 
   // TODO Add license to the test script.
 
-  // If a known option was encountered, produce a testcase
-  // to check the validity of the result of that option.
-  // If no known option was not encountered, produce
-  // testcases to verify the correct usage message when
-  // using the valid options incorrectly.
+  // If a known option was encountered (i.e. `opt_string` is
+  // not empty), produce a testcase to check the validity of the
+  // result of that option. If no known option was encountered,
+  // produce testcases to verify the correct usage message
+  // when using the valid options incorrectly.
 
   string output;
-  if (!opt_string.empty())
-    for (int i = 0; i < opt_string.length(); i++)
+  string testcase_list;
+
+  // Add testcases for known options.
+  if (!opt_string.empty()) {
+    for (int i = 0; i < opt_string.length(); i++) {
       add_testcase(opt_string.at(i), f_opts.utility, test_fstream, output);
-  else {
-    for (int i = 0; i < f_opts.opt_list.length(); i++) {
-      string command = f_opts.utility + " -" + f_opts.opt_list.at(i)
-                       + " 2>&1";
-      output = exec(command.c_str());
-      if (!output.empty())
-        add_testcase(f_opts.opt_list.at(i), f_opts.utility, test_fstream, output);
+      testcase_list.append("atf_add_test_case " + string(1, opt_string.at(i)) + "_flag\n");
     }
   }
+
+  // Add testcases for the options whose usage is unknown.
+  for (int i = 0; i < f_opts.opt_list.length(); i++) {
+    string command = f_opts.utility + " -" + f_opts.opt_list.at(i)
+                     + " 2>&1";
+    output = exec(command.c_str());
+    if (!output.empty()) {
+      add_testcase(f_opts.opt_list.at(i), f_opts.utility, test_fstream, output);
+      testcase_list.append("\tatf_add_test_case " + string(1, f_opts.opt_list.at(i)) + "_flag\n");
+    }
+  }
+
+  test_fstream << "atf_init_test_cases()\n{\n"
+               << testcase_list
+               << "}";
 
   test_fstream.close();
 }

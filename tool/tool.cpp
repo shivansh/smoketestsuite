@@ -48,14 +48,19 @@ tool::find_opts::check_opts() {
       // description of which is now stored in `buffer`.
       if ((opt_map_iter = opt_map.find(string(1, opt_list.back())))
                        != opt_map.end() &&
-          buffer.find( (opt_map_iter->second).keyword) != string::npos)
+          buffer.find( (opt_map_iter->second).keyword) != string::npos) {
         identified_opt_list.push_back(opt_map_iter->second);
+
+        // Since the option under test is a known
+        // one, we remove it from `opt_list`.
+        opt_list.pop_back();
+      }
 
       // Update the string of valid options.
       if (opt_name.size() == 1)
         opt_list.append(opt_name);
 
-      // Empty the buffer.
+      // Empty the buffer for next option's description.
       buffer.clear();
     }
     else {
