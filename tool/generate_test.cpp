@@ -19,6 +19,9 @@ add_testcase(const char& option, string utility,
   test_script << testcase_name << "\n";
 
   if (output.empty()) {
+    // Empty `output` denotes that `option` is a known one
+    // and a EXIT_SUCCESS will be encountered when executing it.
+
     // Add testcase description.
     test_script << testcase_name
                 << "_head()\n{\n\tatf_set \"descr\" "
@@ -35,17 +38,21 @@ add_testcase(const char& option, string utility,
                 << option
                 << "\n}\n\n";
   } else {
+    // Non-empty output denotes that stderr was not empty
+    // and hence the command failed to execute. We add an
+    // appropriate testcase to verify this behavior.
+
     // Add testcase description.
     test_script << testcase_name
                 << "_head()\n{\n\tatf_set \"descr\" "
-                << "\"Verify if the option \'-"
+                << "\"Verify that the option \'-"
                 << string(1, option)
                 << "\' produces a valid error message in case of an invalid usage\""
                 << "\n}\n\n";
 
     // Add body of the testcase.
     test_script << testcase_name
-                << "_body()\n{\n\tatf_fail -o inline:\""
+                << "_body()\n{\n\tatf_check -s exit:1 -e inline:\""
                 << output
                 << "\"\n}\n\n";
   }
