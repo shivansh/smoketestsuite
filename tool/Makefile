@@ -2,20 +2,20 @@
 #
 # Makefile for building automation tool
 
-CC 	= g++
+CC 			= g++
 CFLAGS 	= -I. -std=c++11
-OBJS 	= tool.o
+OBJS 		= tool.o generate_test.o
 
-tool 	: $(OBJS)
+generate_test 	: $(OBJS)
 	$(CC) $(CFLAGS) -o $(.TARGET) $(.ALLSRC)
 
-$(OBJS) : $(.PREFIX).cpp $(.PREFIX).hpp
+$(OBJS) 				: $(.PREFIX).cpp $(.PREFIX).hpp
 	$(CC) $(CFLAGS) -c $(.PREFIX).cpp
 
 .PHONY: clean run
 
 clean:
-	rm -f tool $(OBJS)
+	rm -f generate_test ln_test.sh $(OBJS)
 
 run:
-	./tool
+	./generate_test
