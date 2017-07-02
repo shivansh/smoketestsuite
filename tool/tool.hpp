@@ -6,28 +6,23 @@ using namespace std;
 
 namespace tool {
 
-  // Basic option defition.
-  typedef struct opt_def {
+  // Option relation which maps option names
+  // to the identifier in their descriptions.
+  typedef struct opt_rel {
     char type;            // Option type: (s)short/(l)long.
     string value;
-    string keyword;  // The keyword which should be looked up in the
-    // message (if) produced when using this option.
-  } opt_def;
+    string keyword;       // The keyword which should be looked up in the
+                          // message (if) produced when using this option.
+  } opt_rel;
 
   class find_opts {
     public:
       string utility;               // Utility under test
-      string line;                  // An individual line in a man-page.
-      string buffer;
-      string opt_ident = ".It Fl";  // Identifier for an option in man page.
-      string opt_name;              // Name of the option.
-      int opt_pos;                  // Starting index of the (identified) option.
-      // TODO: Support for long_opts
+      // TODO: Add support for long_opts
       string opt_list;              // String of all the accepted options.
-      list<opt_def> identified_opt_list;       // List of identified option definitions (opt_def's).
-      list<opt_def>::iterator identified_opt_list_iter;
-      unordered_map<string, opt_def> opt_map; // Map "option value" to "option definition".
-      unordered_map<string, opt_def>::iterator opt_map_iter;
+
+      unordered_map<string, opt_rel> opt_map;   // Map "option value" to "option definition".
+      unordered_map<string, opt_rel>::iterator opt_map_iter;
 
       // Insert a list of user-defined option definitions
       // into a hashmap. These specific option definitions
