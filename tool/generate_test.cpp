@@ -1,3 +1,30 @@
+//
+// Copyright 2017 Shivansh Rai
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions
+// are met:
+// 1. Redistributions of source code must retain the above copyright
+//    notice, this list of conditions and the following disclaimer.
+// 2. Redistributions in binary form must reproduce the above copyright
+//    notice, this list of conditions and the following disclaimer in the
+//    documentation and/or other materials provided with the distribution.
+//
+// THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+// FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+// DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+// OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+// HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+// LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+// OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+// SUCH DAMAGE.
+//
+// $FreeBSD$
+
 #include <array>
 #include <cstdlib>
 #include <fstream>
@@ -85,6 +112,7 @@ generate_test()
   string command;
   struct stat buffer;
   ofstream test_fstream;
+  ifstream license_fstream;
 
   tool::opt_def f_opts;
   ident_opt_list = f_opts.check_opts();
@@ -97,8 +125,10 @@ generate_test()
   }
 
   test_fstream.open(test_file, ios::out);
+  license_fstream.open("license", ios::in);
 
-  // TODO Add license to the test script.
+  test_fstream << license_fstream.rdbuf();
+  license_fstream.close();
 
   // If a known option was encountered (i.e. `ident_opt_list` is
   // not empty), produce a testcase to check the validity of the
