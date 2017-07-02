@@ -24,7 +24,7 @@ add_testcase(string option,
   test_script << testcase_name + "\n";
 
   if (output.find("usage:") == string::npos) {
-    // Presence of the string "usage:" in `output` denotes
+    // Absence of the string "usage:" in `output` denotes
     // that the `option` is a known one and EXIT_SUCCESS
     // will be encountered when it is executed.
 
