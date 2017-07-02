@@ -9,14 +9,17 @@
 #include "generate_test.hpp"
 
 void
-add_testcase(const char& option, string utility,
-             ofstream& test_script, string output)
+add_testcase(string option,
+             string keyword,
+             string utility,
+             string output,
+             ofstream& test_script)
 {
   string testcase_name;
 
   // Add testcase name.
   test_script << "atf_test_case ";
-  testcase_name = string(1, option);
+  testcase_name = option;
   testcase_name.append("_flag");
   test_script << testcase_name + "\n";
 
@@ -29,12 +32,15 @@ add_testcase(const char& option, string utility,
     test_script << testcase_name
                  + "_head()\n{\n\tatf_set \"descr\" "
                  + "\"Verify the behavior for the option '-"
-                 + string(1, option) + "'\"" + "\n}\n\n";
+                 + option + "'\"" + "\n}\n\n";
 
     // Add body of the testcase.
     test_script << testcase_name
                  + "_body()\n{\n\tatf_check -s exit:0 "
-                 + utility + " -" + option + "\n}\n\n";
+                 + utility + " -" + option
+                 + "\n\tatf_check -s exit:0 -o match:\""
+                 + keyword + "\" " + utility + " -" + option
+                 + "\n}\n\n";
   } else {
     // Non-empty output denotes that stderr was not empty
     // and hence the command failed to execute. We add an
@@ -44,13 +50,13 @@ add_testcase(const char& option, string utility,
     test_script << testcase_name
                  + "_head()\n{\n\tatf_set \"descr\" "
                  + "\"Verify that the option \'-"
-                 + string(1, option)
+                 + option
                  + "\' produces a valid error message in case of an invalid usage\"\n}\n\n";
 
     // Add body of the testcase.
     test_script << testcase_name
                  + "_body()\n{\n\tatf_check -s exit:1 -e inline:\'"
-                 + output + "\' " + utility + " -" + string(1, option) + "\n}\n\n";
+                 + output + "\' " + utility + " -" + option + "\n}\n\n";
   }
 }
 
@@ -72,7 +78,7 @@ exec(const char* cmd)
 void
 generate_test()
 {
-  string opt_string;
+  list<tool::opt_rel*> ident_opt_list;
   string test_file;
   string output;
   string testcase_list;
@@ -80,8 +86,8 @@ generate_test()
   struct stat buffer;
   ofstream test_fstream;
 
-  tool::find_opts f_opts;
-  opt_string = f_opts.check_opts();
+  tool::opt_def f_opts;
+  ident_opt_list = f_opts.check_opts();
   test_file = f_opts.utility + "_test.sh";
 
   // Check if the test file exists. In case it does, stop execution.
@@ -94,17 +100,18 @@ generate_test()
 
   // TODO Add license to the test script.
 
-  // If a known option was encountered (i.e. `opt_string` is
+  // If a known option was encountered (i.e. `ident_opt_list` is
   // not empty), produce a testcase to check the validity of the
   // result of that option. If no known option was encountered,
   // produce testcases to verify the correct usage message
   // when using the valid options incorrectly.
 
   // Add testcases for known options.
-  if (!opt_string.empty()) {
-    for (int i = 0; i < opt_string.length(); i++) {
-      add_testcase(opt_string.at(i), f_opts.utility, test_fstream, output);
-      testcase_list.append("atf_add_test_case " + string(1, opt_string.at(i)) + "_flag\n");
+  if (!ident_opt_list.empty()) {
+    for (auto i = ident_opt_list.begin(); i != ident_opt_list.end(); i++) {
+      add_testcase((*i)->value, (*i)->keyword,
+                   f_opts.utility, output, test_fstream);
+      testcase_list.append("atf_add_test_case " + (*i)->value + "_flag\n");
     }
   }
 
@@ -114,15 +121,14 @@ generate_test()
                      + " 2>&1";
     output = exec(command.c_str());
     if (!output.empty()) {
-      add_testcase(f_opts.opt_list.at(i), f_opts.utility, test_fstream, output);
-      testcase_list.append("\tatf_add_test_case " + string(1, f_opts.opt_list.at(i)) + "_flag\n");
+      add_testcase(string(1, f_opts.opt_list.at(i)), "",
+                   f_opts.utility, output, test_fstream);
+      testcase_list.append("\tatf_add_test_case "
+                           + string(1, f_opts.opt_list.at(i)) + "_flag\n");
     }
   }
 
-  test_fstream << "atf_init_test_cases()\n{\n"
-               << testcase_list
-               << "}";
-
+  test_fstream << "atf_init_test_cases()\n{\n" + testcase_list + "}";
   test_fstream.close();
 }
 

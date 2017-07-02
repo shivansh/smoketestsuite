@@ -3,7 +3,7 @@
 using namespace std;
 
 void
-add_testcase(const char&, string, ofstream&, string);
+add_testcase(string, string, string, string, ofstream&);
 
 string
 exec(const char*);

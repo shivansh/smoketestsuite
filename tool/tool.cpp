@@ -4,7 +4,7 @@
 #include "tool.hpp"
 
 void
-tool::find_opts::insert_opts()
+tool::opt_def::insert_opts()
 {
   // Option definitions.
   opt_rel h_def;        // '-h'
@@ -25,24 +25,24 @@ tool::find_opts::insert_opts()
                                ("v", (opt_rel)v_def));
 };
 
-string
-tool::find_opts::check_opts() {
+list<tool::opt_rel*>
+tool::opt_def::check_opts() {
   string line;                      // An individual line in a man-page.
   string opt_name;                  // Name of the option.
   string opt_ident = ".It Fl";      // Identifier for an option in man page.
   string buffer;                    // Option description extracted from man-page.
   string opt_string;                // Identified option names.
   int opt_pos;                      // Starting index of the (identified) option.
-  list<opt_rel> ident_opt_list;     // List of identified option definitions (opt_rel's).
+  list<opt_rel*> ident_opt_list;     // List of identified option definitions (opt_rel's).
 
   // Generate the hashmap opt_map.
   insert_opts();
 
   // An example utility under test: ln(1).
   // TODO: Walk the entire source tree.
-  tool::find_opts::utility = "ln";
+  tool::opt_def::utility = "ln";
   // TODO: Section number cannot be hardcoded.
-  ifstream infile(tool::find_opts::utility + ".1");
+  ifstream infile(tool::opt_def::utility + ".1");
 
   // Search for all the options accepted by the
   // utility and collect those present in `opt_map`.
@@ -57,7 +57,7 @@ tool::find_opts::check_opts() {
       if ((opt_map_iter = opt_map.find(string(1, opt_list.back())))
                        != opt_map.end() &&
           buffer.find( (opt_map_iter->second).keyword) != string::npos) {
-        ident_opt_list.push_back(opt_map_iter->second);
+        ident_opt_list.push_back(&(opt_map_iter->second));
 
         // Since the option under test is a known
         // one, we remove it from `opt_list`.
@@ -79,8 +79,8 @@ tool::find_opts::check_opts() {
     }
   }
 
-  for (const auto& it : ident_opt_list)
-    opt_string.append(it.value);
+  // for (const auto& it : ident_opt_list)
+    // opt_string.append(it.value);
 
-  return opt_string;
+  return ident_opt_list;
 }
