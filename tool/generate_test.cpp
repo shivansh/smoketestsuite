@@ -63,9 +63,7 @@ add_testcase(string option,
 
     // Add body of the testcase.
     test_script << testcase_name
-                 + "_body()\n{\n\tatf_check -s exit:0 "
-                 + utility + " -" + option
-                 + "\n\tatf_check -s exit:0 -o match:\""
+                 + "_body(){\n\tatf_check -s exit:0 -o match:\""
                  + keyword + "\" " + utility + " -" + option
                  + "\n}\n\n";
   } else {
