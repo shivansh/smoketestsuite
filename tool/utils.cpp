@@ -28,10 +28,10 @@
 #include <fstream>
 #include <iostream>
 #include <cstdlib>
-#include "tool.hpp"
+#include "utils.h"
 
 void
-tool::opt_def::insert_opts()
+utils::opt_def::insert_opts()
 {
   // Option definitions.
   opt_rel h_def;        // '-h'
@@ -52,8 +52,8 @@ tool::opt_def::insert_opts()
                                ("v", (opt_rel)v_def));
 };
 
-list<tool::opt_rel*>
-tool::opt_def::check_opts() {
+list<utils::opt_rel*>
+utils::opt_def::check_opts() {
   string line;                      // An individual line in a man-page.
   string opt_name;                  // Name of the option.
   string opt_ident = ".It Fl";      // Identifier for an option in man page.
@@ -67,9 +67,9 @@ tool::opt_def::check_opts() {
 
   // An example utility under test: ln(1).
   // TODO: Walk the entire source tree.
-  tool::opt_def::utility = "ln";
+  utils::opt_def::utility = "ln";
   // TODO: Section number cannot be hardcoded.
-  ifstream infile(tool::opt_def::utility + ".1");
+  ifstream infile(utils::opt_def::utility + ".1");
 
   // Search for all the options accepted by the
   // utility and collect those present in `opt_map`.

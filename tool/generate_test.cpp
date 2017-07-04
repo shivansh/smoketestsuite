@@ -33,7 +33,7 @@
 #include <stdexcept>
 #include <sys/stat.h>
 #include <sys/wait.h>
-#include "generate_test.hpp"
+#include "generate_test.h"
 
 void
 add_testcase(string option,
@@ -63,7 +63,7 @@ add_testcase(string option,
 
     // Add body of the testcase.
     test_script << testcase_name
-                 + "_body(){\n\tatf_check -s exit:0 -o match:\""
+                 + "_body()\n{\n\tatf_check -s exit:0 -o match:\""
                  + keyword + "\" " + utility + " -" + option
                  + "\n}\n\n";
   } else {
@@ -103,7 +103,7 @@ exec(const char* cmd)
 void
 generate_test()
 {
-  list<tool::opt_rel*> ident_opt_list;
+  list<utils::opt_rel*> ident_opt_list;
   string test_file;
   string output;
   string testcase_list;
@@ -112,7 +112,7 @@ generate_test()
   ofstream test_fstream;
   ifstream license_fstream;
 
-  tool::opt_def f_opts;
+  utils::opt_def f_opts;
   ident_opt_list = f_opts.check_opts();
   test_file = f_opts.utility + "_test.sh";
 

@@ -4,12 +4,12 @@
 
 CC 			= g++
 CFLAGS 	= -I. -std=c++11
-OBJS 		= tool.o generate_test.o
+OBJS 		= utils.o generate_test.o
 
 generate_test 	: $(OBJS)
 	$(CC) $(CFLAGS) -o $(.TARGET) $(.ALLSRC)
 
-$(OBJS) 				: $(.PREFIX).cpp $(.PREFIX).hpp
+$(OBJS) 				: $(.PREFIX).cpp $(.PREFIX).h
 	$(CC) $(CFLAGS) -c $(.PREFIX).cpp
 
 .PHONY: clean run
