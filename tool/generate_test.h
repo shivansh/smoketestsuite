@@ -30,7 +30,10 @@
 using namespace std;
 
 void
-add_testcase(string, string, string, string, ofstream&);
+add_known_testcase(string, string, string, string, ofstream&);
+
+void
+add_unknown_testcase(string, string, string, ofstream&);
 
 string
 exec(const char*);

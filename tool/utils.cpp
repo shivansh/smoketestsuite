@@ -37,7 +37,7 @@ utils::opt_def::insert_opts()
   opt_rel h_def;        // '-h'
   h_def.type = 's';
   h_def.value = "h";
-  h_def.keyword = "help";
+  h_def.keyword = "do not follow it";
 
   opt_rel v_def;        // '-v'
   v_def.type = 's';

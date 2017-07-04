@@ -46,7 +46,7 @@ namespace utils {
     public:
       string utility;     // Utility under test
       // TODO: Add support for long_opts
-      string opt_list;    // String of all the accepted options.
+      string opt_list;    // String of all the accepted options with unknown usage.
 
       unordered_map<string, opt_rel> opt_map;   // Map "option value" to "option definition".
       unordered_map<string, opt_rel>::iterator opt_map_iter;

@@ -1,5 +1,5 @@
 # Automation tool
-An (in-progress) implementation of the automation described [here](https://shivrai.github.io/assets/tmp/GSoC17Automation.pdf).
+An (in-progress) implementation of the automation described briefly [here](https://lists.freebsd.org/pipermail/soc-status/2017-July/001079.html).
 
 ## Instructions
 Execute the following commands -
