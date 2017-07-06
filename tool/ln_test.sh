@@ -26,62 +26,31 @@
 # $FreeBSD$
 #
 
-atf_test_case verify_invalid_usage
-verify_invalid_usage_head()
+output='usage: ln [-s [-F] | -L | -P] [-f | -i] [-hnv] source_file [target_file]
+       ln [-s [-F] | -L | -P] [-f | -i] [-hnv] source_file ... target_dir
+       link source_file target_file
+'
+
+atf_test_case invalid_usage
+invalid_usage_head()
 {
 	atf_set "descr" "Verify that the accepted options produce a valid error message in case of an invalid usage"
 }
 
-verify_invalid_usage_body()
+invalid_usage_body()
 {
-	atf_check -s exit:1 -e inline:'usage: ln [-s [-F] | -L | -P] [-f | -i] [-hnv] source_file [target_file]
-       ln [-s [-F] | -L | -P] [-f | -i] [-hnv] source_file ... target_dir
-       link source_file target_file
-' ln -F
-
-	atf_check -s exit:1 -e inline:'usage: ln [-s [-F] | -L | -P] [-f | -i] [-hnv] source_file [target_file]
-       ln [-s [-F] | -L | -P] [-f | -i] [-hnv] source_file ... target_dir
-       link source_file target_file
-' ln -L
-
-	atf_check -s exit:1 -e inline:'usage: ln [-s [-F] | -L | -P] [-f | -i] [-hnv] source_file [target_file]
-       ln [-s [-F] | -L | -P] [-f | -i] [-hnv] source_file ... target_dir
-       link source_file target_file
-' ln -P
-
-	atf_check -s exit:1 -e inline:'usage: ln [-s [-F] | -L | -P] [-f | -i] [-hnv] source_file [target_file]
-       ln [-s [-F] | -L | -P] [-f | -i] [-hnv] source_file ... target_dir
-       link source_file target_file
-' ln -f
-
-	atf_check -s exit:1 -e inline:'usage: ln [-s [-F] | -L | -P] [-f | -i] [-hnv] source_file [target_file]
-       ln [-s [-F] | -L | -P] [-f | -i] [-hnv] source_file ... target_dir
-       link source_file target_file
-' ln -i
-
-	atf_check -s exit:1 -e inline:'usage: ln [-s [-F] | -L | -P] [-f | -i] [-hnv] source_file [target_file]
-       ln [-s [-F] | -L | -P] [-f | -i] [-hnv] source_file ... target_dir
-       link source_file target_file
-' ln -n
-
-	atf_check -s exit:1 -e inline:'usage: ln [-s [-F] | -L | -P] [-f | -i] [-hnv] source_file [target_file]
-       ln [-s [-F] | -L | -P] [-f | -i] [-hnv] source_file ... target_dir
-       link source_file target_file
-' ln -s
-
-	atf_check -s exit:1 -e inline:'usage: ln [-s [-F] | -L | -P] [-f | -i] [-hnv] source_file [target_file]
-       ln [-s [-F] | -L | -P] [-f | -i] [-hnv] source_file ... target_dir
-       link source_file target_file
-' ln -v
-
-	atf_check -s exit:1 -e inline:'usage: ln [-s [-F] | -L | -P] [-f | -i] [-hnv] source_file [target_file]
-       ln [-s [-F] | -L | -P] [-f | -i] [-hnv] source_file ... target_dir
-       link source_file target_file
-' ln -w
-
+	atf_check -s exit:1 -e inline:"$output" ln -F
+	atf_check -s exit:1 -e inline:"$output" ln -L
+	atf_check -s exit:1 -e inline:"$output" ln -P
+	atf_check -s exit:1 -e inline:"$output" ln -f
+	atf_check -s exit:1 -e inline:"$output" ln -i
+	atf_check -s exit:1 -e inline:"$output" ln -n
+	atf_check -s exit:1 -e inline:"$output" ln -s
+	atf_check -s exit:1 -e inline:"$output" ln -v
+	atf_check -s exit:1 -e inline:"$output" ln -w
 }
 
 atf_init_test_cases()
 {
-	atf_add_test_case verify_invalid_usage
+	atf_add_test_case invalid_usage
 }

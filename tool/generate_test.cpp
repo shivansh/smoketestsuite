@@ -64,7 +64,7 @@ add_known_testcase(string option,
   test_script << testcase_name
                + "_body()\n{\n\tatf_check -s exit:0 -o match:\""
                + keyword + "\" " + utility + " -" + option
-               + "\n}\n\n";
+               + "\n}\n";
 }
 
 void
@@ -73,23 +73,25 @@ add_unknown_testcase(string option,
                      string output,
                      ofstream& test_script)
 {
-  test_script << "\tatf_check -s exit:1 -e inline:\'"
-               + output + "\' " + utility + " -" + option + "\n\n";
+  test_script << "\n\tatf_check -s exit:1 -e inline:\"$output\" "
+               + utility + " -" + option;
 }
 
 string
 exec(const char* cmd)
 {
-    array<char, 128> buffer;
-    string result;
-    shared_ptr<FILE> pipe(popen(cmd, "r"), pclose);
-    if (!pipe) throw runtime_error("popen() failed!");
-    while (!feof(pipe.get())) {
-        if (fgets(buffer.data(), 128, pipe.get()) != NULL)
-            result += buffer.data();
-    }
+  // TODO: Update this call to return output/error
+  // printed to stdout and stderr separately.
+  array<char, 128> buffer;
+  string result;
+  shared_ptr<FILE> pipe(popen(cmd, "r"), pclose);
+  if (!pipe) throw runtime_error("popen() failed!");
+  while (!feof(pipe.get())) {
+      if (fgets(buffer.data(), 128, pipe.get()) != NULL)
+          result += buffer.data();
+  }
 
-    return result;
+  return result;
 }
 
 void
@@ -128,22 +130,30 @@ generate_test()
 
   // Add testcases for the options whose usage is unknown.
   if (!f_opts.opt_list.empty()) {
-    testcase_list.append("\tatf_add_test_case verify_invalid_usage\n");
-    test_fstream << "atf_test_case verify_invalid_usage\nverify_invalid_usage_head()\n{\n\tatf_set \"descr\" \"Verify that the accepted options produce a valid error message in case of an invalid usage\"\n}\n\nverify_invalid_usage_body()\n{\n";
+    // Add the $output environment variable
+    command = f_opts.utility + " -" + f_opts.opt_list.at(1) + " 2>&1";
+    output = exec(command.c_str());
+    if (!output.empty())
+      test_fstream << "output=\'" + output + "\'\n\n";
+
+    testcase_list.append("\tatf_add_test_case invalid_usage\n");
+    test_fstream << "atf_test_case invalid_usage\ninvalid_usage_head()\n{\n\tatf_set \"descr\" \"Verify that the accepted options produce a valid error message in case of an invalid usage\"\n}\n\ninvalid_usage_body()\n{";
 
     for (int i = 0; i < f_opts.opt_list.length(); i++) {
-      command = f_opts.utility + " -" + f_opts.opt_list.at(i)
-                       + " 2>&1";
+      command = f_opts.utility + " -" + f_opts.opt_list.at(i) + " 2>&1";
       output = exec(command.c_str());
+
       if (!output.empty()) {
         add_unknown_testcase(string(1, f_opts.opt_list.at(i)), f_opts.utility,
                              output, test_fstream);
       }
       else {
-        // complete the case if the command executes successfully.
+        // TODO: Complete the case if the command executes successfully.
+        // This will be done after the implementation of exec() is
+        // updated to return data printed to stdout and stderr separately.
       }
     }
-    test_fstream << "}\n\n";
+    test_fstream << "\n}\n\n";
   }
 
   // Add testcases for known options.
@@ -159,7 +169,7 @@ generate_test()
     }
   }
 
-  test_fstream << "atf_init_test_cases()\n{\n" + testcase_list + "}";
+  test_fstream << "atf_init_test_cases()\n{\n" + testcase_list + "}\n";
   test_fstream.close();
 }
 
