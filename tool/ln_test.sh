@@ -44,6 +44,7 @@ invalid_usage_body()
 	atf_check -s exit:1 -e inline:"$usage_output" ln -L
 	atf_check -s exit:1 -e inline:"$usage_output" ln -P
 	atf_check -s exit:1 -e inline:"$usage_output" ln -f
+	atf_check -s exit:1 -e inline:"$usage_output" ln -h
 	atf_check -s exit:1 -e inline:"$usage_output" ln -i
 	atf_check -s exit:1 -e inline:"$usage_output" ln -n
 	atf_check -s exit:1 -e inline:"$usage_output" ln -s

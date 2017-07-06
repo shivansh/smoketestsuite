@@ -80,7 +80,7 @@ add_unknown_testcase(string option,
 string
 exec(const char* cmd)
 {
-  // TODO: Update this call to return output/error
+  // TODO: Update this function to return output/error
   // printed to stdout and stderr separately.
   array<char, 128> buffer;
   string result;
@@ -130,7 +130,7 @@ generate_test()
 
   // Add testcases for the options whose usage is unknown.
   if (!f_opts.opt_list.empty()) {
-    // Add the $usage_output environment variable
+    // Add the "$usage_output" environment variable.
     command = f_opts.utility + " -" + f_opts.opt_list.at(1) + " 2>&1";
     output = exec(command.c_str());
     if (!output.empty())
@@ -169,10 +169,15 @@ generate_test()
     for (auto i = ident_opt_list.begin(); i != ident_opt_list.end(); i++) {
       command = f_opts.utility + " -" + (*i)->value + " 2>&1";
       output = exec(command.c_str());
-      if (output.find("usage:") == string::npos) {
+      if (output.find("usage:") == string::npos &&
+          output.find((*i)->keyword) != string::npos) {
         add_known_testcase((*i)->value, (*i)->keyword,
                      f_opts.utility, output, test_fstream);
           testcase_list.append("\tatf_add_test_case " + (*i)->value + "_flag\n");
+      }
+      else {
+        // We failed to guess the correct usage.
+        add_unknown_testcase((*i)->value, f_opts.utility, output, test_fstream);
       }
     }
   }
