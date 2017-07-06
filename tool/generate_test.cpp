@@ -73,7 +73,7 @@ add_unknown_testcase(string option,
                      string output,
                      ofstream& test_script)
 {
-  test_script << "\n\tatf_check -s exit:1 -e inline:\"$output\" "
+  test_script << "\n\tatf_check -s exit:1 -e inline:\"$usage_output\" "
                + utility + " -" + option;
 }
 
@@ -130,11 +130,11 @@ generate_test()
 
   // Add testcases for the options whose usage is unknown.
   if (!f_opts.opt_list.empty()) {
-    // Add the $output environment variable
+    // Add the $usage_output environment variable
     command = f_opts.utility + " -" + f_opts.opt_list.at(1) + " 2>&1";
     output = exec(command.c_str());
     if (!output.empty())
-      test_fstream << "output=\'" + output + "\'\n\n";
+      test_fstream << "usage_output=\'" + output + "\'\n\n";
 
     testcase_list.append("\tatf_add_test_case invalid_usage\n");
     test_fstream << "atf_test_case invalid_usage\ninvalid_usage_head()\n{\n\tatf_set \"descr\" \"Verify that the accepted options produce a valid error message in case of an invalid usage\"\n}\n\ninvalid_usage_body()\n{";
@@ -144,7 +144,7 @@ generate_test()
     command = f_opts.utility + " 2>&1";
     output = exec(command.c_str());
     if (!output.empty())
-      test_fstream << "\n\tatf_check -s exit:1 -e inline:\"$output\" "
+      test_fstream << "\n\tatf_check -s exit:1 -e inline:\"$usage_output\" "
                     + f_opts.utility;
 
     for (int i = 0; i < f_opts.opt_list.length(); i++) {

@@ -26,7 +26,7 @@
 # $FreeBSD$
 #
 
-output='usage: ln [-s [-F] | -L | -P] [-f | -i] [-hnv] source_file [target_file]
+usage_output='usage: ln [-s [-F] | -L | -P] [-f | -i] [-hnv] source_file [target_file]
        ln [-s [-F] | -L | -P] [-f | -i] [-hnv] source_file ... target_dir
        link source_file target_file
 '
@@ -39,16 +39,16 @@ invalid_usage_head()
 
 invalid_usage_body()
 {
-	atf_check -s exit:1 -e inline:"$output" ln
-	atf_check -s exit:1 -e inline:"$output" ln -F
-	atf_check -s exit:1 -e inline:"$output" ln -L
-	atf_check -s exit:1 -e inline:"$output" ln -P
-	atf_check -s exit:1 -e inline:"$output" ln -f
-	atf_check -s exit:1 -e inline:"$output" ln -i
-	atf_check -s exit:1 -e inline:"$output" ln -n
-	atf_check -s exit:1 -e inline:"$output" ln -s
-	atf_check -s exit:1 -e inline:"$output" ln -v
-	atf_check -s exit:1 -e inline:"$output" ln -w
+	atf_check -s exit:1 -e inline:"$usage_output" ln
+	atf_check -s exit:1 -e inline:"$usage_output" ln -F
+	atf_check -s exit:1 -e inline:"$usage_output" ln -L
+	atf_check -s exit:1 -e inline:"$usage_output" ln -P
+	atf_check -s exit:1 -e inline:"$usage_output" ln -f
+	atf_check -s exit:1 -e inline:"$usage_output" ln -i
+	atf_check -s exit:1 -e inline:"$usage_output" ln -n
+	atf_check -s exit:1 -e inline:"$usage_output" ln -s
+	atf_check -s exit:1 -e inline:"$usage_output" ln -v
+	atf_check -s exit:1 -e inline:"$usage_output" ln -w
 }
 
 atf_init_test_cases()
