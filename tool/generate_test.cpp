@@ -139,6 +139,14 @@ generate_test()
     testcase_list.append("\tatf_add_test_case invalid_usage\n");
     test_fstream << "atf_test_case invalid_usage\ninvalid_usage_head()\n{\n\tatf_set \"descr\" \"Verify that the accepted options produce a valid error message in case of an invalid usage\"\n}\n\ninvalid_usage_body()\n{";
 
+    // If invocation of utility under test without any option
+    // fails, we add a relevant test to "invalid_usage" testcase.
+    command = f_opts.utility + " 2>&1";
+    output = exec(command.c_str());
+    if (!output.empty())
+      test_fstream << "\n\tatf_check -s exit:1 -e inline:\"$output\" "
+                    + f_opts.utility;
+
     for (int i = 0; i < f_opts.opt_list.length(); i++) {
       command = f_opts.utility + " -" + f_opts.opt_list.at(i) + " 2>&1";
       output = exec(command.c_str());

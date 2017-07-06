@@ -39,6 +39,7 @@ invalid_usage_head()
 
 invalid_usage_body()
 {
+	atf_check -s exit:1 -e inline:"$output" ln
 	atf_check -s exit:1 -e inline:"$output" ln -F
 	atf_check -s exit:1 -e inline:"$output" ln -L
 	atf_check -s exit:1 -e inline:"$output" ln -P
