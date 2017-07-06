@@ -37,7 +37,6 @@
 
 void
 add_known_testcase(string option,
-                   string keyword,
                    string utility,
                    string output,
                    ofstream& test_script)
@@ -62,9 +61,13 @@ add_known_testcase(string option,
 
   // Add body of the testcase.
   test_script << testcase_name
-               + "_body()\n{\n\tatf_check -s exit:0 -o match:\""
-               + keyword + "\" " + utility + " -" + option
-               + "\n}\n";
+               + "_body()\n{\n\tatf_check -s exit:0 ";
+
+  // Match the usage output if generated.
+  if (!output.empty())
+    test_script << "-o match:\'" + output + "\' ";
+
+  test_script << utility + " -" + option + "\n}\n";
 }
 
 void
@@ -77,21 +80,26 @@ add_unknown_testcase(string option,
                + utility + " -" + option;
 }
 
-string
+pair<string, int>
 exec(const char* cmd)
 {
-  // TODO: Update this function to return output/error
-  // printed to stdout and stderr separately.
   array<char, 128> buffer;
-  string result;
-  shared_ptr<FILE> pipe(popen(cmd, "r"), pclose);
+  string usage_output;
+  FILE* pipe = popen(cmd, "r");
   if (!pipe) throw runtime_error("popen() failed!");
-  while (!feof(pipe.get())) {
-      if (fgets(buffer.data(), 128, pipe.get()) != NULL)
-          result += buffer.data();
+  try {
+    while (!feof(pipe)) {
+        if (fgets(buffer.data(), 128, pipe) != NULL)
+            usage_output += buffer.data();
+    }
+  }
+  catch(...) {
+    pclose(pipe);
+    throw;
   }
 
-  return result;
+  return make_pair<string, int>
+         ((string)usage_output, WEXITSTATUS(pclose(pipe)));
 }
 
 void
@@ -99,12 +107,12 @@ generate_test()
 {
   list<utils::opt_rel*> ident_opt_list;
   string test_file;
-  string output;
   string testcase_list;
   string command;
   struct stat buffer;
   ofstream test_fstream;
   ifstream license_fstream;
+  pair<string, int> output;
 
   utils::opt_def f_opts;
   ident_opt_list = f_opts.check_opts();
@@ -133,8 +141,8 @@ generate_test()
     // Add the "$usage_output" environment variable.
     command = f_opts.utility + " -" + f_opts.opt_list.at(1) + " 2>&1";
     output = exec(command.c_str());
-    if (!output.empty())
-      test_fstream << "usage_output=\'" + output + "\'\n\n";
+    if (!output.first.empty() && output.second)
+      test_fstream << "usage_output=\'" + output.first + "\'\n\n";
 
     testcase_list.append("\tatf_add_test_case invalid_usage\n");
     test_fstream << "atf_test_case invalid_usage\ninvalid_usage_head()\n{\n\tatf_set \"descr\" \"Verify that the accepted options produce a valid error message in case of an invalid usage\"\n}\n\ninvalid_usage_body()\n{";
@@ -143,22 +151,32 @@ generate_test()
     // fails, we add a relevant test to "invalid_usage" testcase.
     command = f_opts.utility + " 2>&1";
     output = exec(command.c_str());
-    if (!output.empty())
+    if (!output.first.empty() && output.second)
       test_fstream << "\n\tatf_check -s exit:1 -e inline:\"$usage_output\" "
                     + f_opts.utility;
 
+    // Execute the utility with options and add tests accordingly.
     for (int i = 0; i < f_opts.opt_list.length(); i++) {
       command = f_opts.utility + " -" + f_opts.opt_list.at(i) + " 2>&1";
       output = exec(command.c_str());
 
-      if (!output.empty()) {
-        add_unknown_testcase(string(1, f_opts.opt_list.at(i)), f_opts.utility,
-                             output, test_fstream);
+      if (!output.first.empty()) {
+        if (output.second) {
+          // Error is generated.
+          add_unknown_testcase(string(1, f_opts.opt_list.at(i)),
+                               f_opts.utility, output.first, test_fstream);
+        }
+        else {
+          // Output is generated.
+          add_known_testcase(string(1, f_opts.opt_list.at(i)),
+                             f_opts.utility, output.first, test_fstream);
+        }
       }
       else {
-        // TODO: Complete the case if the command executes successfully.
-        // This will be done after the implementation of exec() is
-        // updated to return data printed to stdout and stderr separately.
+        // Neither an output nor an error is generated,
+        // but the command ran successfully.
+        add_known_testcase(string(1, f_opts.opt_list.at(i)),
+                           f_opts.utility, "", test_fstream);
       }
     }
     test_fstream << "\n}\n\n";
@@ -169,15 +187,14 @@ generate_test()
     for (auto i = ident_opt_list.begin(); i != ident_opt_list.end(); i++) {
       command = f_opts.utility + " -" + (*i)->value + " 2>&1";
       output = exec(command.c_str());
-      if (output.find("usage:") == string::npos &&
-          output.find((*i)->keyword) != string::npos) {
-        add_known_testcase((*i)->value, (*i)->keyword,
-                     f_opts.utility, output, test_fstream);
-          testcase_list.append("\tatf_add_test_case " + (*i)->value + "_flag\n");
+      if (output.first.find("usage:") == string::npos) {
+        add_known_testcase((*i)->value, f_opts.utility,
+                           output.first, test_fstream);
+        testcase_list.append("\tatf_add_test_case " + (*i)->value + "_flag\n");
       }
       else {
         // We failed to guess the correct usage.
-        add_unknown_testcase((*i)->value, f_opts.utility, output, test_fstream);
+        add_unknown_testcase((*i)->value, f_opts.utility, output.first, test_fstream);
       }
     }
   }
