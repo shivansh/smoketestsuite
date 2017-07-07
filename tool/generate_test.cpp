@@ -148,9 +148,10 @@ generate_test()
     test_fstream << "atf_test_case invalid_usage\ninvalid_usage_head()\n{\n\tatf_set \"descr\" \"Verify that the accepted options produce a valid error message in case of an invalid usage\"\n}\n\ninvalid_usage_body()\n{";
 
     // If invocation of utility under test without any option
-    // fails, we add a relevant test to "invalid_usage" testcase.
+    // fails, we add a relevant test under "invalid_usage" testcase.
     command = f_opts.utility + " 2>&1";
     output = exec(command.c_str());
+
     if (!output.first.empty() && output.second)
       test_fstream << "\n\tatf_check -s exit:1 -e inline:\"$usage_output\" "
                     + f_opts.utility;
@@ -160,23 +161,15 @@ generate_test()
       command = f_opts.utility + " -" + f_opts.opt_list.at(i) + " 2>&1";
       output = exec(command.c_str());
 
-      if (!output.first.empty()) {
-        if (output.second) {
-          // Error is generated.
-          add_unknown_testcase(string(1, f_opts.opt_list.at(i)),
-                               f_opts.utility, output.first, test_fstream);
-        }
-        else {
-          // Output is generated.
-          add_known_testcase(string(1, f_opts.opt_list.at(i)),
+      if (output.second) {
+        // Error is generated.
+        add_unknown_testcase(string(1, f_opts.opt_list.at(i)),
                              f_opts.utility, output.first, test_fstream);
-        }
       }
       else {
-        // Neither an output nor an error is generated,
-        // but the command ran successfully.
+        // Output is generated.
         add_known_testcase(string(1, f_opts.opt_list.at(i)),
-                           f_opts.utility, "", test_fstream);
+                           f_opts.utility, output.first, test_fstream);
       }
     }
     test_fstream << "\n}\n\n";
