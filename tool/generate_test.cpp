@@ -46,16 +46,20 @@ add_known_testcase(string option,
 
   // Add testcase name.
   test_script << "atf_test_case ";
-  testcase_name = option;
-  testcase_name.append("_flag");
+  if (!option.empty()) {
+    cout << "option: " + option;
+    testcase_name = option;
+    testcase_name.append("_flag");
+  }
+  else
+    testcase_name = "no_arguments";
+
   test_script << testcase_name + "\n";
 
   // Add testcase description.
   test_script << testcase_name
                + "_head()\n{\n\tatf_set \"descr\" "
                + descr + "\n}\n\n";
-               // + "\"Verify the behavior for the option '-"
-               // + option + "'\"" + "\n}\n\n";
 
   // Add body of the testcase.
   test_script << testcase_name
@@ -63,14 +67,14 @@ add_known_testcase(string option,
 
   // Match the usage output if generated.
   if (!output.empty())
-    test_script << "-o match:\'" + output + "\' ";
+    test_script << "-o inline:\'" + output + "\' ";
 
   test_script << utility;
 
   if (!option.empty())
     test_script << " -" + option;
 
-  test_script << "\n}\n";
+  test_script << "\n}\n\n";
 }
 
 void
@@ -79,8 +83,17 @@ add_unknown_testcase(string option,
                      string output,
                      ofstream& test_script)
 {
-  test_script << "\n\tatf_check -s exit:1 -e inline:\"$usage_output\" "
-               + utility + " -" + option;
+  test_script << "\n\tatf_check -s exit:1 -e ";
+
+  if (!output.empty() || !output.compare("usage_output"))
+    test_script << "inline:\"$usage_output\" ";
+  else
+    test_script << "empty ";
+
+  test_script << utility;
+
+  if (!option.empty())
+    test_script << " -" + option;
 }
 
 pair<string, int>
@@ -134,32 +147,6 @@ generate_test()
   test_fstream << license_fstream.rdbuf();
   license_fstream.close();
 
-  // If invocation of utility under test without any option
-  // fails, we add a relevant test under "invalid_usage" testcase.
-  command = f_opts.utility + " 2>&1";
-  output = exec(command.c_str());
-
-  if (output.second) {
-    if (!output.first.empty()) {
-      // We expect a usage message to be generated in this case.
-      test_fstream << "\n\tatf_check -s exit:1 -e inline:\"$usage_output\" " + f_opts.utility;
-    }
-    else
-      test_fstream << "\n\tatf_check -s exit:1 -e empty " + f_opts.utility;
-  }
-  else {
-    if (!output.first.empty()) {
-      descr = "Verify that " + f_opts.utility + " executes successfully and "
-            + "produces a valid output when run without any options";
-      add_known_testcase("", f_opts.utility, descr, output.first, test_fstream);
-    }
-    else {
-      descr = "Verify that " + f_opts.utility + " executes successfully and "
-            + "silently when run without any options";
-      add_known_testcase("", f_opts.utility, descr, output.first, test_fstream);
-    }
-  }
-
   // If a known option was encountered (i.e. `ident_opt_list` is
   // not empty), produce a testcase to check the validity of the
   // result of that option. If no known option was encountered,
@@ -206,14 +193,44 @@ generate_test()
       if (output.first.find("usage:") == string::npos) {
         add_known_testcase((*i)->value, f_opts.utility, descr,
                            output.first, test_fstream);
-        testcase_list.append("\tatf_add_test_case " + (*i)->value + "_flag\n");
       }
       else {
         // We failed to guess the correct usage.
         add_unknown_testcase((*i)->value, f_opts.utility, output.first, test_fstream);
       }
+      testcase_list.append("\tatf_add_test_case " + (*i)->value + "_flag\n");
     }
   }
+
+  // If invocation of utility under test without any option
+  // fails, we add a relevant test under "invalid_usage" testcase.
+  command = f_opts.utility + " 2>&1";
+  output = exec(command.c_str());
+
+  if (output.second) {
+    if (!output.first.empty()) {
+      // We expect a usage message to be generated in this case.
+      descr = "\"Verify that " + f_opts.utility + " fails and generates a valid output when no arguments are supplied\"";
+      add_known_testcase("", f_opts.utility, descr, "usage_output", test_fstream);
+    }
+    else {
+      descr = "\"Verify that " + f_opts.utility + "fails silently when no arguments are supplied\"" ;
+      add_known_testcase("", f_opts.utility, descr, "", test_fstream);
+    }
+  }
+  else {
+    if (!output.first.empty()) {
+      descr = "\"Verify that " + f_opts.utility + " executes successfully and "
+      + "produces a valid output when run without any options\"";
+      add_known_testcase("", f_opts.utility, descr, output.first, test_fstream);
+    }
+    else {
+      descr = "\"Verify that " + f_opts.utility + " executes successfully and "
+      + "silently when run without any options\"";
+      add_known_testcase("", f_opts.utility, descr, output.first, test_fstream);
+    }
+  }
+  testcase_list.append("\tatf_add_test_case no_arguments\n");
 
   test_fstream << "atf_init_test_cases()\n{\n" + testcase_list + "}\n";
   test_fstream.close();

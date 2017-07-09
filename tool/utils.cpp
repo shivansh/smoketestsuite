@@ -67,8 +67,9 @@ utils::opt_def::check_opts() {
 
   // An example utility under test: ln(1).
   // TODO: Walk the entire source tree.
-  utils::opt_def::utility = "ln";
+  utils::opt_def::utility = "stdbuf";
   // TODO: Section number cannot be hardcoded.
+  // ifstream infile(utils::opt_def::utility + ".1");
   ifstream infile(utils::opt_def::utility + ".1");
 
   // Search for all the options accepted by the
