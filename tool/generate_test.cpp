@@ -66,7 +66,9 @@ add_known_testcase(string option,
                + "_body()\n{\n\tatf_check -s exit:0 ";
 
   // Match the usage output if generated.
-  if (!output.empty())
+  if (!output.compare("usage_output"))
+    test_script << "-o inline:\"$usage_output\" ";
+  else if (!output.empty())
     test_script << "-o inline:\'" + output + "\' ";
 
   test_script << utility;
@@ -162,7 +164,7 @@ generate_test()
       test_fstream << "usage_output=\'" + output.first + "\'\n\n";
 
     testcase_list.append("\tatf_add_test_case invalid_usage\n");
-    test_fstream << "atf_test_case invalid_usage\ninvalid_usage_head()\n{\n\tatf_set \"descr\" \"Verify that the accepted options produce a valid error message in case of an invalid usage\"\n}\n\ninvalid_usage_body()\n{";
+    test_fstream << "atf_test_case invalid_usage\ninvalid_usage_head()\n{\n\tatf_set \"descr\" \"Verify that the usage with a supported option produces a valid error message in case of an invalid usage\"\n}\n\ninvalid_usage_body()\n{";
 
     // Execute the utility with options and add tests accordingly.
     for (int i = 0; i < f_opts.opt_list.length(); i++) {
@@ -202,8 +204,8 @@ generate_test()
     }
   }
 
-  // If invocation of utility under test without any option
-  // fails, we add a relevant test under "invalid_usage" testcase.
+  // If the invocation of utility under test without any option
+  // fails, we add a relevant test under "no_arguments" testcase.
   command = f_opts.utility + " 2>&1";
   output = exec(command.c_str());
 
@@ -221,12 +223,12 @@ generate_test()
   else {
     if (!output.first.empty()) {
       descr = "\"Verify that " + f_opts.utility + " executes successfully and "
-      + "produces a valid output when run without any options\"";
+      + "produces a valid output when invoked without any arguments\"";
       add_known_testcase("", f_opts.utility, descr, output.first, test_fstream);
     }
     else {
       descr = "\"Verify that " + f_opts.utility + " executes successfully and "
-      + "silently when run without any options\"";
+      + "silently when invoked without any arguments\"";
       add_known_testcase("", f_opts.utility, descr, output.first, test_fstream);
     }
   }
