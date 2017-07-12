@@ -3,3 +3,4 @@
 
 # Exclude logs
 error.log
+*.1

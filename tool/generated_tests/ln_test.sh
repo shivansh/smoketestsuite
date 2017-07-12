@@ -26,18 +26,44 @@
 # $FreeBSD$
 #
 
+usage_output='usage: ln [-s [-F] | -L | -P] [-f | -i] [-hnv] source_file [target_file]
+       ln [-s [-F] | -L | -P] [-f | -i] [-hnv] source_file ... target_dir
+       link source_file target_file
+'
+
+atf_test_case invalid_usage
+invalid_usage_head()
+{
+	atf_set "descr" "Verify that the usage with a supported option produces a valid error message in case of an invalid usage"
+}
+
+invalid_usage_body()
+{
+	atf_check -s exit:1 -e inline:"$usage_output" ln -F
+	atf_check -s exit:1 -e inline:"$usage_output" ln -L
+	atf_check -s exit:1 -e inline:"$usage_output" ln -P
+	atf_check -s exit:1 -e inline:"$usage_output" ln -f
+	atf_check -s exit:1 -e inline:"$usage_output" ln -h
+	atf_check -s exit:1 -e inline:"$usage_output" ln -i
+	atf_check -s exit:1 -e inline:"$usage_output" ln -n
+	atf_check -s exit:1 -e inline:"$usage_output" ln -s
+	atf_check -s exit:1 -e inline:"$usage_output" ln -v
+	atf_check -s exit:1 -e inline:"$usage_output" ln -w
+}
+
 atf_test_case no_arguments
 no_arguments_head()
 {
-	atf_set "descr" "Verify that stdbuf executes successfully and silently when invoked without any arguments"
+	atf_set "descr" "Verify that ln fails and generates a valid output when no arguments are supplied"
 }
 
 no_arguments_body()
 {
-	atf_check -s exit:0 stdbuf
+	atf_check -s exit:1 -e inline:"$usage_output" ln
 }
 
 atf_init_test_cases()
 {
+	atf_add_test_case invalid_usage
 	atf_add_test_case no_arguments
 }

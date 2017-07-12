@@ -33,7 +33,7 @@ void
 add_known_testcase(string, string, string, ofstream&);
 
 void
-add_unknown_testcase(string, string, string, ofstream&);
+add_unknown_testcase(string, string, string, string&);
 
 pair<string, int>
 exec(const char*);
