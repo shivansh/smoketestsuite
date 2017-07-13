@@ -66,7 +66,7 @@ utils::opt_def::check_opts(string utility) {
   insert_opts();
 
   // TODO: Section number cannot be hardcoded.
-  ifstream infile(utility + ".1");
+  ifstream infile("groff/" + utility + ".1");
 
   // Search for all the options accepted by the
   // utility and collect those present in `opt_map`.

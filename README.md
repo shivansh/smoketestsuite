@@ -1,9 +1,7 @@
-# Smoke testing of base utilities
+# Smoke testing of base utilities (FreeBSD)
 
 This repo is currently a subset of a broader task which is to be done during [Google Summer of Code '17 with FreeBSD](https://summerofcode.withgoogle.com/projects/#6426676740227072).  
 **Refer the [FreeBSD wiki](https://wiki.freebsd.org/SummerOfCode2017/SmokeTestingOfBaseUtilities) for an overview and updates.**
-
-**NOTE:** Things are under progress and can break/perform unexpectedly as of now!
 
 ## Directory Structure
 ```
@@ -11,38 +9,38 @@ This repo is currently a subset of a broader task which is to be done during [Go
 ├── baseutils
 │   ├── ........................:: Base utilities
 │   └── ls
-│       └── tests ..............:: Smoke tests
-└── parse_options.py ...........:: Options parsing script (to be updated)
+│       └── tests ..............:: Smoke tests pertaining to the initial test plan
+├── scripts
+│   └── ........................:: Handy scripts
+└── tool........................:: Automation tool pertaining to the new test plan
+    ├── generated_tests
+    │   └── ....................:: Generated atf-sh test scripts
+    ├── generate_test.cpp.......:: Test generation file
+    ├── groff
+    │   └── ....................:: groff scripts for utilities
+    └── utils.cpp...............:: Index generation file
 ```
 - - -
 
-## Test Plan
-More details concerning automated generation of test scripts available [here](https://shivrai.github.io/assets/tmp/GSoC17Automation.pdf).
+## Automation tool
+An (in-progress) implementation of the automation tool briefly described [here](https://lists.freebsd.org/pipermail/soc-status/2017-July/001079.html).
 
-### Test 1: Checking valid arguments
-The file [functional_test.c](baseutils/ls/tests/functional_test.c) is a simple test file which checks whether the `ls` program is properly linked by running trivial commands. The arguments supported by ls are stored in `long_options[]`.<br>
-
-**Note 1:** This file is a WIP test which checks basic functionality of `ls` utility, namely the supported arguments.<br>
-**Note 2:** This file provides an example workflow.<br>
-
-The smoke tests can be run as follows from inside **baseutils/_utility_/tests** -
+### Instructions
+Execute the following commands inside [tool](tool) -
 ```
->> make
->> make test
+make clean
+make && make run
 ```
+The expected result (at the time of writing) should be generation of 3 atf-sh test files under [generated_tests](generated_tests).
 
-It should be noted that finally the tests will be automated with appropriately passed options. The above commands will not have to be run for testing individual programs.
+## Generated tests
+The following table summarizes the type of test-cases produced for 3 (randomly chosen) utilities.
 
-The test file uses `getopt()` and `getopt_long()` for testing the validity of the passed options. If a valid option is passed, the command `<utility> --<option(i)>` is executed.
-In case the command fails to execute for a valid option, this will imply that the utility under test is not properly linked.
+|           **Test**            | **Positive test-cases** | **Negative test-cases** |
+--------------------------------|:-----------------------:|:-----------------------:|
+[date_test.sh](generated_tests/date_test.sh)    | 5 | 2
+[ln_test.sh](generated_tests/ln_test.sh)        | 0 | 11
+[stdbuf_test.sh](generated_tests/stdbuf_test.sh)| 1 | 0
 
-#### Populating `short_options[]` and `long_options[]`
-
-`short_options[]` and `long_options[]` need to be initially populated with a few supported options for all the base utilities. This can be done by using either one of the following available approaches -
-* Parse man pages for each utility to get the supported options.
-* Pass an unsupported option to the utility. This might generate a usage message which can then be parsed.  
-  **Note:** The unsupported option will be chosen experimentally.
-
-### Initial setup
-* An automation script [parse_options.py](parse_options.py) will be written which will populate `short_options[]` and `long_options[]` by following the above mentioned approaches and will generate the relevant test files.
-* The script [fetch_utils.sh](scripts/fetch_utils.sh) will be used for filtering the list of appropriate base utilities from the src tree.
+**NOTE :** [date_test.sh](generated_tests/date_test.sh) is time/timezone dependent, hence all the test-cases apart from `invalid_usage` will fail.  
+The aim for using this utility is to demonstrate that the tool can generate positive test-cases along with negative ones. It also demonstrates the need to sanity check the tests.
