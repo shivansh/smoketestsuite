@@ -34,7 +34,7 @@ usage_output='usage: ln [-s [-F] | -L | -P] [-f | -i] [-hnv] source_file [target
 atf_test_case invalid_usage
 invalid_usage_head()
 {
-	atf_set "descr" "Verify that the usage with a supported option produces a valid error message in case of an invalid usage"
+	atf_set "descr" "Verify that an invalid usage with a supported option produces a valid error message"
 }
 
 invalid_usage_body()

@@ -29,14 +29,19 @@
 
 using namespace std;
 
+// Add a test-case for an option with known usage.
 void
 add_known_testcase(string, string, string, ofstream&);
 
+// Add a test-case for an option with unknown usage.
 void
 add_unknown_testcase(string, string, string, string&);
 
+// Execute passed string in shell and return
+// its output and the return value.
 pair<string, int>
 exec(const char*);
 
+// Generate a test for the given utility.
 void
-generate_test();
+generate_test(string);

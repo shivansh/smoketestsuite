@@ -15,7 +15,7 @@ $(OBJS) 				: $(.PREFIX).cpp $(.PREFIX).h
 .PHONY: clean run
 
 clean:
-	rm -f generate_test ln_test.sh $(OBJS)
+	rm -rf generate_test generated_tests/* $(OBJS)
 
 run:
 	./generate_test

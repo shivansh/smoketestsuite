@@ -47,13 +47,13 @@ utils::opt_def::insert_opts()
   // `opt_map` contains all the options
   // which can be "easily" tested.
   opt_map.insert(make_pair<string, opt_rel>
-                               ("h", (opt_rel)h_def));  // NOTE: Explicit typecast required here.
+                          ("h", (opt_rel)h_def));  // NOTE: Explicit typecast required here.
   opt_map.insert(make_pair<string, opt_rel>
-                               ("v", (opt_rel)v_def));
+                          ("v", (opt_rel)v_def));
 };
 
 list<utils::opt_rel*>
-utils::opt_def::check_opts() {
+utils::opt_def::check_opts(string utility) {
   string line;                      // An individual line in a man-page.
   string opt_name;                  // Name of the option.
   string opt_ident = ".It Fl";      // Identifier for an option in man page.
@@ -65,12 +65,8 @@ utils::opt_def::check_opts() {
   // Generate the hashmap opt_map.
   insert_opts();
 
-  // An example utility under test: ln(1).
-  // TODO: Walk the entire source tree.
-  utils::opt_def::utility = "date";
   // TODO: Section number cannot be hardcoded.
-  // ifstream infile(utils::opt_def::utility + ".1");
-  ifstream infile(utils::opt_def::utility + ".1");
+  ifstream infile(utility + ".1");
 
   // Search for all the options accepted by the
   // utility and collect those present in `opt_map`.
@@ -84,11 +80,11 @@ utils::opt_def::check_opts() {
       // description of which is now stored in `buffer`.
       if ((opt_map_iter = opt_map.find(string(1, opt_list.back())))
                        != opt_map.end() &&
-          buffer.find( (opt_map_iter->second).keyword) != string::npos) {
+          buffer.find((opt_map_iter->second).keyword) != string::npos) {
         ident_opt_list.push_back(&(opt_map_iter->second));
 
-        // Since the option under test is a known
-        // one, we remove it from `opt_list`.
+        // Since the usage of the option under test
+        // is known, we remove it from `opt_list`.
         opt_list.pop_back();
       }
 
