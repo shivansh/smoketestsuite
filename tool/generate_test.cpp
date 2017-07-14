@@ -34,77 +34,7 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include "generate_test.h"
-
-void
-add_known_testcase(string option,
-                   string utility,
-                   string descr,
-                   string output,
-                   ofstream& test_script)
-{
-  string testcase_name;
-
-  // Add testcase name.
-  test_script << "atf_test_case ";
-
-  if (!option.empty()) {
-    testcase_name = option;
-    testcase_name.append("_flag");
-  }
-  else
-    testcase_name = "no_arguments";
-
-  test_script << testcase_name + "\n";
-
-  // Add testcase description.
-  test_script << testcase_name
-               + "_head()\n{\n\tatf_set \"descr\" ";
-
-  if (!descr.empty())
-    test_script << descr;
-  else
-    test_script << "\"Verify the usage of option \'" + option + "\'\"";
-
-  test_script << "\n}\n\n";
-
-  // Add body of the testcase.
-  test_script << testcase_name
-               + "_body()\n{\n\tatf_check -s exit:0 -o ";
-
-  // Match the usage output if generated.
-  if (!output.empty())
-    test_script << "inline:\'" + output + "\' ";
-  else
-    test_script << "empty ";
-
-  test_script << utility;
-
-  if (!option.empty())
-    test_script << " -" + option;
-
-  test_script << "\n}\n\n";
-}
-
-void
-add_unknown_testcase(string option,
-                     string utility,
-                     string output,
-                     string& testcase_buffer)
-{
-  testcase_buffer.append("\n\tatf_check -s exit:1 -e ");
-
-  if (!output.compare(0, 6, "usage:"))
-    testcase_buffer.append("inline:\"$usage_output\" ");
-  else if (!output.empty())
-    testcase_buffer.append("inline:\'" + output + "\' ");
-  else
-    testcase_buffer.append("empty ");
-
-  testcase_buffer.append(utility);
-
-  if (!option.empty())
-    testcase_buffer.append(" -" + option);
-}
+#include "add_testcase.h"
 
 pair<string, int>
 exec(const char* cmd)
@@ -122,7 +52,7 @@ exec(const char* cmd)
   }
   catch(...) {
     pclose(pipe);
-    throw;
+    throw "Unable to execute the command: " + string(cmd);
   }
 
   return make_pair<string, int>
@@ -137,7 +67,7 @@ generate_test(string utility)
   string testcase_list;         // List of testcases.
   string command;               // Command to be executed in shell.
   string descr;                 // Testcase description.
-  string testcase_buffer;       // Buffer for holding data for a testcase.
+  string testcase_buffer;       // Buffer for (temporarily) holding testcase data.
   struct stat buffer;
   ofstream test_fstream;        // Output stream for the atf-sh test.
   ifstream license_fstream;     // Input stream for license.
@@ -149,10 +79,11 @@ generate_test(string utility)
 
   // Check if the test file exists. In case it does, stop execution.
   if (stat (test_file.c_str(), &buffer) == 0) {
-    cout << "Skipping: Test file already exists" << endl;
+    cout << "Skipping: Test file already exists!" << endl;
     return;
   }
 
+  // Add license in the generated test scripts.
   test_fstream.open(test_file, ios::out);
   license_fstream.open("license", ios::in);
 
@@ -175,7 +106,8 @@ generate_test(string utility)
                            output.first, test_fstream);
       }
       else {
-        // We failed to guess the correct usage.
+        // A usage message was produced, i.e. we
+        // failed to guess the correct usage.
         add_unknown_testcase((*i)->value, utility, output.first, testcase_buffer);
       }
       testcase_list.append("\tatf_add_test_case " + (*i)->value + "_flag\n");
@@ -197,13 +129,13 @@ generate_test(string utility)
       output = exec(command.c_str());
 
       if (output.second) {
-        // Error is generated.
+        // Non-zero exit status was encountered.
         add_unknown_testcase(string(1, f_opts.opt_list[i]),
                              utility, output.first, testcase_buffer);
       }
       else {
-        // Output is generated.
-        // Also, we guessed a correct usage.
+        // EXIT_SUCCESS was encountered. Hence,
+        // the guessed usage was correct.
         add_known_testcase(string(1, f_opts.opt_list[i]), utility,
                            "", output.first, test_fstream);
         testcase_list.append(string("\tatf_add_test_case ")
@@ -220,56 +152,11 @@ generate_test(string utility)
     test_fstream << testcase_buffer + "\n}\n\n";
   }
 
-  // If the invocation of utility under test without any option
-  // fails, we add a relevant test under "no_arguments" testcase.
+  // Add a testcase under "no_arguments" for
+  // running the utility without any arguments.
   command = utility + " 2>&1";
   output = exec(command.c_str());
-
-  if (output.second) {
-    // An error was encountered.
-    test_fstream << string("atf_test_case no_arguments\n")
-                  + "no_arguments_head()\n{\n\tatf_set \"descr\" ";
-    if (!output.first.empty()) {
-      // We expect a usage message to be generated in this case.
-      descr = "\"Verify that " + utility
-            + " fails and generates a valid output"
-            + " when no arguments are supplied\"";
-
-      if (!output.first.compare(0, 6, "usage:"))
-        test_fstream << descr + "\n}\n\nno_arguments_body()\n{"
-                      + "\n\tatf_check -s exit:1 -e inline:\"$usage_output\" "
-                      + utility;
-      else
-        test_fstream << descr + "\n}\n\nno_arguments_body()\n{"
-                      + "\n\tatf_check -s exit:1 -e inline:\'"
-                      + output.first + "\' " + utility;
-    }
-
-    else {
-      descr = "\"Verify that " + utility + "fails silently when no arguments are supplied\"" ;
-      test_fstream << descr + "\n}\n\nno_arguments_body()\n{"
-                    + "\n\tatf_check -s exit:1 -e empty " + utility;
-    }
-
-    test_fstream << "\n}\n\n";
-  }
-
-  else {
-    // The command ran successfully, hence we guessed
-    // a correct usage for the utility under test.
-    if (!output.first.empty()) {
-      descr = "\"Verify that " + utility
-            + " executes successfully and produces a valid"
-            + " output when invoked without any arguments\"";
-      add_known_testcase("", utility, descr, output.first, test_fstream);
-    }
-    else {
-      descr = "\"Verify that " + utility
-            + " executes successfully and silently"
-            + " when invoked without any arguments\"";
-      add_known_testcase("", utility, descr, output.first, test_fstream);
-    }
-  }
+  add_noargs_testcase(utility, output, test_fstream);
 
   testcase_list.append("\tatf_add_test_case no_arguments\n");
   test_fstream << "atf_init_test_cases()\n{\n" + testcase_list + "}\n";
@@ -279,10 +166,11 @@ generate_test(string utility)
 int
 main()
 {
-  list<string> utility_list = {"date", "ln", "stdbuf"};
-  for (const auto& i : utility_list) {
+  // TODO: Walk the src tree.
+  list<string> utility_list = { "date", "ln", "stdbuf" };
+
+  for (const auto& i : utility_list)
     generate_test(i);
-  }
 
   return 0;
 }

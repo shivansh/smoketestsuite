@@ -26,12 +26,15 @@ This repo is currently a subset of a broader task which is to be done during [Go
 An (in-progress) implementation of the automation tool briefly described [here](https://lists.freebsd.org/pipermail/soc-status/2017-July/001079.html).
 
 ### Instructions
-Execute the following commands inside [tool](tool) -
-```
-make clean
-make && make run
-```
-The expected result (at the time of writing) should be generation of 3 atf-sh test files under [generated_tests](generated_tests).
+* The directory `tool/groff` should be populated with the relevant groff scripts before proceeding. These scripts are available in the FreeBSD src tree.  
+  **NOTE:** It should be noted that the directory [generated_tests](generated_tests) is already populated. Unless testing, there won't be a need to proceed to the next step.
+
+* Execute the following commands inside [tool](tool) -
+  ```
+  make clean
+  make && make run
+  ```
+  The expected result (at the time of writing) should be generation of 3 atf-sh test files under [generated_tests](generated_tests).
 
 ## Generated tests
 The following table summarizes the type of test-cases produced for 3 (randomly chosen) utilities.

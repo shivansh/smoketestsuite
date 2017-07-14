@@ -2,20 +2,23 @@
 #
 # Makefile for building automation tool
 
-CC 			= g++
+CC 	= g++
 CFLAGS 	= -I. -std=c++11
-OBJS 		= utils.o generate_test.o
+OBJS 	= utils.o add_testcase.o generate_test.o
 
 generate_test 	: $(OBJS)
 	$(CC) $(CFLAGS) -o $(.TARGET) $(.ALLSRC)
 
-$(OBJS) 				: $(.PREFIX).cpp $(.PREFIX).h
+$(OBJS) 	: $(.PREFIX).cpp $(.PREFIX).h
 	$(CC) $(CFLAGS) -c $(.PREFIX).cpp
 
-.PHONY: clean run
+.PHONY: clean clean_tests run
 
 clean:
-	rm -rf generate_test generated_tests/* $(OBJS)
+	rm -f generate_test $(OBJS)
+
+clean_tests:
+	rm -f generated_tests/*
 
 run:
 	./generate_test
