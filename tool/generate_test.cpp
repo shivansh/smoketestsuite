@@ -91,26 +91,26 @@ generate_test(string utility)
   license_fstream.close();
 
   // If a known option was encountered (i.e. `ident_opt_list` is
-  // not empty), produce a testcase to check the validity of the
+  // populated), produce a testcase to check the validity of the
   // result of that option. If no known option was encountered,
-  // produce testcases to verify the correct usage message
-  // when using the valid options incorrectly.
+  // produce testcases to verify the correct (generated) usage
+  // message when using the supported options incorrectly.
 
   // Add testcases for known options.
   if (!ident_opt_list.empty()) {
-    for (auto i = ident_opt_list.begin(); i != ident_opt_list.end(); i++) {
-      command = utility + " -" + (*i)->value + " 2>&1";
+    for (const auto &i : ident_opt_list) {
+      command = utility + " -" + i->value + " 2>&1";
       output = exec(command.c_str());
       if (!output.first.compare(0, 6, "usage:")) {
-        add_known_testcase((*i)->value, utility, descr,
+        add_known_testcase(i->value, utility, descr,
                            output.first, test_fstream);
       }
       else {
         // A usage message was produced, i.e. we
         // failed to guess the correct usage.
-        add_unknown_testcase((*i)->value, utility, output.first, testcase_buffer);
+        add_unknown_testcase(i->value, utility, output.first, testcase_buffer);
       }
-      testcase_list.append("\tatf_add_test_case " + (*i)->value + "_flag\n");
+      testcase_list.append("\tatf_add_test_case " + i->value + "_flag\n");
     }
   }
 
@@ -169,7 +169,7 @@ main()
   // TODO: Walk the src tree.
   list<string> utility_list = { "date", "ln", "stdbuf" };
 
-  for (const auto& i : utility_list)
+  for (const auto &i : utility_list)
     generate_test(i);
 
   return 0;
