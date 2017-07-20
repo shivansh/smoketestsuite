@@ -33,8 +33,10 @@
 #include <stdexcept>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <unordered_set>
 #include "generate_test.h"
 #include "add_testcase.h"
+#include "run_tests.h"
 
 pair<string, int>
 exec(const char* cmd)
@@ -68,20 +70,17 @@ generate_test(string utility)
   string command;               // Command to be executed in shell.
   string descr;                 // Testcase description.
   string testcase_buffer;       // Buffer for (temporarily) holding testcase data.
-  struct stat buffer;
   ofstream test_fstream;        // Output stream for the atf-sh test.
   ifstream license_fstream;     // Input stream for license.
   pair<string, int> output;     // Return value type for `exec()`.
+  unordered_set<char> annot;
+
+  // Read annotations and populate hash set "annot".
+  read_annotations(annot);
 
   utils::opt_def f_opts;
   ident_opt_list = f_opts.check_opts(utility);
   test_file = "generated_tests/" + utility + "_test.sh";
-
-  // Check if the test file exists. In case it does, stop execution.
-  if (stat (test_file.c_str(), &buffer) == 0) {
-    cout << "Skipping: Test file already exists!" << endl;
-    return;
-  }
 
   // Add license in the generated test scripts.
   test_fstream.open(test_file, ios::out);
@@ -116,30 +115,43 @@ generate_test(string utility)
 
   // Add testcases for the options whose usage is not known (yet).
   if (!f_opts.opt_list.empty()) {
-    // Add the "$usage_output" variable.
-    command = utility + " -" + f_opts.opt_list[1] + " 2>&1";
-    output = exec(command.c_str());
 
-    if (!output.first.compare(0, 6, "usage:") && output.second)
-      test_fstream << "usage_output=\'" + output.first + "\'\n\n";
+    // For the purpose of adding a "$usage_output" variable,
+    // we choose the option which produces one.
+    // TODO Avoid multiple executions of an option
+    for (const auto &i : f_opts.opt_list) {
+      command = utility + " -" + i + " 2>&1";
+      output = exec(command.c_str());
+      if (!output.first.compare(0, 5, "usage") ||
+          !output.first.compare(0, 5, "Usage") &&
+          output.second) {
+        test_fstream << "usage_output=\'" + output.first + "\'\n\n";
+        break;
+      }
+    }
 
-    // Execute the utility with options and add tests accordingly.
-    for (int i = 0; i < f_opts.opt_list.length(); i++) {
-      command = utility + " -" + f_opts.opt_list[i] + " 2>&1";
+    // Execute the utility with supported options
+    // and add (+ve)/(-ve) tests accordingly.
+    for (const auto &i : f_opts.opt_list) {
+      // If the option is annotated, skip it.
+      if (annot.find(i) != annot.end())
+        continue;
+
+      command = utility + " -" + i + " 2>&1";
       output = exec(command.c_str());
 
       if (output.second) {
         // Non-zero exit status was encountered.
-        add_unknown_testcase(string(1, f_opts.opt_list[i]),
+        add_unknown_testcase(string(1, i),
                              utility, output.first, testcase_buffer);
       }
       else {
         // EXIT_SUCCESS was encountered. Hence,
         // the guessed usage was correct.
-        add_known_testcase(string(1, f_opts.opt_list[i]), utility,
+        add_known_testcase(string(1, i), utility,
                            "", output.first, test_fstream);
         testcase_list.append(string("\tatf_add_test_case ")
-                            + f_opts.opt_list[i] + "_flag\n");
+                            + i + "_flag\n");
       }
     }
 
@@ -168,9 +180,33 @@ main()
 {
   // TODO: Walk the src tree.
   list<string> utility_list = { "date", "ln", "stdbuf" };
+  string test_file;     // atf-sh test name.
+  struct stat buffer;
+  char answer;          // User input to determine overwriting of test files.
+  int flag = 0;
 
-  for (const auto &i : utility_list)
-    generate_test(i);
+  for (const auto &util : utility_list) {
+    test_file = "generated_tests/" + util + "_test.sh";
+
+    // Check if the test file exists.
+    // In case the test file exists, confirm before proceeding.
+    if (stat (test_file.c_str(), &buffer) == 0 && !flag) {
+      cout << "Test file(s) already exists. Overwrite? [Y/n] ";
+      cin >> answer;
+      switch (answer) {
+        case 'n':
+        case 'N':
+          cout << "Stopping execution!" << endl;
+          flag = 1;
+          break;
+        default:
+          // TODO capture newline character
+          flag = 1;
+      }
+    }
+
+    generate_test(util);
+  }
 
   return 0;
 }

@@ -60,7 +60,7 @@ utils::opt_def::check_opts(string utility) {
   string buffer;                    // Option description extracted from man-page.
   string opt_string;                // Identified option names.
   int opt_pos;                      // Starting index of the (identified) option.
-  list<opt_rel*> ident_opt_list;     // List of identified option definitions (opt_rel's).
+  list<opt_rel*> ident_opt_list;    // List of identified option definitions (opt_rel's).
 
   // Generate the hashmap opt_map.
   insert_opts();
@@ -88,8 +88,8 @@ utils::opt_def::check_opts(string utility) {
         opt_list.pop_back();
       }
 
-      // Update the string of valid options. We allow out list
-      // to be populated with only short_options currently.
+      // Update the string of valid options. The list
+      // is currently populated with only short_options.
       if (opt_name.size() == 1)
         opt_list.append(opt_name);
 

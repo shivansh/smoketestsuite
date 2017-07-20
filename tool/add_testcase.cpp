@@ -107,18 +107,24 @@ add_noargs_testcase(string utility,
                   + "no_arguments_head()\n{\n\tatf_set \"descr\" ";
     if (!output.first.empty()) {
       // We expect a usage message to be generated in this case.
-      descr = "\"Verify that " + utility
-            + " fails and generates a valid output"
-            + " when no arguments are supplied\"";
+      if (!output.first.compare(0, 6, "usage:")) {
+        descr = "\"Verify that " + utility
+              + " fails and generates a valid usage"
+              + " message when no arguments are supplied\"";
 
-      if (!output.first.compare(0, 6, "usage:"))
         test_script << descr + "\n}\n\nno_arguments_body()\n{"
                       + "\n\tatf_check -s exit:1 -e inline:\"$usage_output\" "
                       + utility;
-      else
+      }
+      else {
+        descr = "\"Verify that " + utility
+              + " fails and generates a valid output"
+              + " when no arguments are supplied\"";
+
         test_script << descr + "\n}\n\nno_arguments_body()\n{"
                       + "\n\tatf_check -s exit:1 -e inline:\'"
                       + output.first + "\' " + utility;
+      }
     }
 
     else {
