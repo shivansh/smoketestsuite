@@ -26,30 +26,6 @@
 # $FreeBSD$
 #
 
-atf_test_case j_flag
-j_flag_head()
-{
-	atf_set "descr" "Verify the usage of option 'j'"
-}
-
-j_flag_body()
-{
-	atf_check -s exit:0 -o inline:'Wed Jul 12 22:38:31 IST 2017
-' date -j
-}
-
-atf_test_case n_flag
-n_flag_head()
-{
-	atf_set "descr" "Verify the usage of option 'n'"
-}
-
-n_flag_body()
-{
-	atf_check -s exit:0 -o inline:'Wed Jul 12 22:38:31 IST 2017
-' date -n
-}
-
 atf_test_case R_flag
 R_flag_head()
 {
@@ -58,7 +34,7 @@ R_flag_head()
 
 R_flag_body()
 {
-	atf_check -s exit:0 -o inline:'Wed, 12 Jul 2017 22:38:31 +0530
+	atf_check -s exit:0 -o inline:'Sat, 22 Jul 2017 22:56:10 +0530
 ' date -R
 }
 
@@ -70,7 +46,7 @@ u_flag_head()
 
 u_flag_body()
 {
-	atf_check -s exit:0 -o inline:'Wed Jul 12 17:08:31 UTC 2017
+	atf_check -s exit:0 -o inline:'Sat Jul 22 17:26:10 UTC 2017
 ' date -u
 }
 
@@ -100,14 +76,12 @@ no_arguments_head()
 
 no_arguments_body()
 {
-	atf_check -s exit:0 -o inline:'Wed Jul 12 22:38:31 IST 2017
+	atf_check -s exit:0 -o inline:'Sat Jul 22 22:56:10 IST 2017
 ' date
 }
 
 atf_init_test_cases()
 {
-	atf_add_test_case j_flag
-	atf_add_test_case n_flag
 	atf_add_test_case R_flag
 	atf_add_test_case u_flag
 	atf_add_test_case invalid_usage
