@@ -29,44 +29,22 @@
 #include <fstream>
 #include <iostream>
 #include <string>
-#include "run_tests.h"
+#include "read_annotations.h"
 
 void
-generate_annotations()
-{
-  DIR *dirp;
-  struct dirent *dp;
-  string test_script;
-  string util;
-
-  dirp = opendir("generated_tests");
-  if (dirp == NULL) {
-    fprintf(stderr, "Warning: Cannot open directory generated_tests\n");
-    return;
-  }
-
-  while ((dp = readdir(dirp)) != NULL) {
-    test_script = dp->d_name;
-    // Ignore hidden files.
-    if (test_script[0] != '.') {
-      // Extract utility name from test file.
-      // TODO Maintain a list of utilities and their locations.
-      util = test_script.substr(0, test_script.find("_test"));
-    }
-  }
-
-  (void)closedir(dirp);
-}
-
-void
-read_annotations(unordered_set<char>& annot)
+read_annotations(string utility, unordered_set<char>& annot)
 {
   string line;
   // TODO do this for all the annotation files
   ifstream annot_fstream;
-  annot_fstream.open("annotations/date_test.annot");
+  annot_fstream.open("annotations/" + utility + "_test.annot");
 
   while (getline(annot_fstream, line)) {
+    // Add a unique identifier for no_arguments testcase
+    if (line.compare(2, 4, "flag")) {
+      annot.insert('*');
+      continue;
+    }
     annot.insert(line[0]);
   }
 

@@ -29,12 +29,7 @@
 
 using namespace std;
 
-// Run the generated tests and add annotations
-// corresponding to the ones which fail.
-void
-generate_annotations();
-
 // Read the annotation files and skip
 // generation of the respective tests.
 void
-read_annotations(unordered_set<char>&);
+read_annotations(string, unordered_set<char>&);

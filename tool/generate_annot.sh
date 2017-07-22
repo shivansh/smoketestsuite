@@ -1,3 +1,4 @@
+#!/bin/sh
 #
 # Copyright 2017 Shivansh Rai
 # All rights reserved.
@@ -25,26 +26,47 @@
 #
 # $FreeBSD$
 #
+# Script for generating annotations based on generated tests.
 
-atf_test_case invalid_usage
-invalid_usage_head()
-{
-	atf_set "descr" "Verify that an invalid usage with a supported option produces a valid error message"
-}
+pwd=$(pwd)
+suffix="_test.sh"
+extension=".sh"
 
-invalid_usage_body()
-{
-	atf_check -s exit:1 -e inline:'date: option requires an argument -- f
-usage: date [-jnRu] [-d dst] [-r seconds] [-t west] [-v[+|-]val[ymwdHMS]] ... 
-            [-f fmt date | [[[[[cc]yy]mm]dd]HH]MM[.ss]] [+format]
-' date -f
-	atf_check -s exit:1 -e inline:'date: option requires an argument -- v
-usage: date [-jnRu] [-d dst] [-r seconds] [-t west] [-v[+|-]val[ymwdHMS]] ... 
-            [-f fmt date | [[[[[cc]yy]mm]dd]HH]MM[.ss]] [+format]
-' date -v
-}
+printf "Updated files:\n"
+for f in "generated_tests"/*
+do
+  annotations=""
+  file=$(basename $f)
+  test=${file%$extension}
+  utility=${file%$suffix}
+  dir="/usr/tests/bin/$utility"
 
-atf_init_test_cases()
-{
-	atf_add_test_case invalid_usage
-}
+  (
+  cd $dir
+  report=$(kyua report)
+  i=2
+
+  while [ 1 ]
+  do
+    testcase=$(printf "$report" | awk 'NR=='"$i"' {print $1}')
+    status=$(printf "$report" | awk 'NR=='"$i"' {print $3}')
+    check=$(printf "$testcase" | cut -s -f1 -d":")
+
+    if [ "$check" != "$test" ]; then
+      if [ "$annotations" ]; then
+	printf "$annotations" > "$pwd/annotations/$test.annot"
+	printf "\tannotations/$test.annot\n"
+      fi
+      break
+    fi
+
+    if [ "$status" == "failed:" ]; then
+      testcase=${testcase#"$test:"}
+      annotations="$annotations$testcase\n"
+    fi
+
+    i=$((i+1))
+  done
+  )
+
+done

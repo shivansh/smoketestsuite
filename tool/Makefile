@@ -4,7 +4,7 @@
 
 CC 	= g++
 CFLAGS 	= -I. -std=c++11
-OBJS 	= utils.o add_testcase.o generate_test.o run_tests.o
+OBJS 	= utils.o add_testcase.o generate_test.o read_annotations.o
 
 generate_test 	: $(OBJS)
 	$(CC) $(CFLAGS) -o $(.TARGET) $(.ALLSRC)

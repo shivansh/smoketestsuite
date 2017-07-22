@@ -36,7 +36,7 @@
 #include <unordered_set>
 #include "generate_test.h"
 #include "add_testcase.h"
-#include "run_tests.h"
+#include "read_annotations.h"
 
 pair<string, int>
 exec(const char* cmd)
@@ -76,7 +76,7 @@ generate_test(string utility)
   unordered_set<char> annot;
 
   // Read annotations and populate hash set "annot".
-  read_annotations(annot);
+  read_annotations(utility, annot);
 
   utils::opt_def f_opts;
   ident_opt_list = f_opts.check_opts(utility);
@@ -166,11 +166,14 @@ generate_test(string utility)
 
   // Add a testcase under "no_arguments" for
   // running the utility without any arguments.
-  command = utility + " 2>&1";
-  output = exec(command.c_str());
-  add_noargs_testcase(utility, output, test_fstream);
+  if (annot.find('*') == annot.end()) {
+    command = utility + " 2>&1";
+    output = exec(command.c_str());
+    add_noargs_testcase(utility, output, test_fstream);
 
-  testcase_list.append("\tatf_add_test_case no_arguments\n");
+    testcase_list.append("\tatf_add_test_case no_arguments\n");
+  }
+
   test_fstream << "atf_init_test_cases()\n{\n" + testcase_list + "}\n";
   test_fstream.close();
 }
