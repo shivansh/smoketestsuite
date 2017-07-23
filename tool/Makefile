@@ -21,4 +21,7 @@ clean_tests:
 	rm -f generated_tests/*
 
 run:
+	@echo Generating annotations...
+	./generate_annot.sh
+	@echo Generating test files...
 	./generate_test

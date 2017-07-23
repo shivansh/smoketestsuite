@@ -170,7 +170,6 @@ generate_test(string utility)
     command = utility + " 2>&1";
     output = exec(command.c_str());
     add_noargs_testcase(utility, output, test_fstream);
-
     testcase_list.append("\tatf_add_test_case no_arguments\n");
   }
 
@@ -194,7 +193,7 @@ main()
     // Check if the test file exists.
     // In case the test file exists, confirm before proceeding.
     if (stat (test_file.c_str(), &buffer) == 0 && !flag) {
-      cout << "Test file(s) already exists. Overwrite? [Y/n] ";
+      cout << "Test file(s) already exists. Overwrite? [y/n] ";
       cin >> answer;
       switch (answer) {
         case 'n':

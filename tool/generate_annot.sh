@@ -29,7 +29,7 @@
 # Script for generating annotations based on generated tests.
 
 pwd=$(pwd)
-suffix="_test.sh"
+suffix="_test"
 extension=".sh"
 
 printf "Updated files:\n"
@@ -38,7 +38,7 @@ do
   annotations=""
   file=$(basename $f)
   test=${file%$extension}
-  utility=${file%$suffix}
+  utility=${test%$suffix}
   dir="/usr/tests/bin/$utility"
 
   (
@@ -54,9 +54,15 @@ do
 
     if [ "$check" != "$test" ]; then
       if [ "$annotations" ]; then
-	printf "$annotations" > "$pwd/annotations/$test.annot"
-	printf "\tannotations/$test.annot\n"
+	annotations_file="$pwd/annotations/$test.annot"
+	# Append only the new annotations
+	printf "$annotations" > "$annotations_file.temp"
+	echo $annotations_file
+	[ ! -e "$annotations_file" ] && touch "$annotations_file"
+	comm -13 "$annotations_file" "$annotations_file.temp" >> "$annotations_file" && printf "\tannotations/$test.annot\n"
+	rm -f "$annotations_file.temp"
       fi
+
       break
     fi
 
@@ -70,3 +76,5 @@ do
   )
 
 done
+
+printf "==============================================================================\n"
