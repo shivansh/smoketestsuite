@@ -38,56 +38,56 @@
 #include "add_testcase.h"
 #include "read_annotations.h"
 
-pair<string, int>
-exec(const char* cmd)
+std::pair<std::string, int>
+generate_test::exec(const char* cmd)
 {
-  array<char, 128> buffer;
-  string usage_output;
+  std::array<char, 128> buffer;
+  std::string usage_output;
   FILE* pipe = popen(cmd, "r");
 
-  if (!pipe) throw runtime_error("popen() failed!");
+  if (!pipe) throw std::runtime_error("popen() failed!");
   try {
     while (!feof(pipe)) {
-        if (fgets(buffer.data(), 128, pipe) != NULL)
+        if (std::fgets(buffer.data(), 128, pipe) != NULL)
             usage_output += buffer.data();
     }
   }
   catch(...) {
     pclose(pipe);
-    throw "Unable to execute the command: " + string(cmd);
+    throw "Unable to execute the command: " + std::string(cmd);
   }
 
-  return make_pair<string, int>
-         ((string)usage_output, WEXITSTATUS(pclose(pipe)));
+  return std::make_pair<std::string, int>
+         ((std::string)usage_output, WEXITSTATUS(pclose(pipe)));
 }
 
 void
-generate_test(string utility)
+generate_test::generate_test(std::string utility)
 {
-  list<utils::opt_rel*> ident_opt_list;  // List of identified option relations.
-  string test_file;             // atf-sh test name.
-  string testcase_list;         // List of testcases.
-  string command;               // Command to be executed in shell.
-  string descr;                 // Testcase description.
-  string testcase_buffer;       // Buffer for (temporarily) holding testcase data.
-  ofstream test_fstream;        // Output stream for the atf-sh test.
-  ifstream license_fstream;     // Input stream for license.
-  pair<string, int> output;     // Return value type for `exec()`.
-  unordered_set<char> annot;
+  std::list<utils::opt_rel*> ident_opt_list;  // List of identified option relations.
+  std::string test_file;             // atf-sh test name.
+  std::string testcase_list;         // List of testcases.
+  std::string command;               // Command to be executed in shell.
+  std::string descr;                 // Testcase description.
+  std::string testcase_buffer;       // Buffer for (temporarily) holding testcase data.
+  std::ofstream test_ofs;            // Output stream for the atf-sh test.
+  std::ifstream license_ifs;         // Input stream for license.
+  std::pair<std::string, int> output;     // Return value type for `exec()`.
+  std::unordered_set<char> annot;
 
   // Read annotations and populate hash set "annot".
-  read_annotations(utility, annot);
+  annotations::read_annotations(utility, annot);
 
   utils::opt_def f_opts;
   ident_opt_list = f_opts.check_opts(utility);
   test_file = "generated_tests/" + utility + "_test.sh";
 
   // Add license in the generated test scripts.
-  test_fstream.open(test_file, ios::out);
-  license_fstream.open("license", ios::in);
+  test_ofs.open(test_file, std::ios::out);
+  license_ifs.open("license", std::ios::in);
 
-  test_fstream << license_fstream.rdbuf();
-  license_fstream.close();
+  test_ofs << license_ifs.rdbuf();
+  license_ifs.close();
 
   // If a known option was encountered (i.e. `ident_opt_list` is
   // populated), produce a testcase to check the validity of the
@@ -99,15 +99,15 @@ generate_test(string utility)
   if (!ident_opt_list.empty()) {
     for (const auto &i : ident_opt_list) {
       command = utility + " -" + i->value + " 2>&1";
-      output = exec(command.c_str());
+      output = generate_test::exec(command.c_str());
       if (!output.first.compare(0, 6, "usage:")) {
-        add_known_testcase(i->value, utility, descr,
-                           output.first, test_fstream);
+        add_testcase::add_known_testcase(i->value, utility, descr,
+                                         output.first, test_ofs);
       }
       else {
         // A usage message was produced, i.e. we
         // failed to guess the correct usage.
-        add_unknown_testcase(i->value, utility, output.first, testcase_buffer);
+        add_testcase::add_unknown_testcase(i->value, utility, output.first, testcase_buffer);
       }
       testcase_list.append("\tatf_add_test_case " + i->value + "_flag\n");
     }
@@ -121,11 +121,11 @@ generate_test(string utility)
     // TODO Avoid multiple executions of an option
     for (const auto &i : f_opts.opt_list) {
       command = utility + " -" + i + " 2>&1";
-      output = exec(command.c_str());
+      output = generate_test::exec(command.c_str());
       if (!output.first.compare(0, 5, "usage") ||
           !output.first.compare(0, 5, "Usage") &&
           output.second) {
-        test_fstream << "usage_output=\'" + output.first + "\'\n\n";
+        test_ofs << "usage_output=\'" + output.first + "\'\n\n";
         break;
       }
     }
@@ -138,51 +138,51 @@ generate_test(string utility)
         continue;
 
       command = utility + " -" + i + " 2>&1";
-      output = exec(command.c_str());
+      output = generate_test::exec(command.c_str());
 
       if (output.second) {
         // Non-zero exit status was encountered.
-        add_unknown_testcase(string(1, i),
-                             utility, output.first, testcase_buffer);
+        add_testcase::add_unknown_testcase(std::string(1, i),
+                                           utility, output.first, testcase_buffer);
       }
       else {
         // EXIT_SUCCESS was encountered. Hence,
         // the guessed usage was correct.
-        add_known_testcase(string(1, i), utility,
-                           "", output.first, test_fstream);
-        testcase_list.append(string("\tatf_add_test_case ")
+        add_testcase::add_known_testcase(std::string(1, i), utility,
+                                         "", output.first, test_ofs);
+        testcase_list.append(std::string("\tatf_add_test_case ")
                             + i + "_flag\n");
       }
     }
 
     testcase_list.append("\tatf_add_test_case invalid_usage\n");
-    test_fstream << string("atf_test_case invalid_usage\ninvalid_usage_head()\n")
+    test_ofs << std::string("atf_test_case invalid_usage\ninvalid_usage_head()\n")
                   + "{\n\tatf_set \"descr\" \"Verify that an invalid usage "
                   + "with a supported option produces a valid error message"
                   + "\"\n}\n\ninvalid_usage_body()\n{";
 
-    test_fstream << testcase_buffer + "\n}\n\n";
+    test_ofs << testcase_buffer + "\n}\n\n";
   }
 
   // Add a testcase under "no_arguments" for
   // running the utility without any arguments.
   if (annot.find('*') == annot.end()) {
     command = utility + " 2>&1";
-    output = exec(command.c_str());
-    add_noargs_testcase(utility, output, test_fstream);
+    output = generate_test::exec(command.c_str());
+    add_testcase::add_noargs_testcase(utility, output, test_ofs);
     testcase_list.append("\tatf_add_test_case no_arguments\n");
   }
 
-  test_fstream << "atf_init_test_cases()\n{\n" + testcase_list + "}\n";
-  test_fstream.close();
+  test_ofs << "atf_init_test_cases()\n{\n" + testcase_list + "}\n";
+  test_ofs.close();
 }
 
 int
 main()
 {
   // TODO: Walk the src tree.
-  list<string> utility_list = { "date", "ln", "stdbuf" };
-  string test_file;     // atf-sh test name.
+  std::list<std::string> utility_list = { "date", "ln", "stdbuf" };
+  std::string test_file;     // atf-sh test name.
   struct stat buffer;
   char answer;          // User input to determine overwriting of test files.
   int flag = 0;
@@ -193,12 +193,12 @@ main()
     // Check if the test file exists.
     // In case the test file exists, confirm before proceeding.
     if (stat (test_file.c_str(), &buffer) == 0 && !flag) {
-      cout << "Test file(s) already exists. Overwrite? [y/n] ";
-      cin >> answer;
+      std::cout << "Test file(s) already exists. Overwrite? [y/n] ";
+      std::cin >> answer;
       switch (answer) {
         case 'n':
         case 'N':
-          cout << "Stopping execution!" << endl;
+          std::cout << "Stopping execution!" << std::endl;
           flag = 1;
           break;
         default:
@@ -207,7 +207,7 @@ main()
       }
     }
 
-    generate_test(util);
+    generate_test::generate_test(util);
   }
 
   return 0;

@@ -39,10 +39,10 @@ do
   file=$(basename $f)
   test=${file%$extension}
   utility=${test%$suffix}
-  dir="/usr/tests/bin/$utility"
+  test_dir="/usr/tests/bin/$utility"
 
   (
-  cd $dir
+  cd $test_dir
   report=$(kyua report)
   i=2
 

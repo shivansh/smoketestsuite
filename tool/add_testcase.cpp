@@ -30,13 +30,13 @@
 #include "add_testcase.h"
 
 void
-add_known_testcase(string option,
-                   string utility,
-                   string descr,
-                   string output,
-                   ofstream& test_script)
+add_testcase::add_known_testcase(std::string option,
+                                 std::string utility,
+                                 std::string descr,
+                                 std::string output,
+                                 std::ofstream& test_script)
 {
-  string testcase_name;
+  std::string testcase_name;
 
   // Add testcase name.
   test_script << "atf_test_case ";
@@ -73,10 +73,10 @@ add_known_testcase(string option,
 }
 
 void
-add_unknown_testcase(string option,
-                     string utility,
-                     string output,
-                     string& testcase_buffer)
+add_testcase::add_unknown_testcase(std::string option,
+                                   std::string utility,
+                                   std::string output,
+                                   std::string& testcase_buffer)
 {
   testcase_buffer.append("\n\tatf_check -s exit:1 -e ");
 
@@ -95,15 +95,15 @@ add_unknown_testcase(string option,
 }
 
 void
-add_noargs_testcase(string utility,
-                    pair<string, int> output,
-                    ofstream& test_script)
+add_testcase::add_noargs_testcase(std::string utility,
+                                  std::pair<std::string, int> output,
+                                  std::ofstream& test_script)
 {
-  string descr;
+  std::string descr;
 
   if (output.second) {
     // An error was encountered.
-    test_script << string("atf_test_case no_arguments\n")
+    test_script << std::string("atf_test_case no_arguments\n")
                   + "no_arguments_head()\n{\n\tatf_set \"descr\" ";
     if (!output.first.empty()) {
       // We expect a usage message to be generated in this case.
@@ -149,6 +149,6 @@ add_noargs_testcase(string utility,
             + " executes successfully and silently"
             + " when invoked without any arguments\"";
 
-    add_known_testcase("", utility, descr, output.first, test_script);
+    add_testcase::add_known_testcase("", utility, descr, output.first, test_script);
   }
 }

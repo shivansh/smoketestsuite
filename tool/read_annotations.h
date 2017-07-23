@@ -27,9 +27,9 @@
 
 #include <unordered_set>
 
-using namespace std;
-
-// Read the annotation files and skip
-// generation of the respective tests.
-void
-read_annotations(string, unordered_set<char>&);
+namespace annotations {
+  // Read the annotation files and skip
+  // generation of the respective tests.
+  void
+  read_annotations(std::string, std::unordered_set<char>&);
+}

@@ -46,41 +46,41 @@ utils::opt_def::insert_opts()
 
   // `opt_map` contains all the options
   // which can be "easily" tested.
-  opt_map.insert(make_pair<string, opt_rel>
+  opt_map.insert(std::make_pair<std::string, opt_rel>
                           ("h", (opt_rel)h_def));  // NOTE: Explicit typecast required here.
-  opt_map.insert(make_pair<string, opt_rel>
+  opt_map.insert(std::make_pair<std::string, opt_rel>
                           ("v", (opt_rel)v_def));
 };
 
-list<utils::opt_rel*>
-utils::opt_def::check_opts(string utility) {
-  string line;                      // An individual line in a man-page.
-  string opt_name;                  // Name of the option.
-  string opt_ident = ".It Fl";      // Identifier for an option in man page.
-  string buffer;                    // Option description extracted from man-page.
-  string opt_string;                // Identified option names.
+std::list<utils::opt_rel*>
+utils::opt_def::check_opts(std::string utility) {
+  std::string line;                      // An individual line in a man-page.
+  std::string opt_name;                  // Name of the option.
+  std::string opt_ident = ".It Fl";      // Identifier for an option in man page.
+  std::string buffer;                    // Option description extracted from man-page.
+  std::string opt_string;                // Identified option names.
   int opt_pos;                      // Starting index of the (identified) option.
-  list<opt_rel*> ident_opt_list;    // List of identified option definitions (opt_rel's).
+  std::list<opt_rel*> ident_opt_list;    // List of identified option definitions (opt_rel's).
 
   // Generate the hashmap opt_map.
   insert_opts();
 
   // TODO: Section number cannot be hardcoded.
-  ifstream infile("groff/" + utility + ".1");
+  std::ifstream infile("groff/" + utility + ".1");
 
   // Search for all the options accepted by the
   // utility and collect those present in `opt_map`.
-  while (getline(infile, line)) {
-    if ((opt_pos = line.find(opt_ident)) != string::npos) {
+  while (std::getline(infile, line)) {
+    if ((opt_pos = line.find(opt_ident)) != std::string::npos) {
       opt_pos += opt_ident.length() + 1;    // Locate the position of option name.
       opt_name = line.substr(opt_pos);
 
       // Check if the identified option matches the identifier.
       // `opt_list.back()` is the previously checked option, the
       // description of which is now stored in `buffer`.
-      if ((opt_map_iter = opt_map.find(string(1, opt_list.back())))
+      if ((opt_map_iter = opt_map.find(std::string(1, opt_list.back())))
                        != opt_map.end() &&
-          buffer.find((opt_map_iter->second).keyword) != string::npos) {
+          buffer.find((opt_map_iter->second).keyword) != std::string::npos) {
         ident_opt_list.push_back(&(opt_map_iter->second));
 
         // Since the usage of the option under test

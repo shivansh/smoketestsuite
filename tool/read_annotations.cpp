@@ -32,11 +32,12 @@
 #include "read_annotations.h"
 
 void
-read_annotations(string utility, unordered_set<char>& annot)
+annotations::read_annotations(std::string utility,
+                              std::unordered_set<char>& annot)
 {
-  string line;
+  std::string line;
   // TODO do this for all the annotation files
-  ifstream annot_fstream;
+  std::ifstream annot_fstream;
   annot_fstream.open("annotations/" + utility + "_test.annot");
 
   while (getline(annot_fstream, line)) {

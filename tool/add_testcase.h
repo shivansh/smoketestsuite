@@ -25,16 +25,16 @@
 //
 // $FreeBSD$
 
-using namespace std;
+namespace add_testcase {
+  // Add a test-case for an option with known usage.
+  void
+  add_known_testcase(std::string, std::string, std::string, std::string, std::ofstream&);
 
-// Add a test-case for an option with known usage.
-void
-add_known_testcase(string, string, string, string, ofstream&);
+  // Add a test-case for an option with unknown usage.
+  void
+  add_unknown_testcase(std::string, std::string, std::string, std::string&);
 
-// Add a test-case for an option with unknown usage.
-void
-add_unknown_testcase(string, string, string, string&);
-
-// Add a test-case for usage without any arguments.
-void
-add_noargs_testcase(string, pair<string, int>, ofstream&);
+  // Add a test-case for usage without any arguments.
+  void
+  add_noargs_testcase(std::string, std::pair<std::string, int>, std::ofstream&);
+}

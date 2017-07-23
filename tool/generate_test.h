@@ -27,21 +27,13 @@
 
 #include "utils.h"
 
-using namespace std;
+namespace generate_test {
+  // Execute passed string in shell and return
+  // its output and the return value.
+  std::pair<std::string, int>
+  exec(const char*);
 
-// Add a test-case for an option with known usage.
-void
-add_known_testcase(string, string, string, ofstream&);
-
-// Add a test-case for an option with unknown usage.
-void
-add_unknown_testcase(string, string, string, string&);
-
-// Execute passed string in shell and return
-// its output and the return value.
-pair<string, int>
-exec(const char*);
-
-// Generate a test for the given utility.
-void
-generate_test(string);
+  // Generate a test for the given utility.
+  void
+  generate_test(std::string);
+}
