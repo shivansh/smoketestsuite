@@ -27,7 +27,7 @@ An (in-progress) implementation of the automation tool briefly described [here](
 
 ### Instructions
 * The directory `tool/groff` should be populated with the relevant groff scripts before proceeding. These scripts are available in the FreeBSD src tree.  
-  **NOTE:** It should be noted that the directory [generated_tests](generated_tests) is already populated. Unless testing, there won't be a need to proceed to the next step.
+  **NOTE:** It should be noted that the directory [generated_tests](tool/generated_tests) is already populated with demo-tests. Unless testing, there won't be a need to proceed to the next step.
 
 * Execute the following commands inside [tool](tool) -
   ```
@@ -37,6 +37,7 @@ An (in-progress) implementation of the automation tool briefly described [here](
   The expected result (at the time of writing) should be generation of 3 atf-sh test files under [generated_tests](generated_tests).
 
 ## Generated tests
+**NOTE:** The generated tests are maintained at [shivrai/smoketests](https://github.com/shivrai/smoketests). The directory [generated_tests](tool/generated_tests) only contains a few demos.  
 The following table summarizes the type of test-cases produced for 3 (randomly chosen) utilities.
 
 |           **Test**            | **Positive test-cases** | **Negative test-cases** |
