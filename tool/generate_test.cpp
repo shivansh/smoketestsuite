@@ -26,7 +26,9 @@
 // $FreeBSD$
 
 #include <array>
+#include <boost/thread/thread.hpp>
 #include <cstdlib>
+#include <dirent.h>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -180,12 +182,27 @@ generate_test::generate_test(std::string utility)
 int
 main()
 {
-  // TODO: Walk the src tree.
-  std::list<std::string> utility_list = { "date", "ln", "stdbuf" };
+  std::ifstream groff_list;
+  std::list<std::string> utility_list;
   std::string test_file;  // atf-sh test name.
   struct stat buffer;
+  std::string util_name;
+  DIR *dir;
+  struct dirent *ent;
   char answer;            // User input to determine overwriting of test files.
   int flag = 0;
+
+  if ((dir = opendir("groff")) != NULL) {
+    while ((ent = readdir(dir)) != NULL) {
+      util_name = ent->d_name;
+      utility_list.push_back(util_name.substr(0, util_name.length()-2));
+    }
+    closedir(dir);
+  }
+  else {
+    fprintf(stderr, "Could not open directory: groff/");
+    return EXIT_FAILURE;
+  }
 
   for (const auto &util : utility_list) {
     test_file = "generated_tests/" + util + "_test.sh";
@@ -207,7 +224,16 @@ main()
       }
     }
 
-    generate_test::generate_test(util);
+    std::cout << "Generating test for: " + util << std::endl;
+
+    boost::thread api_caller(generate_test::generate_test, util);
+    if (api_caller.timed_join(boost::posix_time::seconds(10))) {
+      // API call returned within 10 seconds
+    }
+    else {
+      // API call timed out
+      continue;
+    }
   }
 
   return 0;
