@@ -44,6 +44,7 @@ annotations::read_annotations(std::string utility,
     // Add a unique identifier for no_arguments testcase
     if (!line.compare(0, 12, "no_arguments"))
       annot.insert('*');
+
     // Add flag value for supported argument testcases
     // Doing so we ignore the "invalid_usage" testcase
     // as it is guaranteed to always succeed.

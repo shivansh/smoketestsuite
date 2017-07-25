@@ -36,37 +36,36 @@ printf "Updated files:\n"
 for f in "generated_tests"/*
 do
   annotations=""
-  file=$(basename $f)
+  file=$(basename "$f")
   test=${file%$extension}
   utility=${test%$suffix}
   test_dir="/usr/tests/bin/$utility"
 
   (
-  cd $test_dir
+  cd "$test_dir" || exit
   report=$(kyua report)
   i=2
 
-  while [ 1 ]
+  while true
   do
-    testcase=$(printf "$report" | awk 'NR=='"$i"' {print $1}')
-    status=$(printf "$report" | awk 'NR=='"$i"' {print $3}')
-    check=$(printf "$testcase" | cut -s -f1 -d":")
+    testcase=$(printf "%s" "$report" | awk 'NR=='"$i"' {print $1}')
+    status=$(printf "%s" "$report" | awk 'NR=='"$i"' {print $3}')
+    check=$(printf "%s" "$testcase" | cut -s -f1 -d":")
 
     if [ "$check" != "$test" ]; then
       if [ "$annotations" ]; then
 	annotations_file="$pwd/annotations/$test.annot"
 	# Append only the new annotations
 	printf "$annotations" > "$annotations_file.temp"
-	echo $annotations_file
 	[ ! -e "$annotations_file" ] && touch "$annotations_file"
-	comm -13 "$annotations_file" "$annotations_file.temp" >> "$annotations_file" && printf "\tannotations/$test.annot\n"
+	comm -13 "$annotations_file" "$annotations_file.temp" >> "$annotations_file" && printf "\t%s\n" "annotations/$test.annot"
 	rm -f "$annotations_file.temp"
       fi
 
       break
     fi
 
-    if [ "$status" == "failed:" ]; then
+    if [ "$status" = "failed:" ]; then
       testcase=${testcase#"$test:"}
       annotations="$annotations$testcase\n"
     fi

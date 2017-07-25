@@ -142,8 +142,8 @@ generate_test::generate_test(std::string utility)
 
       if (output.second) {
         // Non-zero exit status was encountered.
-        add_testcase::add_unknown_testcase(std::string(1, i),
-                                           utility, output.first, testcase_buffer);
+        add_testcase::add_unknown_testcase(std::string(1, i), utility,
+                                           output.first, testcase_buffer);
       }
       else {
         // EXIT_SUCCESS was encountered. Hence,
@@ -182,9 +182,9 @@ main()
 {
   // TODO: Walk the src tree.
   std::list<std::string> utility_list = { "date", "ln", "stdbuf" };
-  std::string test_file;     // atf-sh test name.
+  std::string test_file;  // atf-sh test name.
   struct stat buffer;
-  char answer;          // User input to determine overwriting of test files.
+  char answer;            // User input to determine overwriting of test files.
   int flag = 0;
 
   for (const auto &util : utility_list) {
@@ -192,13 +192,13 @@ main()
 
     // Check if the test file exists.
     // In case the test file exists, confirm before proceeding.
-    if (stat (test_file.c_str(), &buffer) == 0 && !flag) {
+    if (!stat(test_file.c_str(), &buffer) && !flag) {
       std::cout << "Test file(s) already exists. Overwrite? [y/n] ";
       std::cin >> answer;
       switch (answer) {
         case 'n':
         case 'N':
-          std::cout << "Stopping execution!" << std::endl;
+          fprintf(stderr, "Stopping execution\n");
           flag = 1;
           break;
         default:
