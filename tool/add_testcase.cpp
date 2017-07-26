@@ -31,12 +31,14 @@
 
 void
 add_testcase::add_known_testcase(std::string option,
-                                 std::string utility,
+                                 std::string util_with_section,
                                  std::string descr,
                                  std::string output,
                                  std::ofstream& test_script)
 {
   std::string testcase_name;
+  std::string utility = util_with_section.substr(0,
+                        util_with_section.length() - 3);
 
   // Add testcase name.
   test_script << "atf_test_case ";
@@ -74,10 +76,13 @@ add_testcase::add_known_testcase(std::string option,
 
 void
 add_testcase::add_unknown_testcase(std::string option,
-                                   std::string utility,
+                                   std::string util_with_section,
                                    std::string output,
                                    std::string& testcase_buffer)
 {
+  std::string utility = util_with_section.substr(0,
+                        util_with_section.length() - 3);
+
   testcase_buffer.append("\n\tatf_check -s exit:1 -e ");
 
   // Check if a usage message was produced.
@@ -95,11 +100,13 @@ add_testcase::add_unknown_testcase(std::string option,
 }
 
 void
-add_testcase::add_noargs_testcase(std::string utility,
+add_testcase::add_noargs_testcase(std::string util_with_section,
                                   std::pair<std::string, int> output,
                                   std::ofstream& test_script)
 {
   std::string descr;
+  std::string utility = util_with_section.substr(0,
+                        util_with_section.length() - 3);
 
   if (output.second) {
     // An error was encountered.
@@ -108,7 +115,7 @@ add_testcase::add_noargs_testcase(std::string utility,
     if (!output.first.empty()) {
       // We expect a usage message to be generated in this case.
       if (!output.first.compare(0, 6, "usage:")) {
-        descr = "\"Verify that " + utility
+        descr = "\"Verify that " + util_with_section
               + " fails and generates a valid usage"
               + " message when no arguments are supplied\"";
 
@@ -117,21 +124,23 @@ add_testcase::add_noargs_testcase(std::string utility,
                       + utility;
       }
       else {
-        descr = "\"Verify that " + utility
+        descr = "\"Verify that " + util_with_section
               + " fails and generates a valid output"
               + " when no arguments are supplied\"";
 
         test_script << descr + "\n}\n\nno_arguments_body()\n{"
                       + "\n\tatf_check -s exit:1 -e inline:\'"
-                      + output.first + "\' " + utility;
+                      + output.first + "\' "
+                      + utility;
       }
     }
 
     else {
-      descr = "\"Verify that " + utility
+      descr = "\"Verify that " + util_with_section
             + "fails silently when no arguments are supplied\"" ;
       test_script << descr + "\n}\n\nno_arguments_body()\n{"
-                    + "\n\tatf_check -s exit:1 -e empty " + utility;
+                    + "\n\tatf_check -s exit:1 -e empty "
+                    + utility;
     }
 
     test_script << "\n}\n\n";
@@ -141,11 +150,11 @@ add_testcase::add_noargs_testcase(std::string utility,
     // The command ran successfully, hence we guessed
     // a correct usage for the utility under test.
     if (!output.first.empty())
-      descr = "\"Verify that " + utility
+      descr = "\"Verify that " + util_with_section
             + " executes successfully and produces a valid"
             + " output when invoked without any arguments\"";
     else
-      descr = "\"Verify that " + utility
+      descr = "\"Verify that " + util_with_section
             + " executes successfully and silently"
             + " when invoked without any arguments\"";
 

@@ -64,7 +64,7 @@ generate_test::exec(const char* cmd)
 }
 
 void
-generate_test::generate_test(std::string utility)
+generate_test::generate_test(std::string utility, std::string section)
 {
   std::list<utils::opt_rel*> ident_opt_list;  // List of identified option relations.
   std::string test_file;             // atf-sh test name.
@@ -72,6 +72,7 @@ generate_test::generate_test(std::string utility)
   std::string command;               // Command to be executed in shell.
   std::string descr;                 // Testcase description.
   std::string testcase_buffer;       // Buffer for (temporarily) holding testcase data.
+  std::string util_with_section;
   std::ofstream test_ofs;            // Output stream for the atf-sh test.
   std::ifstream license_ifs;         // Input stream for license.
   std::pair<std::string, int> output;     // Return value type for `exec()`.
@@ -79,6 +80,8 @@ generate_test::generate_test(std::string utility)
 
   // Read annotations and populate hash set "annot".
   annotations::read_annotations(utility, annot);
+
+  util_with_section = utility + '(' + section + ')';
 
   utils::opt_def f_opts;
   ident_opt_list = f_opts.check_opts(utility);
@@ -103,13 +106,14 @@ generate_test::generate_test(std::string utility)
       command = utility + " -" + i->value + " 2>&1";
       output = generate_test::exec(command.c_str());
       if (!output.first.compare(0, 6, "usage:")) {
-        add_testcase::add_known_testcase(i->value, utility, descr,
-                                         output.first, test_ofs);
+        add_testcase::add_known_testcase(i->value, util_with_section,
+                                         descr, output.first, test_ofs);
       }
       else {
         // A usage message was produced, i.e. we
         // failed to guess the correct usage.
-        add_testcase::add_unknown_testcase(i->value, utility, output.first, testcase_buffer);
+        add_testcase::add_unknown_testcase(i->value, util_with_section,
+                                           output.first, testcase_buffer);
       }
       testcase_list.append("\tatf_add_test_case " + i->value + "_flag\n");
     }
@@ -144,13 +148,13 @@ generate_test::generate_test(std::string utility)
 
       if (output.second) {
         // Non-zero exit status was encountered.
-        add_testcase::add_unknown_testcase(std::string(1, i), utility,
+        add_testcase::add_unknown_testcase(std::string(1, i), util_with_section,
                                            output.first, testcase_buffer);
       }
       else {
         // EXIT_SUCCESS was encountered. Hence,
         // the guessed usage was correct.
-        add_testcase::add_known_testcase(std::string(1, i), utility,
+        add_testcase::add_known_testcase(std::string(1, i), util_with_section,
                                          "", output.first, test_ofs);
         testcase_list.append(std::string("\tatf_add_test_case ")
                             + i + "_flag\n");
@@ -171,7 +175,7 @@ generate_test::generate_test(std::string utility)
   if (annot.find('*') == annot.end()) {
     command = utility + " 2>&1";
     output = generate_test::exec(command.c_str());
-    add_testcase::add_noargs_testcase(utility, output, test_ofs);
+    add_testcase::add_noargs_testcase(util_with_section, output, test_ofs);
     testcase_list.append("\tatf_add_test_case no_arguments\n");
   }
 
@@ -183,7 +187,7 @@ int
 main()
 {
   std::ifstream groff_list;
-  std::list<std::string> utility_list;
+  std::list<std::pair<std::string, std::string>> utility_list;
   std::string test_file;  // atf-sh test name.
   struct stat buffer;
   std::string util_name;
@@ -195,7 +199,9 @@ main()
   if ((dir = opendir("groff")) != NULL) {
     while ((ent = readdir(dir)) != NULL) {
       util_name = ent->d_name;
-      utility_list.push_back(util_name.substr(0, util_name.length()-2));
+      utility_list.push_back(std::make_pair<std::string, std::string>
+                            (util_name.substr(0, util_name.length() - 2),
+                             util_name.substr(util_name.length() - 1, 1)));
     }
     closedir(dir);
   }
@@ -205,7 +211,7 @@ main()
   }
 
   for (const auto &util : utility_list) {
-    test_file = "generated_tests/" + util + "_test.sh";
+    test_file = "generated_tests/" + util.first + "_test.sh";
 
     // Check if the test file exists.
     // In case the test file exists, confirm before proceeding.
@@ -224,11 +230,13 @@ main()
       }
     }
 
-    std::cout << "Generating test for: " + util << std::endl;
+    std::cout << "Generating test for: " + util.first
+               + '('+ util.second + ')' << " ...";
 
-    boost::thread api_caller(generate_test::generate_test, util);
+    boost::thread api_caller(generate_test::generate_test, util.first);
     if (api_caller.timed_join(boost::posix_time::seconds(10))) {
       // API call returned within 10 seconds
+      std::cout << "Successful!" << std::endl;
     }
     else {
       // API call timed out

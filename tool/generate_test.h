@@ -35,5 +35,5 @@ namespace generate_test {
 
   // Generate a test for the given utility.
   void
-  generate_test(std::string);
+  generate_test(std::string, std::string);
 }
