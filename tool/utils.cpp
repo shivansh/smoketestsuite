@@ -73,7 +73,14 @@ utils::opt_def::check_opts(std::string utility) {
   while (std::getline(infile, line)) {
     if ((opt_pos = line.find(opt_ident)) != std::string::npos) {
       opt_pos += opt_ident.length() + 1;    // Locate the position of option name.
-      opt_name = line.substr(opt_pos);
+
+      if (opt_pos > line.length()) {
+        // This condition will trigger when a utility
+        // supports an empty argument, e.g. tset(issue #9)
+        continue;
+      }
+      else
+        opt_name = line.substr(opt_pos);
 
       // Check if the identified option matches the identifier.
       // `opt_list.back()` is the previously checked option, the
