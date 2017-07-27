@@ -158,7 +158,7 @@ add_testcase::add_noargs_testcase(std::string util_with_section,
             + " executes successfully and silently"
             + " when invoked without any arguments\"";
 
-    add_testcase::add_known_testcase("", utility, descr,
+    add_testcase::add_known_testcase("", util_with_section, descr,
                                      output.first, test_script);
   }
 }
