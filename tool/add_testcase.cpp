@@ -65,7 +65,7 @@ add_testcase::add_known_testcase(std::string option,
 
   // Match the usage output if generated.
   if (!output.empty())
-    test_script << "inline:\'" + output + "\' ";
+    test_script << "inline:\"" + output + "\" ";
   else
     test_script << "empty ";
   test_script << utility;
@@ -89,7 +89,7 @@ add_testcase::add_unknown_testcase(std::string option,
   if (!output.compare(0, 6, "usage:"))
     testcase_buffer.append("inline:\"$usage_output\" ");
   else if (!output.empty())
-    testcase_buffer.append("inline:\'" + output + "\' ");
+    testcase_buffer.append("inline:\"" + output + "\" ");
   else
     testcase_buffer.append("empty ");
 
@@ -129,8 +129,8 @@ add_testcase::add_noargs_testcase(std::string util_with_section,
               + " when no arguments are supplied\"";
 
         test_script << descr + "\n}\n\nno_arguments_body()\n{"
-                      + "\n\tatf_check -s exit:1 -e inline:\'"
-                      + output.first + "\' "
+                      + "\n\tatf_check -s exit:1 -e inline:\""
+                      + output.first + "\" "
                       + utility;
       }
     }

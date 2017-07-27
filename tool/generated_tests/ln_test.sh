@@ -54,7 +54,7 @@ invalid_usage_body()
 atf_test_case no_arguments
 no_arguments_head()
 {
-	atf_set "descr" "Verify that ln fails and generates a valid usage message when no arguments are supplied"
+	atf_set "descr" "Verify that ln(1) fails and generates a valid usage message when no arguments are supplied"
 }
 
 no_arguments_body()

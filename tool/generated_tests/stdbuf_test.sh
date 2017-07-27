@@ -29,7 +29,7 @@
 atf_test_case no_arguments
 no_arguments_head()
 {
-	atf_set "descr" "Verify that stdbuf executes successfully and silently when invoked without any arguments"
+	atf_set "descr" "Verify that stdbuf(1) executes successfully and silently when invoked without any arguments"
 }
 
 no_arguments_body()

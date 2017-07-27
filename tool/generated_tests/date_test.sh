@@ -34,14 +34,14 @@ invalid_usage_head()
 
 invalid_usage_body()
 {
-	atf_check -s exit:1 -e inline:'date: option requires an argument -- f
+	atf_check -s exit:1 -e inline:"date: option requires an argument -- f
 usage: date [-jnRu] [-d dst] [-r seconds] [-t west] [-v[+|-]val[ymwdHMS]] ... 
             [-f fmt date | [[[[[cc]yy]mm]dd]HH]MM[.ss]] [+format]
-' date -f
-	atf_check -s exit:1 -e inline:'date: option requires an argument -- v
+" date -f
+	atf_check -s exit:1 -e inline:"date: option requires an argument -- v
 usage: date [-jnRu] [-d dst] [-r seconds] [-t west] [-v[+|-]val[ymwdHMS]] ... 
             [-f fmt date | [[[[[cc]yy]mm]dd]HH]MM[.ss]] [+format]
-' date -v
+" date -v
 }
 
 atf_init_test_cases()
