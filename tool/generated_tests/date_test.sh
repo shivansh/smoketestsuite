@@ -34,10 +34,26 @@ invalid_usage_head()
 
 invalid_usage_body()
 {
+	atf_check -s exit:1 -e inline:"date: option requires an argument -- d
+usage: date [-jnRu] [-d dst] [-r seconds] [-t west] [-v[+|-]val[ymwdHMS]] ... 
+            [-f fmt date | [[[[[cc]yy]mm]dd]HH]MM[.ss]] [+format]
+" date -d
 	atf_check -s exit:1 -e inline:"date: option requires an argument -- f
 usage: date [-jnRu] [-d dst] [-r seconds] [-t west] [-v[+|-]val[ymwdHMS]] ... 
             [-f fmt date | [[[[[cc]yy]mm]dd]HH]MM[.ss]] [+format]
 " date -f
+	atf_check -s exit:1 -e inline:"date: option requires an argument -- r
+usage: date [-jnRu] [-d dst] [-r seconds] [-t west] [-v[+|-]val[ymwdHMS]] ... 
+            [-f fmt date | [[[[[cc]yy]mm]dd]HH]MM[.ss]] [+format]
+" date -r
+	atf_check -s exit:1 -e inline:"date: option requires an argument -- r
+usage: date [-jnRu] [-d dst] [-r seconds] [-t west] [-v[+|-]val[ymwdHMS]] ... 
+            [-f fmt date | [[[[[cc]yy]mm]dd]HH]MM[.ss]] [+format]
+" date -r
+	atf_check -s exit:1 -e inline:"date: option requires an argument -- t
+usage: date [-jnRu] [-d dst] [-r seconds] [-t west] [-v[+|-]val[ymwdHMS]] ... 
+            [-f fmt date | [[[[[cc]yy]mm]dd]HH]MM[.ss]] [+format]
+" date -t
 	atf_check -s exit:1 -e inline:"date: option requires an argument -- v
 usage: date [-jnRu] [-d dst] [-r seconds] [-t west] [-v[+|-]val[ymwdHMS]] ... 
             [-f fmt date | [[[[[cc]yy]mm]dd]HH]MM[.ss]] [+format]

@@ -54,13 +54,15 @@ utils::opt_def::insert_opts()
 
 std::list<utils::opt_rel*>
 utils::opt_def::check_opts(std::string utility) {
-  std::string line;                      // An individual line in a man-page.
-  std::string opt_name;                  // Name of the option.
-  std::string opt_ident = ".It Fl";      // Identifier for an option in man page.
-  std::string buffer;                    // Option description extracted from man-page.
-  std::string opt_string;                // Identified option names.
-  int opt_pos;                      // Starting index of the (identified) option.
-  std::list<opt_rel*> ident_opt_list;    // List of identified option definitions (opt_rel's).
+  std::string line;                    // An individual line in a man-page.
+  std::string opt_name;                // Name of the option.
+  std::string opt_ident = ".It Fl";    // Identifier for an option in man page.
+  std::string buffer;                  // Option description extracted from man-page.
+  std::string opt_string;              // Identified option names.
+  int opt_pos;                         // Starting index of the (identified) option.
+  int space_index;                     // First occurrence of space character
+                                       // in a multi-word option definition.
+  std::list<opt_rel*> ident_opt_list;  // List of identified option relations (opt_rel's).
 
   // Generate the hashmap opt_map.
   insert_opts();
@@ -79,6 +81,12 @@ utils::opt_def::check_opts(std::string utility) {
         // supports an empty argument, e.g. tset(issue #9)
         continue;
       }
+
+      // Check for long options ; While here, also sanitize
+      // multi-word option definitions in a man page(issue #11)
+      if ((space_index = line.find(" ", opt_pos + 1, 1))
+                      != std::string::npos)
+        opt_name = line.substr(opt_pos, space_index - opt_pos);
       else
         opt_name = line.substr(opt_pos);
 
@@ -95,10 +103,8 @@ utils::opt_def::check_opts(std::string utility) {
         opt_list.pop_back();
       }
 
-      // Update the string of valid options. The list
-      // is currently populated with only short_options.
-      if (opt_name.size() == 1)
-        opt_list.append(opt_name);
+      // Update the string of valid options.
+      opt_list.append(opt_name);
 
       // Empty the buffer for next option's description.
       buffer.clear();

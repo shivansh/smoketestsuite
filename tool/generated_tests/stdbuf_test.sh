@@ -26,6 +26,25 @@
 # $FreeBSD$
 #
 
+atf_test_case invalid_usage
+invalid_usage_head()
+{
+	atf_set "descr" "Verify that an invalid usage with a supported option produces a valid error message"
+}
+
+invalid_usage_body()
+{
+	atf_check -s exit:1 -e inline:"stdbuf: option requires an argument -- e
+Usage: stdbuf [-e 0|L|<sz>] [-i 0|L|<sz>] [-o 0|L|<sz>] <cmd> [args ...]
+" stdbuf -e
+	atf_check -s exit:1 -e inline:"stdbuf: option requires an argument -- i
+Usage: stdbuf [-e 0|L|<sz>] [-i 0|L|<sz>] [-o 0|L|<sz>] <cmd> [args ...]
+" stdbuf -i
+	atf_check -s exit:1 -e inline:"stdbuf: option requires an argument -- o
+Usage: stdbuf [-e 0|L|<sz>] [-i 0|L|<sz>] [-o 0|L|<sz>] <cmd> [args ...]
+" stdbuf -o
+}
+
 atf_test_case no_arguments
 no_arguments_head()
 {
@@ -39,5 +58,6 @@ no_arguments_body()
 
 atf_init_test_cases()
 {
+	atf_add_test_case invalid_usage
 	atf_add_test_case no_arguments
 }
