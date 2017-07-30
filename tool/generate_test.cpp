@@ -67,14 +67,15 @@ void
 generate_test::generate_test(std::string utility, std::string section)
 {
   std::list<utils::opt_rel*> ident_opt_list;  // List of identified option relations.
-  std::string test_file;             // atf-sh test name.
-  std::string testcase_list;         // List of testcases.
-  std::string command;               // Command to be executed in shell.
-  std::string descr;                 // Testcase description.
-  std::string testcase_buffer;       // Buffer for (temporarily) holding testcase data.
+  std::list<std::string> usage_messages;  // List to store (two) usage messages for comparision
+  std::string test_file;                  // atf-sh test name.
+  std::string testcase_list;              // List of testcases.
+  std::string command;                    // Command to be executed in shell.
+  std::string descr;                      // Testcase description.
+  std::string testcase_buffer;            // Buffer for (temporarily) holding testcase data.
   std::string util_with_section;
-  std::ofstream test_ofs;            // Output stream for the atf-sh test.
-  std::ifstream license_ifs;         // Input stream for license.
+  std::ofstream test_ofs;                 // Output stream for the atf-sh test.
+  std::ifstream license_ifs;              // Input stream for license.
   std::pair<std::string, int> output;     // Return value type for `exec()`.
   std::unordered_set<std::string> annot;
 
@@ -128,9 +129,12 @@ generate_test::generate_test(std::string utility, std::string section)
     for (const auto &i : f_opts.opt_list) {
       command = utility + " -" + i + " 2>&1";
       output = generate_test::exec(command.c_str());
-      if (!output.first.compare(0, 5, "usage") ||
-          !output.first.compare(0, 5, "Usage") &&
-          output.second) {
+
+      if (output.second && usage_messages.size() < 2)
+        usage_messages.push_back(output.first);
+
+      else if (usage_messages.size() == 2 &&
+              !usage_messages.front().compare(usage_messages.back())) {
         test_ofs << "usage_output=\'" + output.first + "\'\n\n";
         break;
       }
