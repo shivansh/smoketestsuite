@@ -31,5 +31,5 @@ namespace annotations {
   // Read the annotation files and skip
   // generation of the respective tests.
   void
-  read_annotations(std::string, std::unordered_set<char>&);
+  read_annotations(std::string, std::unordered_set<std::string>&);
 }

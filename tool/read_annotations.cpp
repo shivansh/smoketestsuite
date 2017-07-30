@@ -33,7 +33,7 @@
 
 void
 annotations::read_annotations(std::string utility,
-                              std::unordered_set<char>& annot)
+                              std::unordered_set<std::string>& annot)
 {
   std::string line;
   // TODO do this for all the annotation files
@@ -43,13 +43,13 @@ annotations::read_annotations(std::string utility,
   while (getline(annot_fstream, line)) {
     // Add a unique identifier for no_arguments testcase
     if (!line.compare(0, 12, "no_arguments"))
-      annot.insert('*');
+      annot.insert("*");
 
     // Add flag value for supported argument testcases
     // Doing so we ignore the "invalid_usage" testcase
     // as it is guaranteed to always succeed.
     else if (!line.compare(2, 4, "flag"))
-      annot.insert(line[0]);
+      annot.insert(line.substr(0, 1));
   }
 
   annot_fstream.close();

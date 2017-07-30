@@ -26,7 +26,7 @@
 // $FreeBSD$
 
 #include <array>
-#include <boost/thread/thread.hpp>
+#include <boost/thread.hpp>
 #include <cstdlib>
 #include <dirent.h>
 #include <fstream>
@@ -76,7 +76,7 @@ generate_test::generate_test(std::string utility, std::string section)
   std::ofstream test_ofs;            // Output stream for the atf-sh test.
   std::ifstream license_ifs;         // Input stream for license.
   std::pair<std::string, int> output;     // Return value type for `exec()`.
-  std::unordered_set<char> annot;
+  std::unordered_set<std::string> annot;
 
   // Read annotations and populate hash set "annot".
   annotations::read_annotations(utility, annot);
@@ -148,13 +148,13 @@ generate_test::generate_test(std::string utility, std::string section)
 
       if (output.second) {
         // Non-zero exit status was encountered.
-        add_testcase::add_unknown_testcase(std::string(1, i), util_with_section,
+        add_testcase::add_unknown_testcase(i, util_with_section,
                                            output.first, testcase_buffer);
       }
       else {
         // EXIT_SUCCESS was encountered. Hence,
         // the guessed usage was correct.
-        add_testcase::add_known_testcase(std::string(1, i), util_with_section,
+        add_testcase::add_known_testcase(i, util_with_section,
                                          "", output.first, test_ofs);
         testcase_list.append(std::string("\tatf_add_test_case ")
                             + i + "_flag\n");
@@ -172,7 +172,7 @@ generate_test::generate_test(std::string utility, std::string section)
 
   // Add a testcase under "no_arguments" for
   // running the utility without any arguments.
-  if (annot.find('*') == annot.end()) {
+  if (annot.find("*") == annot.end()) {
     command = utility + " 2>&1";
     output = generate_test::exec(command.c_str());
     add_testcase::add_noargs_testcase(util_with_section, output, test_ofs);
@@ -196,18 +196,22 @@ main()
   char answer;            // User input to determine overwriting of test files.
   int flag = 0;
 
-  if ((dir = opendir("groff")) != NULL) {
-    while ((ent = readdir(dir)) != NULL) {
-      util_name = ent->d_name;
-      utility_list.push_back(std::make_pair<std::string, std::string>
-                            (util_name.substr(0, util_name.length() - 2),
-                             util_name.substr(util_name.length() - 1, 1)));
+  // For testing (or generating tests for only selected utilities),
+  // the utility_list can be populated above during declaration.
+  if (utility_list.empty()) {
+    if ((dir = opendir("groff")) != NULL) {
+      while ((ent = readdir(dir)) != NULL) {
+        util_name = ent->d_name;
+        utility_list.push_back(std::make_pair<std::string, std::string>
+                              (util_name.substr(0, util_name.length() - 2),
+                               util_name.substr(util_name.length() - 1, 1)));
+      }
+      closedir(dir);
     }
-    closedir(dir);
-  }
-  else {
-    fprintf(stderr, "Could not open directory: groff/");
-    return EXIT_FAILURE;
+    else {
+      fprintf(stderr, "Could not open directory: groff/");
+      return EXIT_FAILURE;
+    }
   }
 
   for (const auto &util : utility_list) {

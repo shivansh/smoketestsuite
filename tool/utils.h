@@ -41,8 +41,7 @@ namespace utils {
 
   class opt_def {
     public:
-      // TODO: Add support for long_opts
-      std::string opt_list;    // string of all the accepted options with unknown usage.
+      std::list<std::string> opt_list;    // list of all the accepted options with unknown usage.
 
       std::unordered_map<std::string, opt_rel> opt_map;   // Map "option value" to "option definition".
       std::unordered_map<std::string, opt_rel>::iterator opt_map_iter;

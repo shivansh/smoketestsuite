@@ -83,7 +83,9 @@ utils::opt_def::check_opts(std::string utility) {
       }
 
       // Check for long options ; While here, also sanitize
-      // multi-word option definitions in a man page(issue #11)
+      // multi-word option definitions in a man page to properly
+      // extract short options from option definitions such as:
+      // .It Fl r Ar seconds (taken from date(1)).
       if ((space_index = line.find(" ", opt_pos + 1, 1))
                       != std::string::npos)
         opt_name = line.substr(opt_pos, space_index - opt_pos);
@@ -93,7 +95,8 @@ utils::opt_def::check_opts(std::string utility) {
       // Check if the identified option matches the identifier.
       // `opt_list.back()` is the previously checked option, the
       // description of which is now stored in `buffer`.
-      if ((opt_map_iter = opt_map.find(std::string(1, opt_list.back())))
+      if (!opt_list.empty() &&
+          (opt_map_iter = opt_map.find(opt_list.back()))
                        != opt_map.end() &&
           buffer.find((opt_map_iter->second).keyword) != std::string::npos) {
         ident_opt_list.push_back(&(opt_map_iter->second));
@@ -103,8 +106,8 @@ utils::opt_def::check_opts(std::string utility) {
         opt_list.pop_back();
       }
 
-      // Update the string of valid options.
-      opt_list.append(opt_name);
+      // Update the list of valid options.
+      opt_list.push_back(opt_name);
 
       // Empty the buffer for next option's description.
       buffer.clear();
