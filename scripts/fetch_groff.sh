@@ -26,13 +26,14 @@
 #
 # Script for listing location of groff scripts of utilities in section 1
 
+set -e
 
 src="$HOME/freebsd"
 dir_list="$HOME/source-codes/smoketestsuite/scripts/utils_list"
 groff_list="$HOME/source-codes/smoketestsuite/scripts/groff_list"
 
 rm -f "$groff_list.1" && touch "$groff_list.1"
-cd "$src" || exit
+cd "$src"
 
 while IFS= read -r dir_entry
 do

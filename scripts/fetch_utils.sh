@@ -29,7 +29,7 @@
 set -e
 
 fetch_utils() {
-  cd "$path" || exit
+  cd "$path"
   find . -name Makefile | xargs grep -l 'PROG\|PROG_CXX' \
                         | sed -e 's|/Makefile$||' | cut -c 3-
 }
