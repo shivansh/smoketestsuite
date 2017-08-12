@@ -4,11 +4,10 @@
 
 CC 	= g++
 CFLAGS 	= -I. -std=c++11
-LIBS = -L/usr/local/lib -lboost_system -lboost_thread
 OBJS 	= utils.o read_annotations.o add_testcase.o generate_test.o
 
 generate_test 	: $(OBJS)
-	$(CC) $(CFLAGS) $(LIBS) -o $(.TARGET) $(.ALLSRC)
+	$(CC) $(CFLAGS) -o $(.TARGET) $(.ALLSRC)
 
 $(OBJS) 	: $(.PREFIX).cpp $(.PREFIX).h
 	$(CC) $(CFLAGS) -c $(.PREFIX).cpp
