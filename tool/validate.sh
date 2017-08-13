@@ -26,10 +26,16 @@
 #
 # Script for validating side-effects of newly introduced changes.
 
+remote=origin
+
 git checkout testing
-git pull --rebase origin master
+if [ $? != 0 ]; then
+  git fetch && git checkout $remote/testing && git checkout -b testing
+fi
+
+git pull --rebase $remote master
 git status | grep -q generated_tests
-if [ $? ]; then
+if [ $? != 0 ]; then
   echo "
   +----------------------------------+
   | New changes have no side-effects |
