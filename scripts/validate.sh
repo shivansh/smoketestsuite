@@ -34,6 +34,11 @@ if [ $? != 0 ]; then
 fi
 
 git pull --rebase $remote master
+
+# Generate tests
+make
+echo 'y\n' | make run
+
 git status | grep -q generated_tests
 if [ $? != 0 ]; then
   echo "

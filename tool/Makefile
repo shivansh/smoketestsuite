@@ -28,4 +28,4 @@ run:
 	./generate_tests
 
 validate_changes:
-	. ../scripts/validate.sh
+	sh ../scripts/validate.sh
