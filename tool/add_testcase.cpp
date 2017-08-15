@@ -78,12 +78,17 @@ void
 add_testcase::add_unknown_testcase(std::string option,
                                    std::string util_with_section,
                                    std::string output,
+                                   int exitstatus,
                                    std::string& testcase_buffer)
 {
   std::string utility = util_with_section.substr(0,
                         util_with_section.length() - 3);
 
-  testcase_buffer.append("\n\tatf_check -s exit:1 -e ");
+  testcase_buffer.append("\n\tatf_check -s ");
+  if (exitstatus == 1)
+    testcase_buffer.append("exit:1 -e ");
+  else
+    testcase_buffer.append("not-exit:0 -e ");
 
   // Check if a usage message was produced.
   if (!output.compare(0, 6, "usage:"))

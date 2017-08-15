@@ -48,11 +48,11 @@ generate_test::exec(const char* cmd)
 
   if (!pipe) throw std::runtime_error("popen() failed!");
   try {
-    while (!feof(pipe)) {
-        if (std::fgets(buffer.data(), 128, pipe) != NULL)
-            usage_output += buffer.data();
-    }
+    while (!feof(pipe))
+      if (std::fgets(buffer.data(), 128, pipe) != NULL)
+        usage_output += buffer.data();
   }
+
   catch(...) {
     pclose(pipe);
     throw "Unable to execute the command: " + std::string(cmd);
@@ -66,16 +66,16 @@ void
 generate_test::generate_test(std::string utility, std::string section)
 {
   std::list<utils::opt_rel*> ident_opt_list;  // List of identified option relations.
-  std::list<std::string> usage_messages;  // List to store (two) usage messages for comparision
-  std::string test_file;                  // atf-sh test name.
-  std::string testcase_list;              // List of testcases.
-  std::string command;                    // Command to be executed in shell.
-  std::string descr;                      // Testcase description.
-  std::string testcase_buffer;            // Buffer for (temporarily) holding testcase data.
+  std::list<std::string> usage_messages;      // List to store usage messages for comparison.
+  std::string test_file;                      // atf-sh test name.
+  std::string testcase_list;                  // List of testcases.
+  std::string command;                        // Command to be executed in shell.
+  std::string descr;                          // Testcase description.
+  std::string testcase_buffer;                // Buffer for (temporarily) holding testcase data.
   std::string util_with_section;
-  std::ofstream test_ofs;                 // Output stream for the atf-sh test.
-  std::ifstream license_ifs;              // Input stream for license.
-  std::pair<std::string, int> output;     // Return value type for `exec()`.
+  std::ofstream test_ofs;                     // Output stream for the atf-sh test.
+  std::ifstream license_ifs;                  // Input stream for license.
+  std::pair<std::string, int> output;         // Return value type for `exec()`.
   std::unordered_set<std::string> annot;
 
   // Read annotations and populate hash set "annot".
@@ -112,8 +112,8 @@ generate_test::generate_test(std::string utility, std::string section)
       else {
         // A usage message was produced, i.e. we
         // failed to guess the correct usage.
-        add_testcase::add_unknown_testcase(i->value, util_with_section,
-                                           output.first, testcase_buffer);
+        add_testcase::add_unknown_testcase(i->value, util_with_section, output.first,
+                                           output.second, testcase_buffer);
       }
       testcase_list.append("\tatf_add_test_case " + i->value + "_flag\n");
     }
@@ -151,8 +151,8 @@ generate_test::generate_test(std::string utility, std::string section)
 
       if (output.second) {
         // Non-zero exit status was encountered.
-        add_testcase::add_unknown_testcase(i, util_with_section,
-                                           output.first, testcase_buffer);
+        add_testcase::add_unknown_testcase(i, util_with_section, output.first,
+                                           output.second, testcase_buffer);
       }
       else {
         // EXIT_SUCCESS was encountered. Hence,
@@ -166,9 +166,9 @@ generate_test::generate_test(std::string utility, std::string section)
 
     testcase_list.append("\tatf_add_test_case invalid_usage\n");
     test_ofs << std::string("atf_test_case invalid_usage\ninvalid_usage_head()\n")
-                  + "{\n\tatf_set \"descr\" \"Verify that an invalid usage "
-                  + "with a supported option produces a valid error message"
-                  + "\"\n}\n\ninvalid_usage_body()\n{";
+                          + "{\n\tatf_set \"descr\" \"Verify that an invalid usage "
+                          + "with a supported option produces a valid error message"
+                          + "\"\n}\n\ninvalid_usage_body()\n{";
 
     test_ofs << testcase_buffer + "\n}\n\n";
   }
@@ -192,18 +192,18 @@ main()
   std::ifstream groff_list;
   std::list<std::pair<std::string, std::string>> utility_list;
   std::string test_file;  // atf-sh test name.
-  struct stat buffer;
   std::string util_name;
-  DIR *dir;
+  struct stat buffer;
   struct dirent *ent;
+  DIR *dir;
   char answer;            // User input to determine overwriting of test files.
   int flag = 0;
 
   // For testing (or generating tests for only selected utilities),
   // the utility_list can be populated above during declaration.
   if (utility_list.empty()) {
-    if ((dir = opendir("groff")) != NULL) {
-      while ((ent = readdir(dir)) != NULL) {
+    if (dir = opendir("groff")) {
+      while (ent = readdir(dir)) {
         util_name = ent->d_name;
         utility_list.push_back(std::make_pair<std::string, std::string>
                               (util_name.substr(0, util_name.length() - 2),
@@ -231,9 +231,11 @@ main()
           fprintf(stderr, "Stopping execution\n");
           flag = 1;
           break;
+
         default:
           // TODO capture newline character
           flag = 1;
+          break;
       }
     }
 

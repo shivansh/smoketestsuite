@@ -32,7 +32,7 @@ namespace add_testcase {
 
   // Add a test-case for an option with unknown usage.
   void
-  add_unknown_testcase(std::string, std::string, std::string, std::string&);
+  add_unknown_testcase(std::string, std::string, std::string, int, std::string&);
 
   // Add a test-case for usage without any arguments.
   void

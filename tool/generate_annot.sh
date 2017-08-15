@@ -31,8 +31,15 @@
 pwd=$(pwd)
 suffix="_test"
 extension=".sh"
+update_check=0
 
-printf "Updated files:\n"
+message="Following annotation files were updated. \n"
+
+printf "
++--------------------------------------------------+
+| Checking if any annotation file is to be updated |
++--------------------------------------------------+\n"
+
 for f in "generated_tests"/*
 do
   annotations=""
@@ -54,6 +61,10 @@ do
 
     if [ "$check" != "$test" ]; then
       if [ "$annotations" ]; then
+	if [ $update_check = 0 ]; then
+	  printf $message
+	  update_check=1
+	fi
 	annotations_file="$pwd/annotations/$test.annot"
 	# Append only the new annotations
 	printf "$annotations" > "$annotations_file.temp"
@@ -76,4 +87,4 @@ do
 
 done
 
-printf "==============================================================================\n"
+printf "==============================================================================\n\n"
