@@ -124,18 +124,34 @@ generate_test::generate_test(std::string utility, std::string section)
 
     // For the purpose of adding a "$usage_output" variable,
     // we choose the option which produces one.
-    // TODO Avoid multiple executions of an option
-    for (const auto &i : f_opts.opt_list) {
-      command = utility + " -" + i + " 2>&1";
+    // TODO Avoid double executions of an option, i.e. one while
+    // selecting usage message and another while generating testcase.
+
+    if (f_opts.opt_list.size() == 1) {
+      // Utility supports a single option, check if it produces a usage message.
+      command = utility + " -" + f_opts.opt_list.front() + " 2>&1";
       output = generate_test::exec(command.c_str());
 
-      if (output.second && usage_messages.size() < 2)
-        usage_messages.push_back(output.first);
-
-      else if (usage_messages.size() == 2 &&
-              !usage_messages.front().compare(usage_messages.back())) {
+      if (output.second)
         test_ofs << "usage_output=\'" + output.first + "\'\n\n";
-        break;
+    }
+
+    else {
+      // Utility supports multiple options. In case the usage message
+      // is consistent for atleast "two" options, we assume that it will
+      // be same for "all" the options.
+      for (const auto &i : f_opts.opt_list) {
+        command = utility + " -" + i + " 2>&1";
+        output = generate_test::exec(command.c_str());
+
+        if (output.second && usage_messages.size() < 2)
+          usage_messages.push_back(output.first);
+
+        if (usage_messages.size() == 2 &&
+            !usage_messages.front().compare(usage_messages.back())) {
+          test_ofs << "usage_output=\'" + output.first + "\'\n\n";
+          break;
+        }
       }
     }
 
