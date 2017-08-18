@@ -33,7 +33,7 @@ if [ $? != 0 ]; then
   git fetch && git checkout $remote/testing && git checkout -b testing
 fi
 
-git pull --rebase $remote master
+git rebase master
 
 # Generate tests
 make
