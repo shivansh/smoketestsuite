@@ -88,7 +88,7 @@ add_testcase::add_unknown_testcase(std::string option,
 
   // Check if a usage message was produced.
   if (!output.compare(0, 6, "usage:"))
-    testcase_buffer.append("regex:\"$usage_output\" ");
+    testcase_buffer.append("match:\"$usage_output\" ");
   else if (!output.empty())
     testcase_buffer.append("inline:\"" + output + "\" ");
   else
@@ -121,7 +121,7 @@ add_testcase::add_noargs_testcase(std::string util_with_section,
               + " message when no arguments are supplied\"";
 
         test_script << descr + "\n}\n\nno_arguments_body()\n{"
-                      + "\n\tatf_check -s not-exit:0 -e regex:\"$usage_output\" "
+                      + "\n\tatf_check -s not-exit:0 -e match:\"$usage_output\" "
                       + utility;
       }
       else {
