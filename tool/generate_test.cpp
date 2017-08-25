@@ -149,7 +149,7 @@ generate_test::generate_test(std::string utility, std::string section)
 
         if (usage_messages.size() == 2 &&
             !usage_messages.front().compare(usage_messages.back())) {
-          test_ofs << "usage_output=\'" + output.first + "\'\n\n";
+          test_ofs << "usage_output=\'" + output.first.substr(0, 7 + utility.size()) + "\'\n\n";
           break;
         }
       }
