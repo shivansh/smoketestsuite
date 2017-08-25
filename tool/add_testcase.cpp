@@ -84,11 +84,7 @@ add_testcase::add_unknown_testcase(std::string option,
   std::string utility = util_with_section.substr(0,
                         util_with_section.length() - 3);
 
-  testcase_buffer.append("\n\tatf_check -s ");
-  if (exitstatus == 1)
-    testcase_buffer.append("exit:1 -e ");
-  else
-    testcase_buffer.append("not-exit:0 -e ");
+  testcase_buffer.append("\n\tatf_check -s not-exit:0 -e ");
 
   // Check if a usage message was produced.
   if (!output.compare(0, 6, "usage:"))
@@ -125,7 +121,7 @@ add_testcase::add_noargs_testcase(std::string util_with_section,
               + " message when no arguments are supplied\"";
 
         test_script << descr + "\n}\n\nno_arguments_body()\n{"
-                      + "\n\tatf_check -s exit:1 -e regex:\"$usage_output\" "
+                      + "\n\tatf_check -s not-exit:0 -e regex:\"$usage_output\" "
                       + utility;
       }
       else {
@@ -134,7 +130,7 @@ add_testcase::add_noargs_testcase(std::string util_with_section,
               + " when no arguments are supplied\"";
 
         test_script << descr + "\n}\n\nno_arguments_body()\n{"
-                      + "\n\tatf_check -s exit:1 -e inline:\""
+                      + "\n\tatf_check -s not-exit:0 -e inline:\""
                       + output.first + "\" "
                       + utility;
       }
@@ -144,7 +140,7 @@ add_testcase::add_noargs_testcase(std::string util_with_section,
       descr = "\"Verify that " + util_with_section
             + "fails silently when no arguments are supplied\"" ;
       test_script << descr + "\n}\n\nno_arguments_body()\n{"
-                    + "\n\tatf_check -s exit:1 -e empty "
+                    + "\n\tatf_check -s not-exit:0 -e empty "
                     + utility;
     }
 
