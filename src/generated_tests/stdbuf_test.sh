@@ -34,13 +34,13 @@ invalid_usage_head()
 
 invalid_usage_body()
 {
-	atf_check -s exit:1 -e inline:"stdbuf: option requires an argument -- e
+	atf_check -s not-exit:0 -e inline:"stdbuf: option requires an argument -- e
 Usage: stdbuf [-e 0|L|<sz>] [-i 0|L|<sz>] [-o 0|L|<sz>] <cmd> [args ...]
 " stdbuf -e
-	atf_check -s exit:1 -e inline:"stdbuf: option requires an argument -- i
+	atf_check -s not-exit:0 -e inline:"stdbuf: option requires an argument -- i
 Usage: stdbuf [-e 0|L|<sz>] [-i 0|L|<sz>] [-o 0|L|<sz>] <cmd> [args ...]
 " stdbuf -i
-	atf_check -s exit:1 -e inline:"stdbuf: option requires an argument -- o
+	atf_check -s not-exit:0 -e inline:"stdbuf: option requires an argument -- o
 Usage: stdbuf [-e 0|L|<sz>] [-i 0|L|<sz>] [-o 0|L|<sz>] <cmd> [args ...]
 " stdbuf -o
 }

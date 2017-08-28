@@ -214,7 +214,13 @@ int
 main()
 {
   std::ifstream groff_list;
-  std::list<std::pair<std::string, std::string>> utility_list;
+  std::list<std::pair<std::string, std::string>> utility_list = {
+    std::make_pair<std::string, std::string>("stdbuf", "1"),
+    std::make_pair<std::string, std::string>("date", "1"),
+    std::make_pair<std::string, std::string>("ln", "1"),
+    std::make_pair<std::string, std::string>("mkdir", "1"),
+    std::make_pair<std::string, std::string>("rmdir", "1")
+  };
   std::string test_file;  // atf-sh test name.
   std::string util_name;  // Utility name.
   struct stat buffer;
