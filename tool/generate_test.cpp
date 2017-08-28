@@ -26,6 +26,7 @@
 // $FreeBSD$
 
 #include <array>
+#include <boost/thread.hpp>
 #include <cstdlib>
 #include <dirent.h>
 #include <fstream>
@@ -258,7 +259,15 @@ main()
     std::cout << "Generating test for: " + util.first
                + '('+ util.second + ')' << " ...";
 
-    generate_test::generate_test(util.first, util.second);
+    boost::thread api_caller(generate_test::generate_test, util.first, util.second);
+    if (api_caller.timed_join(boost::posix_time::milliseconds(1000))) {
+      // API call returned withing 1 second.
+      std::cout << "Successful\n";
+    }
+    else {
+      // API call timed out.
+      std::cout << "Failed!\n";
+    }
   }
 
   return 0;
