@@ -219,8 +219,8 @@ main()
   // For testing (or generating tests for only selected utilities),
   // the utility_list can be populated above during declaration.
   if (utility_list.empty()) {
-    if (dir = opendir("groff")) {
-      while (ent = readdir(dir)) {
+    if ((dir = opendir("groff"))) {
+      while ((ent = readdir(dir))) {
         util_name = ent->d_name;
         utility_list.push_back(std::make_pair<std::string, std::string>
                               (util_name.substr(0, util_name.length() - 2),
