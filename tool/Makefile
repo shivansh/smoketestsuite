@@ -2,7 +2,7 @@
 #
 # Makefile for building automation tool
 
-CC 	= clang++
+CC 	= c++
 CFLAGS	= -I /usr/local/include -std=c++11
 LIBS 	= -L/usr/local/lib -lboost_system -lboost_thread
 OBJS 	= utils.o read_annotations.o add_testcase.o generate_test.o
