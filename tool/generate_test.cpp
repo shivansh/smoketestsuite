@@ -80,6 +80,7 @@ generate_test::generate_test(std::string utility, std::string section)
   std::ifstream license_ifs;                  // Input stream for license.
   std::pair<std::string, int> output;         // Return value type for `exec()`.
   std::unordered_set<std::string> annot;      // Hashset of utility specific annotations.
+  int temp;
 
   // Read annotations and populate hash set "annot".
   annotations::read_annotations(utility, annot);
@@ -151,8 +152,9 @@ generate_test::generate_test(std::string utility, std::string section)
           usage_messages.push_back(output.first);
       }
 
-      for (int j = 0; j <= 3; j++) {
-        if (!(usage_messages[j]).compare(usage_messages[(j+1) % 3])) {
+      temp = usage_messages.size();
+      for (int j = 0; j < temp; j++) {
+        if (!(usage_messages.at(j)).compare(usage_messages.at((j+1) % temp))) {
           test_ofs << "usage_output=\'"
                     + output.first.substr(0, 7 + utility.size())
                     + "\'\n\n";
@@ -267,12 +269,14 @@ main()
 
     boost::thread api_caller(generate_test::generate_test, util.first, util.second);
     if (api_caller.timed_join(boost::posix_time::seconds(1))) {
-      // API call returned withing 1 second.
+      // API call returned within 1 second.
       std::cout << "Successful\n";
     }
     else {
       // API call timed out.
       std::cout << "Failed!\n";
+      // Remove the incomplete test file.
+      remove(("generated_tests/" + util.first + "_test.sh").c_str());
     }
   }
 
