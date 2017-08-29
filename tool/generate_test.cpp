@@ -43,17 +43,19 @@
 std::pair<std::string, int>
 generate_test::exec(const char* cmd)
 {
-  std::array<char, 128> buffer;
+  const int bufsize = 128;
+  std::array<char, bufsize> buffer;
   std::string usage_output;
   FILE* pipe = popen(cmd, "r");
 
-  if (!pipe) throw std::runtime_error("popen() failed!");
+  if (!pipe)
+    throw std::runtime_error("popen() failed!");
+
   try {
     while (!feof(pipe))
-      if (std::fgets(buffer.data(), 128, pipe) != NULL)
+      if (std::fgets(buffer.data(), bufsize, pipe) != NULL)
         usage_output += buffer.data();
   }
-
   catch(...) {
     pclose(pipe);
     throw "Unable to execute the command: " + std::string(cmd);
@@ -68,16 +70,16 @@ generate_test::generate_test(std::string utility, std::string section)
 {
   std::list<utils::opt_rel*> ident_opt_list;  // List of identified option relations.
   std::list<std::string> usage_messages;      // List to store usage messages for comparison.
-  std::string test_file;                      // atf-sh test name.
-  std::string testcase_list;                  // List of testcases.
   std::string command;                        // Command to be executed in shell.
   std::string descr;                          // Testcase description.
+  std::string testcase_list;                  // List of testcases.
   std::string testcase_buffer;                // Buffer for (temporarily) holding testcase data.
-  std::string util_with_section;
+  std::string test_file;                      // atf-sh test name.
+  std::string util_with_section;              // Section number appended to utility.
   std::ofstream test_ofs;                     // Output stream for the atf-sh test.
   std::ifstream license_ifs;                  // Input stream for license.
   std::pair<std::string, int> output;         // Return value type for `exec()`.
-  std::unordered_set<std::string> annot;
+  std::unordered_set<std::string> annot;      // Hashset of utility specific annotations.
 
   // Read annotations and populate hash set "annot".
   annotations::read_annotations(utility, annot);
@@ -157,7 +159,7 @@ generate_test::generate_test(std::string utility, std::string section)
     }
 
     // Execute the utility with supported options
-    // and add (+ve)/(-ve) tests accordingly.
+    // and add (+ve)/(-ve) testcases accordingly.
     for (const auto &i : f_opts.opt_list) {
       // If the option is annotated, skip it.
       if (annot.find(i) != annot.end())
@@ -174,8 +176,8 @@ generate_test::generate_test(std::string utility, std::string section)
       else {
         // EXIT_SUCCESS was encountered. Hence,
         // the guessed usage was correct.
-        add_testcase::add_known_testcase(i, util_with_section,
-                                         "", output.first, test_ofs);
+        add_testcase::add_known_testcase(i, util_with_section, "",
+                                         output.first, test_ofs);
         testcase_list.append(std::string("\tatf_add_test_case ")
                             + i + "_flag\n");
       }
@@ -209,7 +211,7 @@ main()
   std::ifstream groff_list;
   std::list<std::pair<std::string, std::string>> utility_list;
   std::string test_file;  // atf-sh test name.
-  std::string util_name;
+  std::string util_name;  // Utility name.
   struct stat buffer;
   struct dirent *ent;
   DIR *dir;
@@ -237,11 +239,12 @@ main()
   for (const auto &util : utility_list) {
     test_file = "generated_tests/" + util.first + "_test.sh";
 
-    // Check if the test file exists.
-    // In case the test file exists, confirm before proceeding.
-    if (!stat(test_file.c_str(), &buffer) && !flag) {
+    // Check if the test file already exists. In
+    // case it does, confirm before proceeding.
+    if (!flag && !stat(test_file.c_str(), &buffer)) {
       std::cout << "Test file(s) already exists. Overwrite? [y/n] ";
       std::cin >> answer;
+
       switch (answer) {
         case 'n':
         case 'N':
@@ -260,7 +263,7 @@ main()
                + '('+ util.second + ')' << " ...";
 
     boost::thread api_caller(generate_test::generate_test, util.first, util.second);
-    if (api_caller.timed_join(boost::posix_time::seconds(2))) {
+    if (api_caller.timed_join(boost::posix_time::seconds(1))) {
       // API call returned withing 1 second.
       std::cout << "Successful\n";
     }
@@ -270,5 +273,5 @@ main()
     }
   }
 
-  return 0;
+  return EXIT_SUCCESS;
 }
