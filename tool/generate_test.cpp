@@ -260,7 +260,7 @@ main()
                + '('+ util.second + ')' << " ...";
 
     boost::thread api_caller(generate_test::generate_test, util.first, util.second);
-    if (api_caller.timed_join(boost::posix_time::milliseconds(1000))) {
+    if (api_caller.timed_join(boost::posix_time::seconds(2))) {
       // API call returned withing 1 second.
       std::cout << "Successful\n";
     }

@@ -2,13 +2,13 @@
 #
 # Makefile for building automation tool
 
-CC 	= g++
-CFLAGS 	= -I. -std=c++11
+CC 	= clang++
+CFLAGS	= -I /usr/local/include -std=c++11
 LIBS 	= -L/usr/local/lib -lboost_system -lboost_thread
 OBJS 	= utils.o read_annotations.o add_testcase.o generate_test.o
 
 generate_tests 	: $(OBJS)
-	$(CC) $(CFLAGS) -o $(.TARGET) $(.ALLSRC)
+	$(CC) $(CFLAGS) -o $(.TARGET) $(.ALLSRC) $(LIBS)
 
 $(OBJS) 	: $(.PREFIX).cpp $(.PREFIX).h
 	$(CC) $(CFLAGS) -c $(.PREFIX).cpp
