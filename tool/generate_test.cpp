@@ -69,7 +69,7 @@ void
 generate_test::generate_test(std::string utility, std::string section)
 {
   std::list<utils::opt_rel*> ident_opt_list;  // List of identified option relations.
-  std::list<std::string> usage_messages;      // List to store usage messages for comparison.
+  std::vector<std::string> usage_messages;    // Vector to store usage messages for comparison.
   std::string command;                        // Command to be executed in shell.
   std::string descr;                          // Testcase description.
   std::string testcase_list;                  // List of testcases.
@@ -141,18 +141,21 @@ generate_test::generate_test(std::string utility, std::string section)
 
     else {
       // Utility supports multiple options. In case the usage message
-      // is consistent for atleast "two" options, we assume that it will
-      // be same for "all" the options.
+      // is consistent for atleast "two" options, we reduce duplication
+      // by assigning a variable "usage_output" in the test script.
       for (const auto &i : f_opts.opt_list) {
         command = utility + " -" + i + " 2>&1";
         output = generate_test::exec(command.c_str());
 
-        if (output.second && usage_messages.size() < 2)
+        if (output.second && usage_messages.size() < 3)
           usage_messages.push_back(output.first);
+      }
 
-        if (usage_messages.size() == 2 &&
-            !usage_messages.front().compare(usage_messages.back())) {
-          test_ofs << "usage_output=\'" + output.first.substr(0, 7 + utility.size()) + "\'\n\n";
+      for (int j = 0; j <= 3; j++) {
+        if (!(usage_messages[j]).compare(usage_messages[(j+1) % 3])) {
+          test_ofs << "usage_output=\'"
+                    + output.first.substr(0, 7 + utility.size())
+                    + "\'\n\n";
           break;
         }
       }
