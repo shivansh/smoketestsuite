@@ -3,7 +3,7 @@
 # Makefile for building automation tool
 
 CC 	= c++
-CFLAGS	= -I /usr/local/include -std=c++11
+CFLAGS	= -I/usr/local/include -std=c++11
 LIBS 	= -L/usr/local/lib -lboost_system -lboost_thread
 OBJS 	= utils.o read_annotations.o add_testcase.o generate_test.o
 
@@ -23,9 +23,9 @@ clean_tests:
 
 run:
 	@echo Generating annotations...
-	./generate_annot.sh
+	sh scripts/generate_annot.sh
 	@echo Generating test files...
 	./generate_tests
 
 validate_changes:
-	sh ../scripts/validate.sh
+	sh scripts/validate.sh
