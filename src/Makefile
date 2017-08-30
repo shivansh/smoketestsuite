@@ -23,9 +23,9 @@ clean_tests:
 
 run:
 	@echo Generating annotations...
-	sh ../scripts/generate_annot.sh
+	sh scripts/generate_annot.sh
 	@echo Generating test files...
 	./generate_tests
 
 validate_changes:
-	sh ../scripts/validate.sh
+	sh scripts/validate.sh

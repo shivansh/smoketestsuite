@@ -3,7 +3,10 @@
 
 # Exclude logs
 error.log
-groff
 
 # Exclude binaries
 generate_tests
+
+# Exclude groff scripts
+groff
+failed
