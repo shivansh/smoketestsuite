@@ -19,10 +19,14 @@ This repo is currently a subset of a broader task which is to be done during [Go
     ├── read_annotations.cpp ...:: Annotation parser
     └── utils.cpp ..............:: Index generator
 ```
-- - -
 
 ## Automation tool
-An (in-progress) implementation of the automation tool briefly described [here](https://lists.freebsd.org/pipermail/soc-status/2017-July/001079.html).
+An (in-progress) implementation of the automation tool briefly described [here](https://lists.freebsd.org/pipermail/soc-status/2017-July/001079.html).  
+The following diagram summarizes how different components fit with the testcase-generator -  
+
+![Automation-Tool](architecture.png)
+
+- - -
 
 ### Instructions
 * The directory `src/groff` should be populated with the relevant groff scripts before proceeding. These scripts are available in the FreeBSD src tree.  
