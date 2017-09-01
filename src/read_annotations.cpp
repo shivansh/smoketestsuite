@@ -31,6 +31,8 @@
 #include <string>
 #include "read_annotations.h"
 
+// Read the annotation files and skip
+// generation of the respective tests.
 void
 annotations::read_annotations(std::string utility,
                               std::unordered_set<std::string>& annot)

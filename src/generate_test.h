@@ -28,12 +28,6 @@
 #include "utils.h"
 
 namespace generate_test {
-  // Execute passed string in shell and return
-  // its output and the return value.
-  std::pair<std::string, int>
-  exec(const char*);
-
-  // Generate a test for the given utility.
-  void
-  generate_test(std::string, std::string);
+  std::pair<std::string, int> exec(const char*);
+  void generate_test(std::string, std::string);
 }

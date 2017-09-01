@@ -29,6 +29,7 @@
 #include <iostream>
 #include "add_testcase.h"
 
+// Adds a test-case for an option with known usage.
 void
 add_testcase::add_known_testcase(std::string option,
                                  std::string util_with_section,
@@ -74,6 +75,7 @@ add_testcase::add_known_testcase(std::string option,
   test_script << "\n}\n\n";
 }
 
+// Adds a test-case for an option with unknown usage.
 void
 add_testcase::add_unknown_testcase(std::string option,
                                    std::string util_with_section,
@@ -100,6 +102,7 @@ add_testcase::add_unknown_testcase(std::string option,
     testcase_buffer.append(" -" + option);
 }
 
+// Adds a test-case for usage without any arguments.
 void
 add_testcase::add_noargs_testcase(std::string util_with_section,
                                   std::pair<std::string, int> output,

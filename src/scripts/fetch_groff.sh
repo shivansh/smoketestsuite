@@ -41,8 +41,8 @@ do
   do
     # Check for only section 1 entries
     case "$file" in
-      # *.1) cp "$file" "$HOME/source-codes/smoketestsuite/tool/groff"
-        *.1) printf "%s\n" "$file" >> "$groff_list.1"
+      *.1) cp "$file" "$HOME/source-codes/smoketestsuite/tool/groff"
+      # *.1) printf "%s\n" "$file" >> "$groff_list.1"
     esac
   done
 done< "$dir_list"

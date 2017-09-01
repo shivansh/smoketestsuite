@@ -31,7 +31,7 @@
 pwd=$(pwd)
 suffix="_test"
 extension=".sh"
-update_check=0
+update_required=0
 
 message="Following annotation files were updated. \n"
 
@@ -61,15 +61,17 @@ do
 
     if [ "$check" != "$test" ]; then
       if [ "$annotations" ]; then
-	if [ $update_check = 0 ]; then
+	if [ $update_required = 0 ]; then
 	  printf $message
-	  update_check=1
+	  update_required=1
 	fi
+
 	annotations_file="$pwd/annotations/$test.annot"
 	# Append only the new annotations
 	printf "$annotations" > "$annotations_file.temp"
 	[ ! -e "$annotations_file" ] && touch "$annotations_file"
-	comm -13 "$annotations_file" "$annotations_file.temp" >> "$annotations_file" && printf "\t%s\n" "annotations/$test.annot"
+	comm -13 "$annotations_file" "$annotations_file.temp" >> \
+	  "$annotations_file" && printf "\t%s\n" "annotations/$test.annot"
 	rm -f "$annotations_file.temp"
       fi
 

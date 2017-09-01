@@ -40,6 +40,10 @@
 #include "add_testcase.h"
 #include "read_annotations.h"
 
+#define TIMEOUT 1       // threshold (seconds) for a function call to return.
+
+// Executes the passed argument "cmd" in a shell
+// and returns its output and the exit status.
 std::pair<std::string, int>
 generate_test::exec(const char* cmd)
 {
@@ -65,8 +69,10 @@ generate_test::exec(const char* cmd)
          ((std::string)usage_output, WEXITSTATUS(pclose(pipe)));
 }
 
+// Generate a test for the given utility.
 void
-generate_test::generate_test(std::string utility, std::string section)
+generate_test::generate_test(std::string utility,
+                             std::string section)
 {
   std::list<utils::opt_rel*> ident_opt_list;  // List of identified option relations.
   std::vector<std::string> usage_messages;    // Vector to store usage messages for comparison.
@@ -268,8 +274,8 @@ main()
                + '('+ util.second + ')' << " ...";
 
     boost::thread api_caller(generate_test::generate_test, util.first, util.second);
-    if (api_caller.timed_join(boost::posix_time::seconds(1))) {
-      // API call returned within 1 second.
+    if (api_caller.timed_join(boost::posix_time::seconds(TIMEOUT))) {
+      // API call successfully returned within TIMEOUT (seconds).
       std::cout << "Successful\n";
     }
     else {
