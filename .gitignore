@@ -1,12 +1,14 @@
-# Exclude object files
-*.o
-
-# Exclude logs
-error.log
-
 # Exclude binaries
 generate_tests
 
 # Exclude groff scripts
 groff
 failed
+# Exclude logs
+error.log
+
+# Exclude makefile for testing on Linux
+Makefile.Linux
+
+# Exclude object files
+*.o
