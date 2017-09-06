@@ -13,7 +13,9 @@ generate_tests 	: $(OBJS)
 $(OBJS) 	: $(.PREFIX).cpp $(.PREFIX).h
 	$(CC) $(CFLAGS) -c $(.PREFIX).cpp
 
-.PHONY: clean clean_tests run fetch_groff validate_changes
+.PHONY: clean clean_tests run \
+	fetch_groff fetch_utils \
+	validate_changes
 
 clean:
 	rm -f generate_tests $(OBJS)
@@ -29,6 +31,9 @@ run:
 
 fetch_groff:
 	sh scripts/fetch_groff.sh
+
+fetch_utils:
+	sh scripts/fetch_utils.sh
 
 validate_changes:
 	sh scripts/validate.sh

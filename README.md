@@ -24,7 +24,7 @@ Test generation tool made as a part of [Google Summer of Code '17 with FreeBSD](
 An (in-progress) implementation of the automation tool briefly described [here](https://lists.freebsd.org/pipermail/soc-status/2017-July/001079.html).  
 The following diagram summarizes how different components fit with the testcase-generator -  
 
-![Automation-Tool](http://i.imgur.com/JhKM7h1.png)
+![Automation-Tool](architecture.png)
 
 - - -
 
@@ -46,6 +46,7 @@ The location `~/smoketestsuite` is important! If using a different location, the
 
 * For populating `src/groff`, execute from [src](src) -
   ```
+  make fetch_utils
   make fetch_groff
   ```
 

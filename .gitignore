@@ -4,8 +4,12 @@ generate_tests
 # Exclude groff scripts
 groff
 failed
+
 # Exclude logs
 error.log
+
+# Exclude list of base utilities
+src/scripts/utils_list
 
 # Exclude makefile for testing on Linux
 Makefile.Linux

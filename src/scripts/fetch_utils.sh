@@ -27,6 +27,7 @@
 # Script for listing all the base utilities
 
 set -e
+dir="$HOME/smoketestsuite/src/scripts"
 
 fetch_utils() {
   cd "$path"
@@ -37,4 +38,4 @@ fetch_utils() {
 rm -f utils_list
 
 path="$HOME/source-codes/freebsd"
-(fetch_utils) >> utils_list
+(fetch_utils) >> "$dir/utils_list"
