@@ -13,10 +13,10 @@ generate_tests 	: $(OBJS)
 $(OBJS) 	: $(.PREFIX).cpp $(.PREFIX).h
 	$(CC) $(CFLAGS) -c $(.PREFIX).cpp
 
-.PHONY: clean clean_tests run validate_changes
+.PHONY: clean clean_tests run fetch_groff validate_changes
 
 clean:
-	rm -f generate_test $(OBJS)
+	rm -f generate_tests $(OBJS)
 
 clean_tests:
 	rm -f generated_tests/*
@@ -26,6 +26,9 @@ run:
 	sh scripts/generate_annot.sh
 	@echo Generating test files...
 	./generate_tests
+
+fetch_groff:
+	sh scripts/fetch_groff.sh
 
 validate_changes:
 	sh scripts/validate.sh

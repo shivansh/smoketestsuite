@@ -55,3 +55,5 @@ Execute the following commands inside [src](src) -
 make clean
 make && make run
 ```
+
+A few demo tests are located in [src/generated_tests](src/generated_tests).
