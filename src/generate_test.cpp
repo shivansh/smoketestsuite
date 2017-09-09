@@ -26,6 +26,7 @@
 // $FreeBSD$
 
 #include <array>
+#include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
 #include <cstdlib>
 #include <dirent.h>
@@ -36,8 +37,8 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <unordered_set>
-#include "generate_test.h"
 #include "add_testcase.h"
+#include "generate_test.h"
 #include "read_annotations.h"
 
 #define TIMEOUT 1       // threshold (seconds) for a function call to return.
@@ -223,28 +224,37 @@ main()
   std::list<std::pair<std::string, std::string>> utility_list;
   std::string test_file;  // atf-sh test name.
   std::string util_name;  // Utility name.
-  struct stat buffer;
+  const char *tests_dir = "generated_tests";
+  struct stat sb;
   struct dirent *ent;
-  DIR *dir;
+  DIR *groff_dir;
   char answer;            // User input to determine overwriting of test files.
   int flag = 0;
 
   // For testing (or generating tests for only selected utilities),
   // the utility_list can be populated above during declaration.
   if (utility_list.empty()) {
-    if ((dir = opendir("groff"))) {
-      while ((ent = readdir(dir))) {
+    if ((groff_dir = opendir("groff"))) {
+      while ((ent = readdir(groff_dir))) {
         util_name = ent->d_name;
         utility_list.push_back(std::make_pair<std::string, std::string>
                               (util_name.substr(0, util_name.length() - 2),
                                util_name.substr(util_name.length() - 1, 1)));
       }
-      closedir(dir);
+      closedir(groff_dir);
     }
     else {
-      fprintf(stderr, "Could not open directory: groff/");
+      fprintf(stderr, "Could not open the directory: ./groff\nRefer to the "
+                      "section \"Populating groff scripts\" in README!\n");
       return EXIT_FAILURE;
     }
+  }
+
+  // Check if the directory 'generated_tests' exists.
+  if (stat(tests_dir, &sb) || !S_ISDIR(sb.st_mode)) {
+    boost::filesystem::path dir(tests_dir);
+    if (boost::filesystem::create_directory(dir))
+      std::cout << "Directory created: " << tests_dir << std::endl;
   }
 
   for (const auto &util : utility_list) {
@@ -252,7 +262,7 @@ main()
 
     // Check if the test file already exists. In
     // case it does, confirm before proceeding.
-    if (!flag && !stat(test_file.c_str(), &buffer)) {
+    if (!flag && !stat(test_file.c_str(), &sb)) {
       std::cout << "Test file(s) already exists. Overwrite? [y/n] ";
       std::cin >> answer;
 
