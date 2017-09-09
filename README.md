@@ -1,18 +1,14 @@
 # Smoke testing of base utilities (FreeBSD)
 
-Test generation tool made as a part of [Google Summer of Code '17 with FreeBSD](https://summerofcode.withgoogle.com/projects/#6426676740227072).  
+Test generation tool made as a part of [Google Summer of Code '17 with FreeBSD](https://summerofcode.withgoogle.com/projects/#6426676740227072).
 **Refer the [FreeBSD wiki](https://wiki.freebsd.org/SummerOfCode2017/SmokeTestingOfBaseUtilities) for an overview and updates.**
 
 ## Directory Structure
 ```
 .
-├── deprecated_tests
-│   └── ........................:: Tests pertaining to initial test plan
 └── src ........................:: Automation tool pertaining to new test plan
     ├── annotations
     │   └── ....................:: Annotation files (generated/user-defined)
-    ├── generated_tests
-    │   └── ....................:: Generated atf-sh test scripts
     ├── scripts
     │   └── ....................:: Handy scripts
     ├── generate_test.cpp ......:: Test generator
@@ -21,8 +17,8 @@ Test generation tool made as a part of [Google Summer of Code '17 with FreeBSD](
 ```
 
 ## Automation tool
-An (in-progress) implementation of the automation tool briefly described [here](https://lists.freebsd.org/pipermail/soc-status/2017-July/001079.html).  
-The following diagram summarizes how different components fit with the testcase-generator -  
+An implementation of the automation tool briefly described [here](https://lists.freebsd.org/pipermail/soc-status/2017-July/001079.html).
+The following diagram summarizes how different components fit with the testcase-generator -
 
 ![Automation-Tool](architecture.png)
 
@@ -44,9 +40,14 @@ The location `~/smoketestsuite` is important! If using a different location, the
 
 * The variable `src` in [fetch_groff.sh](src/scripts/fetch_groff.sh) should be updated to the local location of the FreeBSD source. The default value is `~/freebsd`.
 
-* For populating `src/groff`, execute from [src](src) -
+* Before proceeding to filter out groff scripts, the list of all utilities in the FreeBSD src tree has to be first extracted out. This is done via -
   ```
   make fetch_utils
+  ```
+**NOTE:** The above command needs to be invoked only once. In case the src tree is updated and the generated list of utilities is stale, it can be run again.
+
+* For populating `src/groff`, execute from [src](src) -
+  ```
   make fetch_groff
   ```
 

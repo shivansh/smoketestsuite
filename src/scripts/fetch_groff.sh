@@ -24,25 +24,24 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# Script for listing location of groff scripts of utilities in section 1
+# Script for listing location of groff scripts of utilities in section 1.
 
 set -e
 
 src="$HOME/freebsd"
-dir_list="$HOME/source-codes/smoketestsuite/scripts/utils_list"
-groff_list="$HOME/source-codes/smoketestsuite/scripts/groff_list"
+dir_list="$HOME/smoketestsuite/src/scripts/utils_list"
+groff_src="$HOME/smoketestsuite/src/groff"
+section=1       # Section number for filtering the base utilities
 
-rm -f "$groff_list.1" && touch "$groff_list.1"
+rm -rf "$groff_src" && mkdir "$groff_src"
 cd "$src"
 
 while IFS= read -r dir_entry
 do
   for file in "$dir_entry"/*
   do
-    # Check for only section 1 entries
     case "$file" in
-      *.1) cp "$file" "$HOME/source-codes/smoketestsuite/tool/groff"
-      # *.1) printf "%s\n" "$file" >> "$groff_list.1"
+      *."$section") cp "$file" "$HOME/smoketestsuite/src/groff/"
     esac
   done
 done< "$dir_list"

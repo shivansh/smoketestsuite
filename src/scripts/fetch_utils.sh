@@ -24,18 +24,19 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# Script for listing all the base utilities
+# Script for listing all the base utilities in FreeBSD.
+# The output "utils_list" of this script is required by "fetch_groff.sh".
 
 set -e
+src="$HOME/freebsd"
 dir="$HOME/smoketestsuite/src/scripts"
 
 fetch_utils() {
-  cd "$path"
+  cd "$src"
   find . -name Makefile | xargs grep -l 'PROG\|PROG_CXX' \
                         | sed -e 's|/Makefile$||' | cut -c 3-
 }
 
 rm -f utils_list
 
-path="$HOME/source-codes/freebsd"
 (fetch_utils) >> "$dir/utils_list"
