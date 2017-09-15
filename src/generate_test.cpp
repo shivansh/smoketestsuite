@@ -114,7 +114,7 @@ generate_test::generate_test(std::string utility,
   // Add testcases for known options.
   if (!ident_opt_list.empty()) {
     for (const auto &i : ident_opt_list) {
-      command = utility + " -" + i->value + " 2>&1";
+      command = utility + " -" + i->value + " 2>&1 </dev/null";
       output = generate_test::exec(command.c_str());
       if (!output.first.compare(0, 6, "usage:")) {
         add_testcase::add_known_testcase(i->value, util_with_section,
@@ -140,7 +140,7 @@ generate_test::generate_test(std::string utility,
 
     if (f_opts.opt_list.size() == 1) {
       // Utility supports a single option, check if it produces a usage message.
-      command = utility + " -" + f_opts.opt_list.front() + " 2>&1";
+      command = utility + " -" + f_opts.opt_list.front() + " 2>&1 </dev/null";
       output = generate_test::exec(command.c_str());
 
       if (output.second)
@@ -152,7 +152,7 @@ generate_test::generate_test(std::string utility,
       // is consistent for atleast "two" options, we reduce duplication
       // by assigning a variable "usage_output" in the test script.
       for (const auto &i : f_opts.opt_list) {
-        command = utility + " -" + i + " 2>&1";
+        command = utility + " -" + i + " 2>&1 </dev/null";
         output = generate_test::exec(command.c_str());
 
         if (output.second && usage_messages.size() < 3)
@@ -177,7 +177,7 @@ generate_test::generate_test(std::string utility,
       if (annot.find(i) != annot.end())
         continue;
 
-      command = utility + " -" + i + " 2>&1";
+      command = utility + " -" + i + " 2>&1 </dev/null";
       output = generate_test::exec(command.c_str());
 
       if (output.second) {
@@ -207,7 +207,7 @@ generate_test::generate_test(std::string utility,
   // Add a testcase under "no_arguments" for
   // running the utility without any arguments.
   if (annot.find("*") == annot.end()) {
-    command = utility + " 2>&1";
+    command = utility + " 2>&1 </dev/null";
     output = generate_test::exec(command.c_str());
     add_testcase::add_noargs_testcase(util_with_section, output, test_ofs);
     testcase_list.append("\tatf_add_test_case no_arguments\n");
@@ -279,6 +279,9 @@ main()
           break;
       }
     }
+
+    // Enable line-buffering on stdout.
+    setlinebuf(stdout);
 
     std::cout << "Generating test for: " + util.first
                + '('+ util.second + ')' << " ...";
