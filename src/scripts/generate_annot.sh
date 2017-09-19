@@ -25,7 +25,7 @@
 # SUCH DAMAGE.
 #
 # $FreeBSD$
-#
+
 # Script for generating annotations based on generated tests.
 
 pwd=$(pwd)

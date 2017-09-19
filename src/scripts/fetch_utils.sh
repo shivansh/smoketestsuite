@@ -24,8 +24,9 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# Script for listing all the base utilities in FreeBSD.
-# The output "utils_list" of this script is required by "fetch_groff.sh".
+# $FreeBSD$
+
+# Script for listing all the base utilities
 
 set -e
 src="$HOME/freebsd"
@@ -39,4 +40,5 @@ fetch_utils() {
 
 rm -f utils_list
 
+path="$HOME/freebsd"
 (fetch_utils) >> "$dir/utils_list"

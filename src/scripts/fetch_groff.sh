@@ -24,7 +24,9 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# Script for listing location of groff scripts of utilities in section 1.
+# $FreeBSD$
+
+# Script for listing location of groff scripts of utilities in section 1
 
 set -e
 
@@ -43,7 +45,7 @@ do
 		# Check for only section 1 entries
 		case "$file" in
 			*.1) cp "$file" "$HOME/source-codes/smoketestsuite/tool/groff"
-				# *.1) printf "%s\n" "$file" >> "$groff_list.1"
-			esac
-		done
-	done< "$dir_list"
+			# *.1) printf "%s\n" "$file" >> "$groff_list.1"
+		esac
+	done
+done< "$dir_list"
