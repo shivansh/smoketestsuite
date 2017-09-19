@@ -16,3 +16,6 @@ Makefile.Linux
 
 # Exclude object files
 *.o
+
+# Exclude generated scripts
+generated_tests

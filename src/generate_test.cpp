@@ -27,6 +27,7 @@
 
 #include <array>
 #include <boost/filesystem.hpp>
+#include <boost/chrono.hpp>
 #include <boost/thread.hpp>
 #include <cstdlib>
 #include <dirent.h>
@@ -38,10 +39,13 @@
 #include <sys/wait.h>
 #include <unordered_set>
 #include "add_testcase.h"
+#include "generate_license.h"
 #include "generate_test.h"
 #include "read_annotations.h"
 
 #define TIMEOUT 1       // threshold (seconds) for a function call to return.
+
+std::string license;    // license file generated during runtime.
 
 // Executes the passed argument "cmd" in a shell
 // and returns its output and the exit status.
@@ -84,7 +88,6 @@ generate_test::generate_test(std::string utility,
   std::string test_file;                      // atf-sh test name.
   std::string util_with_section;              // Section number appended to utility.
   std::ofstream test_ofs;                     // Output stream for the atf-sh test.
-  std::ifstream license_ifs;                  // Input stream for license.
   std::pair<std::string, int> output;         // Return value type for `exec()`.
   std::unordered_set<std::string> annot;      // Hashset of utility specific annotations.
   int temp;
@@ -100,10 +103,7 @@ generate_test::generate_test(std::string utility,
 
   // Add license in the generated test scripts.
   test_ofs.open(test_file, std::ios::out);
-  license_ifs.open("license", std::ios::in);
-
-  test_ofs << license_ifs.rdbuf();
-  license_ifs.close();
+  test_ofs << license;
 
   // If a known option was encountered (i.e. `ident_opt_list` is
   // populated), produce a testcase to check the validity of the
@@ -224,7 +224,7 @@ main()
   std::list<std::pair<std::string, std::string>> utility_list;
   std::string test_file;  // atf-sh test name.
   std::string util_name;  // Utility name.
-  const char *tests_dir = "generated_tests";
+  const char *tests_dir = "generated_tests/";
   struct stat sb;
   struct dirent *ent;
   DIR *groff_dir;
@@ -236,6 +236,9 @@ main()
   if (utility_list.empty()) {
     if ((groff_dir = opendir("groff"))) {
       while ((ent = readdir(groff_dir))) {
+        if (!strncmp(ent->d_name, ".", 1))
+          continue;
+
         util_name = ent->d_name;
         utility_list.push_back(std::make_pair<std::string, std::string>
                               (util_name.substr(0, util_name.length() - 2),
@@ -257,8 +260,11 @@ main()
       std::cout << "Directory created: " << tests_dir << std::endl;
   }
 
+  // Generate a license to be added in the generated scripts.
+  license = add_license::generate_license();
+
   for (const auto &util : utility_list) {
-    test_file = "generated_tests/" + util.first + "_test.sh";
+    test_file = tests_dir + util.first + "_test.sh";
 
     // Check if the test file already exists. In
     // case it does, confirm before proceeding.
@@ -287,7 +293,7 @@ main()
                + '('+ util.second + ')' << " ...";
 
     boost::thread api_caller(generate_test::generate_test, util.first, util.second);
-    if (api_caller.timed_join(boost::posix_time::seconds(TIMEOUT))) {
+    if (api_caller.try_join_for(boost::chrono::seconds(TIMEOUT))) {
       // API call successfully returned within TIMEOUT (seconds).
       std::cout << "Successful\n";
     }
