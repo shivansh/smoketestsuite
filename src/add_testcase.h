@@ -26,15 +26,12 @@
 // $FreeBSD$
 
 namespace add_testcase {
-  void
-  add_known_testcase(std::string, std::string, std::string, \
-                     std::string, std::ofstream&);
+	void add_known_testcase(std::string, std::string, std::string, \
+				std::string, std::ofstream&);
 
-  void
-  add_unknown_testcase(std::string, std::string, std::string, \
-                       int, std::string&);
+	void add_unknown_testcase(std::string, std::string, std::string, \
+				  int, std::string&);
 
-  void
-  add_noargs_testcase(std::string, std::pair<std::string, int>, \
-                      std::ofstream&);
+	void add_noargs_testcase(std::string, std::pair<std::string, int>, \
+				 std::ofstream&);
 }

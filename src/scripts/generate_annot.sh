@@ -42,50 +42,50 @@ printf "
 
 for f in "generated_tests"/*
 do
-  annotations=""
-  file=$(basename "$f")
-  test=${file%$extension}
-  utility=${test%$suffix}
-  test_dir="/usr/tests/bin/$utility"
+	annotations=""
+	file=$(basename "$f")
+	test=${file%$extension}
+	utility=${test%$suffix}
+	test_dir="/usr/tests/bin/$utility"
 
-  (
-  cd "$test_dir" || exit
-  report=$(kyua report)
-  i=2
+	(
+	cd "$test_dir" || exit
+	report=$(kyua report)
+	i=2
 
-  while true
-  do
-    testcase=$(printf "%s" "$report" | awk 'NR=='"$i"' {print $1}')
-    status=$(printf "%s" "$report" | awk 'NR=='"$i"' {print $3}')
-    check=$(printf "%s" "$testcase" | cut -s -f1 -d":")
+	while true
+	do
+		testcase=$(printf "%s" "$report" | awk 'NR=='"$i"' {print $1}')
+		status=$(printf "%s" "$report" | awk 'NR=='"$i"' {print $3}')
+		check=$(printf "%s" "$testcase" | cut -s -f1 -d":")
 
-    if [ "$check" != "$test" ]; then
-      if [ "$annotations" ]; then
-	if [ $update_required = 0 ]; then
-	  printf $message
-	  update_required=1
-	fi
+		if [ "$check" != "$test" ]; then
+			if [ "$annotations" ]; then
+				if [ $update_required = 0 ]; then
+					printf $message
+					update_required=1
+				fi
 
-	annotations_file="$pwd/annotations/$test.annot"
-	# Append only the new annotations
-	printf "$annotations" > "$annotations_file.temp"
-	[ ! -e "$annotations_file" ] && touch "$annotations_file"
-	comm -13 "$annotations_file" "$annotations_file.temp" >> \
-	  "$annotations_file" && printf "\t%s\n" "annotations/$test.annot"
-	rm -f "$annotations_file.temp"
-      fi
+				annotations_file="$pwd/annotations/$test.annot"
+				# Append only the new annotations
+				printf "$annotations" > "$annotations_file.temp"
+				[ ! -e "$annotations_file" ] && touch "$annotations_file"
+				comm -13 "$annotations_file" "$annotations_file.temp" >> \
+					"$annotations_file" && printf "\t%s\n" "annotations/$test.annot"
+				rm -f "$annotations_file.temp"
+			fi
 
-      break
-    fi
+			break
+		fi
 
-    if [ "$status" = "failed:" ]; then
-      testcase=${testcase#"$test:"}
-      annotations="$annotations$testcase\n"
-    fi
+		if [ "$status" = "failed:" ]; then
+			testcase=${testcase#"$test:"}
+			annotations="$annotations$testcase\n"
+		fi
 
-    i=$((i+1))
-  done
-  )
+		i=$((i+1))
+	done
+	)
 
 done
 

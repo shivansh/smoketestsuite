@@ -29,23 +29,22 @@
 #include <unordered_map>
 
 namespace utils {
+	// Option relation which maps option names to
+	// a unique identifier in their description.
+	typedef struct opt_rel {
+		char type;            // Option type: (s)short/(l)long.
+		std::string value;    // Name of the option.
+		std::string keyword;  // The keyword which should be looked up in the
+				      // message (if) produced when using this option.
+	} opt_rel;
 
-  // Option relation which maps option names to
-  // a unique identifier in their description.
-  typedef struct opt_rel {
-    char type;            // Option type: (s)short/(l)long.
-    std::string value;    // Name of the option.
-    std::string keyword;  // The keyword which should be looked up in the
-                          // message (if) produced when using this option.
-  } opt_rel;
+	class opt_def {
+		public:
+			std::list<std::string> opt_list;    	// list of all the accepted options with unknown usage.
+			std::unordered_map<std::string, opt_rel> opt_map;   // Map "option value" to "option definition".
+			std::unordered_map<std::string, opt_rel>::iterator opt_map_iter;
 
-  class opt_def {
-    public:
-      std::list<std::string> opt_list;    // list of all the accepted options with unknown usage.
-      std::unordered_map<std::string, opt_rel> opt_map;   // Map "option value" to "option definition".
-      std::unordered_map<std::string, opt_rel>::iterator opt_map_iter;
-
-      void insert_opts();
-      std::list<opt_rel*> check_opts(std::string);
-  };
+			void insert_opts();
+			std::list<opt_rel*> check_opts(std::string);
+	};
 }

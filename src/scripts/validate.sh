@@ -30,7 +30,7 @@ remote=origin
 
 git checkout testing
 if [ $? != 0 ]; then
-  git fetch && git checkout $remote/testing && git checkout -b testing
+	git fetch && git checkout $remote/testing && git checkout -b testing
 fi
 
 git rebase master
@@ -41,16 +41,16 @@ echo 'y\n' | make run
 
 git status | grep -q generated_tests
 if [ $? != 0 ]; then
-  echo "
-  +----------------------------------+
-  | New changes have no side-effects |
-  +----------------------------------+
-  "
-  git checkout master
+	echo "
+	+----------------------------------+
+	| New changes have no side-effects |
+	+----------------------------------+
+	"
+	git checkout master
 else
-  echo "
-  +--------------------------------------------------+
-  | New changes introduced side-effects. Stopping... |
-  +--------------------------------------------------+
-  "
+	echo "
+	+--------------------------------------------------+
+	| New changes introduced side-effects. Stopping... |
+	+--------------------------------------------------+
+	"
 fi

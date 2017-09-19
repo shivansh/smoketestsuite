@@ -35,24 +35,24 @@
 // generation of the respective tests.
 void
 annotations::read_annotations(std::string utility,
-                              std::unordered_set<std::string>& annot)
+			      std::unordered_set<std::string>& annot)
 {
-  std::string line;
-  // TODO do this for all the annotation files
-  std::ifstream annot_fstream;
-  annot_fstream.open("annotations/" + utility + "_test.annot");
+	std::string line;
+	// TODO do this for all the annotation files
+	std::ifstream annot_fstream;
+	annot_fstream.open("annotations/" + utility + "_test.annot");
 
-  while (getline(annot_fstream, line)) {
-    // Add a unique identifier for no_arguments testcase
-    if (!line.compare(0, 12, "no_arguments"))
-      annot.insert("*");
+	while (getline(annot_fstream, line)) {
+		// Add a unique identifier for no_arguments testcase
+		if (!line.compare(0, 12, "no_arguments"))
+			annot.insert("*");
 
-    // Add flag value for supported argument testcases
-    // Doing so we ignore the "invalid_usage" testcase
-    // as it is guaranteed to always succeed.
-    else if (!line.compare(2, 4, "flag"))
-      annot.insert(line.substr(0, 1));
-  }
+		// Add flag value for supported argument testcases
+		// Doing so we ignore the "invalid_usage" testcase
+		// as it is guaranteed to always succeed.
+		else if (!line.compare(2, 4, "flag"))
+			annot.insert(line.substr(0, 1));
+	}
 
-  annot_fstream.close();
+	annot_fstream.close();
 }

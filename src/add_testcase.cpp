@@ -32,137 +32,138 @@
 // Adds a test-case for an option with known usage.
 void
 add_testcase::add_known_testcase(std::string option,
-                                 std::string util_with_section,
-                                 std::string descr,
-                                 std::string output,
-                                 std::ofstream& test_script)
+				 std::string util_with_section,
+				 std::string descr,
+				 std::string output,
+				 std::ofstream& test_script)
 {
-  std::string testcase_name;
-  std::string utility = util_with_section.substr(0,
-                        util_with_section.length() - 3);
+	std::string testcase_name;
+	std::string utility = util_with_section.substr(0,
+			util_with_section.length() - 3);
 
-  // Add testcase name.
-  test_script << "atf_test_case ";
-  if (!option.empty()) {
-    testcase_name = option;
-    testcase_name.append("_flag");
-  }
-  else
-    testcase_name = "no_arguments";
-  test_script << testcase_name + "\n";
+	// Add testcase name.
+	test_script << "atf_test_case ";
+	if (!option.empty()) {
+		testcase_name = option;
+		testcase_name.append("_flag");
+	}
+	else
+		testcase_name = "no_arguments";
+	test_script << testcase_name + "\n";
 
-  // Add testcase description.
-  test_script << testcase_name
-               + "_head()\n{\n\tatf_set \"descr\" ";
-  if (!descr.empty())
-    test_script << descr;
-  else
-    test_script << "\"Verify the usage of option \'" + option + "\'\"";
-  test_script << "\n}\n\n";
+	// Add testcase description.
+	test_script << testcase_name
+		+ "_head()\n{\n\tatf_set \"descr\" ";
+	if (!descr.empty())
+		test_script << descr;
+	else
+		test_script << "\"Verify the usage of option \'" + option + "\'\"";
+	test_script << "\n}\n\n";
 
-  // Add body of the testcase.
-  test_script << testcase_name + "_body()\n{"
-               + "\n\tatf_check -s exit:0 -o ";
+	// Add body of the testcase.
+	test_script << testcase_name + "_body()\n{"
+		+ "\n\tatf_check -s exit:0 -o ";
 
-  // Match the usage output if generated.
-  if (!output.empty())
-    test_script << "inline:\"" + output + "\" ";
-  else
-    test_script << "empty ";
-  test_script << utility;
-  if (!option.empty())
-    test_script << " -" + option;
-  test_script << "\n}\n\n";
+	// Match the usage output if generated.
+	if (!output.empty())
+		test_script << "inline:\"" + output + "\" ";
+	else
+		test_script << "empty ";
+	test_script << utility;
+
+	if (!option.empty())
+		test_script << " -" + option;
+	test_script << "\n}\n\n";
 }
 
 // Adds a test-case for an option with unknown usage.
 void
 add_testcase::add_unknown_testcase(std::string option,
-                                   std::string util_with_section,
-                                   std::string output,
-                                   int exitstatus,
-                                   std::string& testcase_buffer)
+				   std::string util_with_section,
+				   std::string output,
+				   int exitstatus,
+				   std::string& testcase_buffer)
 {
-  std::string utility = util_with_section.substr(0,
-                        util_with_section.length() - 3);
+	std::string utility = util_with_section.substr(0,
+			      util_with_section.length() - 3);
 
-  testcase_buffer.append("\n\tatf_check -s not-exit:0 -e ");
+	testcase_buffer.append("\n\tatf_check -s not-exit:0 -e ");
 
-  // Check if a usage message was produced.
-  if (!output.compare(0, 6, "usage:"))
-    testcase_buffer.append("match:\"$usage_output\" ");
-  else if (!output.empty())
-    testcase_buffer.append("inline:\"" + output + "\" ");
-  else
-    testcase_buffer.append("empty ");
+	// Check if a usage message was produced.
+	if (!output.compare(0, 6, "usage:"))
+		testcase_buffer.append("match:\"$usage_output\" ");
+	else if (!output.empty())
+		testcase_buffer.append("inline:\"" + output + "\" ");
+	else
+		testcase_buffer.append("empty ");
 
-  testcase_buffer.append(utility);
+	testcase_buffer.append(utility);
 
-  if (!option.empty())
-    testcase_buffer.append(" -" + option);
+	if (!option.empty())
+		testcase_buffer.append(" -" + option);
 }
 
 // Adds a test-case for usage without any arguments.
 void
 add_testcase::add_noargs_testcase(std::string util_with_section,
-                                  std::pair<std::string, int> output,
-                                  std::ofstream& test_script)
+				  std::pair<std::string, int> output,
+				  std::ofstream& test_script)
 {
-  std::string descr;
-  std::string utility = util_with_section.substr(0,
-                        util_with_section.length() - 3);
+	std::string descr;
+	std::string utility = util_with_section.substr(0,
+			      util_with_section.length() - 3);
 
-  if (output.second) {
-    // An error was encountered.
-    test_script << std::string("atf_test_case no_arguments\n")
-                  + "no_arguments_head()\n{\n\tatf_set \"descr\" ";
-    if (!output.first.empty()) {
-      // We expect a usage message to be generated in this case.
-      if (!output.first.compare(0, 6, "usage:")) {
-        descr = "\"Verify that " + util_with_section
-              + " fails and generates a valid usage"
-              + " message when no arguments are supplied\"";
+	if (output.second) {
+		// An error was encountered.
+		test_script << std::string("atf_test_case no_arguments\n")
+			+ "no_arguments_head()\n{\n\tatf_set \"descr\" ";
+		if (!output.first.empty()) {
+			// We expect a usage message to be generated in this case.
+			if (!output.first.compare(0, 6, "usage:")) {
+				descr = "\"Verify that " + util_with_section
+					+ " fails and generates a valid usage"
+					+ " message when no arguments are supplied\"";
 
-        test_script << descr + "\n}\n\nno_arguments_body()\n{"
-                      + "\n\tatf_check -s not-exit:0 -e match:\"$usage_output\" "
-                      + utility;
-      }
-      else {
-        descr = "\"Verify that " + util_with_section
-              + " fails and generates a valid output"
-              + " when no arguments are supplied\"";
+				test_script << descr + "\n}\n\nno_arguments_body()\n{"
+					       + "\n\tatf_check -s not-exit:0 -e match:\"$usage_output\" "
+					       + utility;
+			}
+			else {
+				descr = "\"Verify that " + util_with_section
+					+ " fails and generates a valid output"
+					+ " when no arguments are supplied\"";
 
-        test_script << descr + "\n}\n\nno_arguments_body()\n{"
-                      + "\n\tatf_check -s not-exit:0 -e inline:\""
-                      + output.first + "\" "
-                      + utility;
-      }
-    }
+				test_script << descr + "\n}\n\nno_arguments_body()\n{"
+					       + "\n\tatf_check -s not-exit:0 -e inline:\""
+					       + output.first + "\" "
+					       + utility;
+			}
+		}
 
-    else {
-      descr = "\"Verify that " + util_with_section
-            + "fails silently when no arguments are supplied\"" ;
-      test_script << descr + "\n}\n\nno_arguments_body()\n{"
-                    + "\n\tatf_check -s not-exit:0 -e empty "
-                    + utility;
-    }
+		else {
+			descr = "\"Verify that " + util_with_section
+				+ "fails silently when no arguments are supplied\"" ;
+			test_script << descr + "\n}\n\nno_arguments_body()\n{"
+				       + "\n\tatf_check -s not-exit:0 -e empty "
+				       + utility;
+		}
 
-    test_script << "\n}\n\n";
-  }
+		test_script << "\n}\n\n";
+	}
 
-  else {
-    // The command ran successfully, hence we guessed
-    // a correct usage for the utility under test.
-    if (!output.first.empty())
-      descr = "\"Verify that " + util_with_section
-            + " executes successfully and produces a valid"
-            + " output when invoked without any arguments\"";
-    else
-      descr = "\"Verify that " + util_with_section
-            + " executes successfully and silently"
-            + " when invoked without any arguments\"";
+	else {
+		// The command ran successfully, hence we guessed
+		// a correct usage for the utility under test.
+		if (!output.first.empty())
+			descr = "\"Verify that " + util_with_section
+				+ " executes successfully and produces a valid"
+				+ " output when invoked without any arguments\"";
+		else
+			descr = "\"Verify that " + util_with_section
+				+ " executes successfully and silently"
+				+ " when invoked without any arguments\"";
 
-    add_testcase::add_known_testcase("", util_with_section, descr,
-                                     output.first, test_script);
-  }
+		add_testcase::add_known_testcase("", util_with_section, descr,
+						 output.first, test_script);
+	}
 }

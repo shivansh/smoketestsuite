@@ -28,6 +28,6 @@
 #include <unordered_set>
 
 namespace annotations {
-  void read_annotations(std::string, \
-                        std::unordered_set<std::string>&);
+	void read_annotations(std::string, \
+			      std::unordered_set<std::string>&);
 }

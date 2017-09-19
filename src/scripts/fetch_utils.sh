@@ -32,9 +32,9 @@ src="$HOME/freebsd"
 dir="$HOME/smoketestsuite/src/scripts"
 
 fetch_utils() {
-  cd "$src"
-  find . -name Makefile | xargs grep -l 'PROG\|PROG_CXX' \
-                        | sed -e 's|/Makefile$||' | cut -c 3-
+	cd "$path"
+	find . -name Makefile | xargs grep -l 'PROG\|PROG_CXX' \
+		| sed -e 's|/Makefile$||' | cut -c 3-
 }
 
 rm -f utils_list

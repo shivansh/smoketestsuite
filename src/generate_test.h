@@ -28,6 +28,6 @@
 #include "utils.h"
 
 namespace generate_test {
-  std::pair<std::string, int> exec(const char*);
-  void generate_test(std::string, std::string);
+	std::pair<std::string, int> exec(const char*);
+	void generate_test(std::string, std::string);
 }
