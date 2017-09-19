@@ -31,8 +31,9 @@
 set -e
 
 src="$HOME/freebsd"
-dir_list="$HOME/smoketestsuite/src/scripts/utils_list"
-groff_src="$HOME/smoketestsuite/src/groff"
+pwd=$(pwd)
+dir_list="$pwd/scripts/utils_list"
+groff_src="$pwd/groff"
 section=1       # Section number for filtering the base utilities
 
 rm -rf "$groff_src" && mkdir "$groff_src"
@@ -44,8 +45,7 @@ do
 	do
 		# Check for only section 1 entries
 		case "$file" in
-			*.1) cp "$file" "$HOME/source-codes/smoketestsuite/tool/groff"
-			# *.1) printf "%s\n" "$file" >> "$groff_list.1"
+			*.1) cp "$file" "$pwd/groff"
 		esac
 	done
 done< "$dir_list"

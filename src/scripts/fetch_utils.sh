@@ -30,7 +30,8 @@
 
 set -e
 src="$HOME/freebsd"
-dir="$HOME/smoketestsuite/src/scripts"
+pwd=$(pwd)
+dir="$pwd/scripts"
 
 fetch_utils() {
 	cd "$path"
