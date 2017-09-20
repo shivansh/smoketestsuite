@@ -43,7 +43,7 @@
 #include "generate_test.h"
 #include "read_annotations.h"
 
-#define TIMEOUT 1       // threshold (seconds) for a function call to return.
+#define TIMEOUT 2       // threshold (seconds) for a function call to return.
 
 std::string license;    // license file generated during runtime.
 
@@ -229,7 +229,6 @@ main()
 	struct dirent *ent;
 	DIR *groff_dir;
 	char answer;            // User input to determine overwriting of test files.
-	int flag = 0;
 
 	// For testing (or generating tests for only selected utilities),
 	// the utility_list can be populated above during declaration.
@@ -264,26 +263,7 @@ main()
 
 	for (const auto &util : utility_list) {
 		test_file = tests_dir + util.first + "_test.sh";
-
-		// Check if the test file already exists. In
-		// case it does, confirm before proceeding.
-		if (!flag && !stat(test_file.c_str(), &sb)) {
-			std::cout << "Test file(s) already exists. Overwrite? [y/n] ";
-			std::cin >> answer;
-
-			switch (answer) {
-				case 'n':
-				case 'N':
-					fprintf(stderr, "Stopping execution\n");
-					flag = 1;
-					break;
-
-				default:
-					// TODO capture newline character
-					flag = 1;
-					break;
-			}
-		}
+		// TODO Check before overwriting existing test scripts.
 
 		// Enable line-buffering on stdout.
 		setlinebuf(stdout);

@@ -65,7 +65,7 @@ add_license::generate_license()
 		"# SUCH DAMAGE.\n"
 		"#\n"
 		"# $FreeBSD$\n"
-		"#\n";
+		"#\n\n";
 
 	return license;
 }

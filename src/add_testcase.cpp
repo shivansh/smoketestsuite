@@ -25,6 +25,7 @@
 //
 // $FreeBSD$
 
+#include <boost/algorithm/string.hpp>
 #include <fstream>
 #include <iostream>
 #include "add_testcase.h"
@@ -89,8 +90,8 @@ add_testcase::add_unknown_testcase(std::string option,
 
 	testcase_buffer.append("\n\tatf_check -s not-exit:0 -e ");
 
-	// Check if a usage message was produced.
-	if (!output.compare(0, 6, "usage:"))
+	// Check if a usage message was produced (case-insensitive match).
+	if (boost::iequals(output.substr(0, 6), "usage:"))
 		testcase_buffer.append("match:\"$usage_output\" ");
 	else if (!output.empty())
 		testcase_buffer.append("inline:\"" + output + "\" ");
@@ -118,8 +119,9 @@ add_testcase::add_noargs_testcase(std::string util_with_section,
 		test_script << std::string("atf_test_case no_arguments\n")
 			     + "no_arguments_head()\n{\n\tatf_set \"descr\" ";
 		if (!output.first.empty()) {
-			// We expect a usage message to be generated in this case.
-			if (!output.first.compare(0, 6, "usage:")) {
+			// We expect a usage message to be generated in this case
+			// (case-insensitive match).
+			if (boost::iequals(output.first.substr(0, 6), "usage:")) {
 				descr = "\"Verify that " + util_with_section
 				      + " fails and generates a valid usage"
 				      + " message when no arguments are supplied\"";
