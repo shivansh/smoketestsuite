@@ -1,6 +1,6 @@
 # Smoke testing of base utilities (FreeBSD)
 
-Test generation tool made as a part of [Google Summer of Code '17 with FreeBSD](https://summerofcode.withgoogle.com/projects/#6426676740227072).
+Test generation tool made as a part of [Google Summer of Code '17 with FreeBSD](https://summerofcode.withgoogle.com/projects/#6426676740227072).  
 **Refer the [FreeBSD wiki](https://wiki.freebsd.org/SummerOfCode2017/SmokeTestingOfBaseUtilities) for an overview and updates.**
 
 ## Directory Structure
@@ -11,14 +11,16 @@ Test generation tool made as a part of [Google Summer of Code '17 with FreeBSD](
     │   └── ....................:: Annotation files (generated/user-defined)
     ├── scripts
     │   └── ....................:: Handy scripts
+    ├── add_testcase.cpp .......:: Testcase generator
+    ├── generate_license.cpp ...:: License generator
     ├── generate_test.cpp ......:: Test generator
     ├── read_annotations.cpp ...:: Annotation parser
     └── utils.cpp ..............:: Index generator
 ```
 
 ## Automation tool
-An implementation of the automation tool briefly described [here](https://lists.freebsd.org/pipermail/soc-status/2017-July/001079.html).
-The following diagram summarizes how different components fit with the testcase-generator -
+An implementation of the automation tool briefly described [here](https://lists.freebsd.org/pipermail/soc-status/2017-July/001079.html).  
+The following diagram summarizes how different components fit with the testcase-generator -  
 
 ![Automation-Tool](architecture.png)
 
@@ -29,33 +31,23 @@ The following diagram summarizes how different components fit with the testcase-
 
 ## Instructions
 
-Clone the repository via -
-```
-git clone git@github.com:shivansh/smoketestsuite.git ~/smoketestsuite
-```
-The location `~/smoketestsuite` is important! If using a different location, the scripts under [src/scripts](src/scripts) need to be updated accordingly (for the time being).
+Clone the repository at `$HOME/smoketestsuite`.  
+The location `$HOME/smoketestsuite` is important! If using a different location, the scripts under [src/scripts](src/scripts) need to be updated accordingly (for the time being).
 
 ### Populating groff scripts
 * The directory [src/groff](src/groff) should be populated with the relevant groff scripts before proceeding for test generation. These scripts are available in the FreeBSD source tree. For filtering the utilities section wise, [fetch_groff.sh](src/scripts/fetch_groff.sh) sets the variable `section` to a default value of **1**. This value can be changed at will. However, it should be noted that currently the tool is tested to successfully generate **section 1 utilities** and might probably fail for other section numbers.
 
-* The variable `src` in [fetch_groff.sh](src/scripts/fetch_groff.sh) should be updated to the local location of the FreeBSD source. The default value is `~/freebsd`.
+* The variable `src` in [fetch_groff.sh](src/scripts/fetch_groff.sh) should be updated to the location of the local FreeBSD source. The default value is `$HOME/freebsd`.
 
-* Before proceeding to filter out groff scripts, the list of all utilities in the FreeBSD src tree has to be first extracted out. This is done via -
+* For populating `src/groff`, execute the following inside [src](src) -
   ```
   make fetch_utils
-  ```
-**NOTE:** The above command needs to be invoked only once. In case the src tree is updated and the generated list of utilities is stale, it can be run again.
-
-* For populating `src/groff`, execute from [src](src) -
-  ```
   make fetch_groff
   ```
 
 ### Generating tests
-Execute the following commands inside [src](src) -
+Execute the following inside [src](src) -
 ```
 make clean
 make && make run
 ```
-
-A few demo tests are located in [src/generated_tests](src/generated_tests).
