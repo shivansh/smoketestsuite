@@ -235,10 +235,9 @@ main()
 	// the utility_list can be populated above during declaration.
 	if (utility_list.empty()) {
 		if ((groff_dir = opendir("groff"))) {
+			readdir(groff_dir); 	// Skip directory entry for "."
+			readdir(groff_dir); 	// Skip directory entry for ".."
 			while ((ent = readdir(groff_dir))) {
-				if (!strncmp(ent->d_name, ".", 1))
-					continue;
-
 				util_name = ent->d_name;
 				utility_list.push_back(std::make_pair<std::string, std::string>
 						      (util_name.substr(0, util_name.length() - 2),
