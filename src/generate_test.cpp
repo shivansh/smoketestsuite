@@ -118,13 +118,13 @@ generate_test::generate_test(std::string utility,
 			output = generate_test::exec(command.c_str());
 			if (!output.first.compare(0, 6, "usage:")) {
 				add_testcase::add_known_testcase(i->value, util_with_section,
-						descr, output.first, test_ofs);
+								 descr, output.first, test_ofs);
 			}
 			else {
 				// A usage message was produced, i.e. we
 				// failed to guess the correct usage.
 				add_testcase::add_unknown_testcase(i->value, util_with_section, output.first,
-						output.second, testcase_buffer);
+								   output.second, testcase_buffer);
 			}
 			testcase_list.append("\tatf_add_test_case " + i->value + "_flag\n");
 		}
@@ -163,8 +163,8 @@ generate_test::generate_test(std::string utility,
 			for (int j = 0; j < temp; j++) {
 				if (!(usage_messages.at(j)).compare(usage_messages.at((j+1) % temp))) {
 					test_ofs << "usage_output=\'"
-						    + output.first.substr(0, 7 + utility.size())
-						    + "\'\n\n";
+						  + output.first.substr(0, 7 + utility.size())
+						  + "\'\n\n";
 					break;
 				}
 			}
@@ -197,9 +197,9 @@ generate_test::generate_test(std::string utility,
 
 		testcase_list.append("\tatf_add_test_case invalid_usage\n");
 		test_ofs << std::string("atf_test_case invalid_usage\ninvalid_usage_head()\n")
-			    + "{\n\tatf_set \"descr\" \"Verify that an invalid usage "
-			    + "with a supported option produces a valid error message"
-			    + "\"\n}\n\ninvalid_usage_body()\n{";
+			  + "{\n\tatf_set \"descr\" \"Verify that an invalid usage "
+			  + "with a supported option produces a valid error message"
+			  + "\"\n}\n\ninvalid_usage_body()\n{";
 
 		test_ofs << testcase_buffer + "\n}\n\n";
 	}
@@ -241,8 +241,8 @@ main()
 
 				util_name = ent->d_name;
 				utility_list.push_back(std::make_pair<std::string, std::string>
-						(util_name.substr(0, util_name.length() - 2),
-						 util_name.substr(util_name.length() - 1, 1)));
+						      (util_name.substr(0, util_name.length() - 2),
+						       util_name.substr(util_name.length() - 1, 1)));
 			}
 			closedir(groff_dir);
 		}

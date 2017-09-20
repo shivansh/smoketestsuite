@@ -29,17 +29,16 @@
 # Script for listing all the base utilities
 
 set -e
-src="$HOME/freebsd"
 pwd=$(pwd)
 dir="$pwd/scripts"
+src="$HOME/freebsd"
 
 fetch_utils() {
-	cd "$path"
+	cd "$src"
 	find . -name Makefile | xargs grep -l 'PROG\|PROG_CXX' \
 		| sed -e 's|/Makefile$||' | cut -c 3-
 }
 
 rm -f utils_list
 
-path="$HOME/freebsd"
 (fetch_utils) >> "$dir/utils_list"

@@ -1,19 +1,19 @@
 # $FreeBSD$
 #
-# Makefile for building the automation tool
+# Makefile for building the test generation tool
 
-CC	= c++
-CFLAGS	= -I/usr/local/include -std=c++11
-LIBS	= -L/usr/local/lib \
-	  -lboost_system \
-	  -lboost_filesystem \
-	  -lboost_thread \
-	  -lboost_chrono
-OBJS	= utils.o \
-	  read_annotations.o \
-	  generate_license.o \
-	  add_testcase.o \
-	  generate_test.o
+CC=    c++
+CFLAGS=-I/usr/local/include -std=c++11
+LIBS=  -L/usr/local/lib \
+       -lboost_system \
+       -lboost_filesystem \
+       -lboost_thread \
+       -lboost_chrono
+OBJS=  utils.o \
+       read_annotations.o \
+       generate_license.o \
+       add_testcase.o \
+       generate_test.o
 
 generate_tests: $(OBJS)
 	$(CC) $(CFLAGS) -o $(.TARGET) $(.ALLSRC) $(LIBS)
@@ -22,11 +22,9 @@ $(OBJS): $(.PREFIX).cpp $(.PREFIX).h
 	$(CC) $(CFLAGS) -c $(.PREFIX).cpp
 
 .PHONY: clean \
-	clean_tests \
 	fetch_groff \
 	fetch_utils \
-	run \
-	validate_changes
+	run
 
 clean:
 	rm -f $(OBJS) generate_tests scripts/utils_list
@@ -42,6 +40,3 @@ run:
 	sh scripts/generate_annot.sh
 	@echo Generating test files...
 	./generate_tests
-
-validate_changes:
-	sh scripts/validate.sh
