@@ -27,7 +27,11 @@ $(OBJS): $(.PREFIX).cpp $(.PREFIX).h
 	run
 
 clean:
-	rm -f $(OBJS) generate_tests scripts/utils_list
+	rm -rf $(OBJS) \
+		generate_tests \
+		scripts/utils_list \
+		groff \
+		generated_tests
 
 fetch_groff:
 	sh scripts/fetch_groff.sh
