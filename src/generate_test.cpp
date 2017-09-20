@@ -143,7 +143,7 @@ generate_test::generate_test(std::string utility,
 			command = utility + " -" + f_opts.opt_list.front() + " 2>&1 </dev/null";
 			output = generate_test::exec(command.c_str());
 
-			if (output.second)
+			if (output.second && !output.first.empty())
 				test_ofs << "usage_output=\'" + output.first + "\'\n\n";
 		}
 
@@ -161,7 +161,8 @@ generate_test::generate_test(std::string utility,
 
 			temp = usage_messages.size();
 			for (int j = 0; j < temp; j++) {
-				if (!(usage_messages.at(j)).compare(usage_messages.at((j+1) % temp))) {
+				if (!(usage_messages.at(j)).compare(usage_messages.at((j+1) % temp)) &&
+					!output.first.empty()) {
 					test_ofs << "usage_output=\'"
 						  + output.first.substr(0, 7 + utility.size())
 						  + "\'\n\n";
