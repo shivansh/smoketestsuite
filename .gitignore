@@ -18,4 +18,5 @@ Makefile.Linux
 *.o
 
 # Exclude generated scripts
-generated_tests
+src/generated_tests
+src/update_tree.sh
