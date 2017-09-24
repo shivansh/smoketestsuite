@@ -30,10 +30,9 @@
 
 set -e
 
-src="$HOME/freebsd"
-pwd=$(pwd)
-dir_list="$pwd/scripts/utils_list"
-groff_src="$pwd/groff"
+src="../../../"
+dir_list="$(pwd)/scripts/utils_list"
+groff_src="$(pwd)/groff"
 section=1       # Section number for filtering the base utilities
 
 rm -rf "$groff_src" && mkdir "$groff_src"
@@ -45,7 +44,9 @@ do
 	do
 		# Check for only section 1 entries
 		case "$file" in
-			*.1) cp "$file" "$pwd/groff"
+			*.1) cp "$file" "$groff_src"
 		esac
 	done
 done< "$dir_list"
+
+rm -f "$groff_src/ed.1" "$groff_src/pax.1" "$groff_src/passwd.1"

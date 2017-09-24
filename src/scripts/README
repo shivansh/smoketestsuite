@@ -1,7 +1,7 @@
-# Handy scripts
+# Helper scripts
 
 Script Name       | Functionality
-------------------|-----------------
+------------------+-----------------
 fetch_groff.sh    | Lists location of all section 1 utilities
 fetch_utils.sh    | Saves all the base utilities in the src tree in **utils_list**
 generate_annot.sh | Populates annotation files under [annotations](../annotations)

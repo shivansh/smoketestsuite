@@ -29,9 +29,8 @@
 # Script for listing all the base utilities
 
 set -e
-pwd=$(pwd)
-dir="$pwd/scripts"
-src="$HOME/freebsd"
+script_dir="scripts"
+src="../../../"
 
 fetch_utils() {
 	cd "$src"
@@ -39,6 +38,6 @@ fetch_utils() {
 		| sed -e 's|/Makefile$||' | cut -c 3-
 }
 
-rm -f utils_list
+rm -f "$script_dir/utils_list"
 
-(fetch_utils) >> "$dir/utils_list"
+(fetch_utils) >> "$script_dir/utils_list"
