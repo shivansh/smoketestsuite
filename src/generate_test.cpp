@@ -26,19 +26,20 @@
  * $FreeBSD$
  */
 
-#include <array>
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/chrono.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
+#include <cstdio>
 #include <cstdlib>
 #include <dirent.h>
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <pthread.h>
+#include <signal.h>
 #include <stdexcept>
 #include <sys/stat.h>
-#include <sys/wait.h>
 #include <unordered_set>
 
 #include "add_testcase.h"
@@ -48,34 +49,7 @@
 
 #define TIMEOUT 2       /* threshold (seconds) for a function call to return. */
 
-/*
- * Executes the passed argument "cmd" in a shell
- * and returns its output and the exit status.
- */
-std::pair<std::string, int>
-generatetest::Exec(const char *cmd)
-{
-	const int bufsize = 128;
-	std::array<char, bufsize> buffer;
-	std::string usage_output;
-	FILE *pipe = popen(cmd, "r");
-
-	if (!pipe)
-		throw std::runtime_error("popen() failed!");
-
-	try {
-		while (!feof(pipe))
-			if (std::fgets(buffer.data(), bufsize, pipe) != NULL)
-				usage_output += buffer.data();
-	}
-	catch(...) {
-		pclose(pipe);
-		throw "Unable to execute the command: " + std::string(cmd);
-	}
-
-	return std::make_pair<std::string, int>
-		((std::string)usage_output, WEXITSTATUS(pclose(pipe)));
-}
+const char *tests_dir = "generated_tests/";  /* Directory to collect generated tests. */
 
 /* Generate a test for the given utility. */
 void
@@ -83,7 +57,7 @@ generatetest::GenerateTest(std::string utility,
 			     std::string section,
 			     std::string& license)
 {
-	std::list<Utils::OptRelation *> identified_opt_list;  /* List of identified option relations. */
+	std::list<utils::OptRelation *> identified_opt_list;  /* List of identified option relations. */
 	std::vector<std::string> usage_messages;         /* Vector of usage messages. Used for validating
 							  * their consistency across different runs.
 							  */
@@ -93,7 +67,7 @@ generatetest::GenerateTest(std::string utility,
 	std::string test_file;                           /* atf-sh test name. */
 	std::string util_with_section;                   /* Section number appended to utility. */
 	std::ofstream test_fstream;                      /* Output stream for the atf-sh test. */
-	std::pair<std::string, int> output;              /* Return value type for `Exec()`. */
+	std::pair<std::string, int> output;              /* Return value type for `Execute()`. */
 	std::unordered_set<std::string> annotation_set;  /* Hashset of utility specific annotations. */
 
 	/* Read annotations and populate hash set "annotation_set". */
@@ -101,9 +75,9 @@ generatetest::GenerateTest(std::string utility,
 
 	util_with_section = utility + '(' + section + ')';
 
-	Utils::OptDefinition opt_def;
+	utils::OptDefinition opt_def;
 	identified_opt_list = opt_def.CheckOpts(utility);
-	test_file = "generated_tests/" + utility + "_test.sh";
+	test_file = tests_dir + utility + "_test.sh";
 
 	/* Add license in the generated test scripts. */
 	test_fstream.open(test_file, std::ios::out);
@@ -121,7 +95,7 @@ generatetest::GenerateTest(std::string utility,
 	if (!identified_opt_list.empty()) {
 		for (const auto &i : identified_opt_list) {
 			command = utility + " -" + i->value + " 2>&1 </dev/null";
-			output = generatetest::Exec(command.c_str());
+			output = utils::Execute(command.c_str());
 			if (boost::iequals(output.first.substr(0, 6), "usage:")) {
 				/* A usage message was produced => our guessed usage is incorrect. */
 				addtestcase::UnknownTestcase(i->value, util_with_section, output.first,
@@ -146,7 +120,7 @@ generatetest::GenerateTest(std::string utility,
 		if (opt_def.opt_list.size() == 1) {
 			/* Utility supports a single option, check if it produces a usage message. */
 			command = utility + " -" + opt_def.opt_list.front() + " 2>&1 </dev/null";
-			output = generatetest::Exec(command.c_str());
+			output = utils::Execute(command.c_str());
 
 			if (output.second && !output.first.empty())
 				test_fstream << "usage_output=\'" + output.first + "\'\n\n";
@@ -158,7 +132,7 @@ generatetest::GenerateTest(std::string utility,
 			 */
 			for (const auto &i : opt_def.opt_list) {
 				command = utility + " -" + i + " 2>&1 </dev/null";
-				output = generatetest::Exec(command.c_str());
+				output = utils::Execute(command.c_str());
 
 				if (output.second && usage_messages.size() < 3)
 					usage_messages.push_back(output.first);
@@ -185,7 +159,7 @@ generatetest::GenerateTest(std::string utility,
 				continue;
 
 			command = utility + " -" + i + " 2>&1 </dev/null";
-			output = generatetest::Exec(command.c_str());
+			output = utils::Execute(command.c_str());
 
 			if (output.second) {
 				/* Non-zero exit status was encountered. */
@@ -218,7 +192,7 @@ generatetest::GenerateTest(std::string utility,
 	 */
 	if (annotation_set.find("*") == annotation_set.end()) {
 		command = utility + " 2>&1 </dev/null";
-		output = generatetest::Exec(command.c_str());
+		output = utils::Execute(command.c_str());
 		addtestcase::NoArgsTestcase(util_with_section, output, test_fstream);
 		testcase_list.append("\tatf_add_test_case no_arguments\n");
 	}
@@ -231,31 +205,37 @@ int
 main()
 {
 	std::ifstream groff_list;
-	std::list<std::pair<std::string, std::string>> utility_list;
+	std::list<std::pair<std::string, std::string>> utility_list = {
+		std::make_pair<std::string, std::string>("enigma", "1"),
+		std::make_pair<std::string, std::string>("stdbuf", "1")
+	};
 	std::string test_file;  /* atf-sh test name. */
 	std::string util_name;  /* Utility name. */
-	const char *tests_dir = "generated_tests/";
 	struct stat sb;
 	struct dirent *ent;
-	DIR *groff_dir;
-	char answer;            /* User input to determine overwriting of test files. */
-	std::string license; 	/* Customized license generated during runtime. */
+	DIR *groff_dir_ptr;
+	char answer;          	/* User input to determine overwriting of test files. */
+	std::string license;  	/* Customized license generated during runtime. */
+	const char *failed_groff_dir = "failed_groff/";  /* Directory for collecting groff scripts
+							  * for utilities with failed test generation.
+							  */
+	const char *groff_dir = "groff/"; 		 /* Directory of groff scripts. */
 
 	/*
 	 * For testing (or generating tests for only selected utilities),
 	 * the utility_list can be populated above during declaration.
 	 */
 	if (utility_list.empty()) {
-		if ((groff_dir = opendir("groff"))) {
-			readdir(groff_dir); 	/* Skip directory entry for "." */
-			readdir(groff_dir); 	/* Skip directory entry for ".." */
-			while ((ent = readdir(groff_dir))) {
+		if ((groff_dir_ptr = opendir(groff_dir))) {
+			readdir(groff_dir_ptr); 	/* Skip directory entry for "." */
+			readdir(groff_dir_ptr); 	/* Skip directory entry for ".." */
+			while ((ent = readdir(groff_dir_ptr))) {
 				util_name = ent->d_name;
 				utility_list.push_back(std::make_pair<std::string, std::string>
 						      (util_name.substr(0, util_name.length() - 2),
 						       util_name.substr(util_name.length() - 1, 1)));
 			}
-			closedir(groff_dir);
+			closedir(groff_dir_ptr);
 		} else {
 			fprintf(stderr, "Could not open the directory: ./groff\nRefer to the "
 					"section \"Populating groff scripts\" in README!\n");
@@ -263,7 +243,7 @@ main()
 		}
 	}
 
-	/* Check if the directory 'generated_tests' exists. */
+	/* Check if the directory "tests_dir" exists. */
 	if (stat(tests_dir, &sb) || !S_ISDIR(sb.st_mode)) {
 		boost::filesystem::path dir(tests_dir);
 		if (boost::filesystem::create_directory(dir))
@@ -277,23 +257,62 @@ main()
 	/* Generate a license to be added in the generated scripts. */
 	license = generatelicense::GenerateLicense();
 
+	remove(failed_groff_dir);
+	boost::filesystem::create_directory(failed_groff_dir);
+
+	setlinebuf(stdout);
 	for (const auto &util : utility_list) {
 		test_file = tests_dir + util.first + "_test.sh";
 		/* TODO(shivansh) Check before overwriting existing test scripts. */
 
-		setlinebuf(stdout);
 		std::cout << "Generating test for: " + util.first
 			   + '('+ util.second + ')' << " ...";
 
 		boost::thread api_caller(generatetest::GenerateTest, util.first, util.second, license);
+
 		if (api_caller.try_join_for(boost::chrono::seconds(TIMEOUT))) {
 			/* API call successfully returned within TIMEOUT (seconds). */
 			std::cout << "Successful\n";
 		} else {
-			/* API call timed out. */
+			/* API call timed out.
+			 * TODO(shivansh) The thread needs to be killed at this point.
+			 * To achieve this, we first detach the thread (which I am assuming places
+			 * the thread in a different thread group), and then send it a SIGINT.
+			 * The expected behavior of this is that the thread represented by "thread_handle"
+			 * will be killed, and the execution will continue normally.
+			 * However, the observed behavior for this is that pthread_kill() returns with
+			 * an exit status 22, and the entire program terminates. A plausible reasoning
+			 * behind this is the "thread_handle" is of the currently running process itself.
+			 * Another reason for this can be that the detached thread is still in the thread
+			 * group of the currently running parent process, and when the thread is
+			 * killed, the parent dies along with it.
+			 *
+			 * An alternative approach for this (which I earlier used) is that we don't
+			 * perform any cleanup for the thread corresponding to the failed test. In
+			 * that case, the next scheduled run for generating test for stdbuf(1) (which
+			 * succeeds normally) will start and then fail too <- "I haven't been able to
+			 * figure out the reason behind this behavior".
+			 */
+
+			/* Get the native handle of the boost::thread. Reference: https://goo.gl/idaQh4 */
+			boost::thread::native_handle_type thread_handle = api_caller.native_handle();
+
+			/* This part of the current if-statement will only execute when the currently
+			 * selected utility is doing a blocking read (e.g. "ed -x" waits on user input).
+			 * Hence, there is no way (that I can think off) that "wait()"ing on this thread
+			 * via join() will work. Hence, we detach this thread and kill it via SIGINT (a
+			 * better choice would have been SIGTERM, but SIGINT works too for shell utilities.
+			 * And there "might" be signal handlers too for SIGINT ensuring proper cleanup).
+			 */
+			pthread_detach(thread_handle);
+
+			/* Send a SIGINT to the detached thread corresponding to thread_handle. */
+			std::cerr << "Exit: " << pthread_kill(thread_handle, 2) << std::endl;
+
 			std::cout << "Failed!\n";
 			/* Remove the incomplete test file. */
-			remove(("generated_tests/" + util.first + "_test.sh").c_str());
+			remove((tests_dir + util.first + "_test.sh").c_str());
+			rename((groff_dir + util.first + ".1").c_str(), (failed_groff_dir + util.first + ".1").c_str());
 		}
 	}
 

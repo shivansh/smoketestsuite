@@ -29,6 +29,5 @@
 #include "utils.h"
 
 namespace generatetest {
-	std::pair<std::string, int> Exec(const char*);
 	void GenerateTest(std::string, std::string, std::string&);
 }

@@ -29,7 +29,7 @@
 #include <list>
 #include <unordered_map>
 
-namespace Utils {
+namespace utils {
 	/*
 	 * Option relation which maps option names to
 	 * a unique identifier in their description.
@@ -41,6 +41,8 @@ namespace Utils {
 				       * message (if) produced when using this option.
 				       */
 	} opt_relation;
+
+	std::pair<std::string, int> Execute(const char*);
 
 	class OptDefinition {
 		public:

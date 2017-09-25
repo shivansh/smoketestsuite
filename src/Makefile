@@ -8,7 +8,8 @@ LIBS=  -L/usr/local/lib \
        -lboost_system \
        -lboost_filesystem \
        -lboost_thread \
-       -lboost_chrono
+       -lboost_chrono \
+       -lpthread
 OBJS=  utils.o \
        read_annotations.o \
        generate_license.o \

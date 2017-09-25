@@ -49,4 +49,20 @@ do
 	done
 done< "$dir_list"
 
-rm -f "$groff_src/ed.1" "$groff_src/pax.1" "$groff_src/passwd.1"
+# Remove the scripts which cause trouble while test generation. This
+# is just a "hack" to get a successful execution, a fix is on the way.
+rm -f \
+	"$groff_src/pax.1" \
+	"$groff_src/passwd.1" \
+	"$groff_src/enigma.1" \
+	"$groff_src/su.1" \
+	"$groff_src/pkill.1" \
+	"$groff_src/elfcopy.1" \
+	"$groff_src/readelf.1" \
+	"$groff_src/man.options.1" \
+	"$groff_src/smbutil.1" \
+	"$groff_src/units.1" \
+	"$groff_src/rup.1" \
+	"$groff_src/rusers.1" \
+	"$groff_src/ypwhich.1" \
+	"$groff_src/cdcontrol.1"
