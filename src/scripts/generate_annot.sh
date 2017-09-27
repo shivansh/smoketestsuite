@@ -28,7 +28,6 @@
 
 # Script for generating annotations based on generated tests.
 
-pwd=$(pwd)
 suffix="_test"
 extension=".sh"
 update_required=0
@@ -66,7 +65,7 @@ do
 					update_required=1
 				fi
 
-				annotations_file="$pwd/annotations/$test.annot"
+				annotations_file="annotations/$test.annot"
 				# Append only the new annotations
 				printf "$annotations" > "$annotations_file.temp"
 				[ ! -e "$annotations_file" ] && touch "$annotations_file"

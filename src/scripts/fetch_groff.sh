@@ -33,7 +33,6 @@ set -e
 src="../../../"
 dir_list="$(pwd)/scripts/utils_list"
 groff_src="$(pwd)/groff"
-section=1       # Section number for filtering the base utilities
 
 rm -rf "$groff_src" && mkdir "$groff_src"
 cd "$src"
@@ -42,27 +41,9 @@ while IFS= read -r dir_entry
 do
 	for file in "$dir_entry"/*
 	do
-		# Check for only section 1 entries
 		case "$file" in
-			*.1) cp "$file" "$groff_src"
+			*.1) cp "$file" "$groff_src" ;;
+			*.8) cp "$file" "$groff_src" ;;
 		esac
 	done
 done< "$dir_list"
-
-# Remove the scripts which cause trouble while test generation. This
-# is just a "hack" to get a successful execution, a fix is on the way.
-rm -f \
-	"$groff_src/pax.1" \
-	"$groff_src/passwd.1" \
-	"$groff_src/enigma.1" \
-	"$groff_src/su.1" \
-	"$groff_src/pkill.1" \
-	"$groff_src/elfcopy.1" \
-	"$groff_src/readelf.1" \
-	"$groff_src/man.options.1" \
-	"$groff_src/smbutil.1" \
-	"$groff_src/units.1" \
-	"$groff_src/rup.1" \
-	"$groff_src/rusers.1" \
-	"$groff_src/ypwhich.1" \
-	"$groff_src/cdcontrol.1"
