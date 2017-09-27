@@ -26,22 +26,28 @@
  * $FreeBSD$
  */
 
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
 
 #include "generate_license.h"
+#include "utils.h"
 
 std::string
-generatelicense::GenerateLicense()
+generatelicense::GenerateLicense(int argc, char **argv)
 {
 	std::string license;
 	std::string copyright_owner;
 
-	/*
-	 * Get the name of the copyright ownner which
-	 * will be added in the license.
-	 */
-	std::cout << "Please enter the name to be added in the license: ";
-	std::cin >> copyright_owner;
+	if (argc > 1) {
+		if (argc == 3 && strncmp(argv[1], "--name ", 7))
+			copyright_owner = argv[2];
+		else {
+			std::cerr << "Usage: ./generate_tests --name <copyright_owner>\n";
+			exit(EXIT_FAILURE);
+		}
+	} else
+		copyright_owner = utils::Execute("id -P | cut -d : -f 8").first;
 
 	license =
 		"#\n"

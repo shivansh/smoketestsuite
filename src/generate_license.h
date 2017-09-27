@@ -27,5 +27,5 @@
  */
 
 namespace generatelicense {
-	std::string GenerateLicense();
+	std::string GenerateLicense(int, char **);
 }
