@@ -31,11 +31,11 @@
 set -e
 
 src="../../../"
-dir_list="$(pwd)/scripts/utils_list"
-groff_src="$(pwd)/groff"
+dir_list="tools/tools/smoketestsuite/scripts/utils_list"
+groff_src="tools/tools/smoketestsuite/groff"
 
-rm -rf "$groff_src" && mkdir "$groff_src"
 cd "$src"
+rm -rf "$groff_src" && mkdir "$groff_src"
 
 while IFS= read -r dir_entry
 do

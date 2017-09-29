@@ -27,9 +27,7 @@
  */
 
 #include <boost/algorithm/string.hpp>
-#include <boost/chrono.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/thread.hpp>
 #include <cstdio>
 #include <cstdlib>
 #include <dirent.h>

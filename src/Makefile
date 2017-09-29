@@ -6,10 +6,7 @@ CC=    c++
 CFLAGS=-I/usr/local/include -std=c++11
 LIBS=  -L/usr/local/lib \
        -lboost_system \
-       -lboost_filesystem \
-       -lboost_thread \
-       -lboost_chrono \
-       -lpthread
+       -lboost_filesystem
 OBJS=  utils.o \
        read_annotations.o \
        generate_license.o \
