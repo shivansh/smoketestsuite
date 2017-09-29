@@ -42,7 +42,8 @@ namespace utils {
 				       */
 	} opt_relation;
 
-	std::pair<std::string, int> Execute(const char*);
+	std::pair<std::string, int> Execute(std::string);
+	FILE* POpen(const char*, const char*, pid_t&);
 
 	class OptDefinition {
 		public:

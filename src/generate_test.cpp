@@ -47,15 +47,13 @@
 #include "generate_test.h"
 #include "read_annotations.h"
 
-#define TIMEOUT 2       /* threshold (seconds) for a function call to return. */
-
 const char *tests_dir = "generated_tests/";  /* Directory to collect generated tests. */
 
 /* Generate a test for the given utility. */
 void
 generatetest::GenerateTest(std::string utility,
-			     std::string section,
-			     std::string& license)
+			   std::string section,
+			   std::string& license)
 {
 	std::list<utils::OptRelation *> identified_opt_list;  /* List of identified option relations. */
 	std::vector<std::string> usage_messages;         /* Vector of usage messages. Used for validating
@@ -95,7 +93,7 @@ generatetest::GenerateTest(std::string utility,
 	if (!identified_opt_list.empty()) {
 		for (const auto &i : identified_opt_list) {
 			command = utility + " -" + i->value + " 2>&1 </dev/null";
-			output = utils::Execute(command.c_str());
+			output = utils::Execute(command);
 			if (boost::iequals(output.first.substr(0, 6), "usage:")) {
 				/* A usage message was produced => our guessed usage is incorrect. */
 				addtestcase::UnknownTestcase(i->value, util_with_section, output.first,
@@ -120,7 +118,7 @@ generatetest::GenerateTest(std::string utility,
 		if (opt_def.opt_list.size() == 1) {
 			/* Utility supports a single option, check if it produces a usage message. */
 			command = utility + " -" + opt_def.opt_list.front() + " 2>&1 </dev/null";
-			output = utils::Execute(command.c_str());
+			output = utils::Execute(command);
 
 			if (output.second && !output.first.empty())
 				test_fstream << "usage_output=\'" + output.first + "\'\n\n";
@@ -132,7 +130,7 @@ generatetest::GenerateTest(std::string utility,
 			 */
 			for (const auto &i : opt_def.opt_list) {
 				command = utility + " -" + i + " 2>&1 </dev/null";
-				output = utils::Execute(command.c_str());
+				output = utils::Execute(command);
 
 				if (output.second && usage_messages.size() < 3)
 					usage_messages.push_back(output.first);
@@ -159,19 +157,19 @@ generatetest::GenerateTest(std::string utility,
 				continue;
 
 			command = utility + " -" + i + " 2>&1 </dev/null";
-			output = utils::Execute(command.c_str());
+			output = utils::Execute(command);
 
 			if (output.second) {
 				/* Non-zero exit status was encountered. */
 				addtestcase::UnknownTestcase(i, util_with_section, output.first,
-								   output.second, testcase_buffer);
+							     output.second, testcase_buffer);
 			} else {
 				/*
 				 * EXIT_SUCCESS was encountered. Hence,
 				 * the guessed usage was correct.
 				 */
 				addtestcase::KnownTestcase(i, util_with_section, "",
-								 output.first, test_fstream);
+							   output.first, test_fstream);
 				testcase_list.append(std::string("\tatf_add_test_case ")
 						     + i + "_flag\n");
 			}
@@ -192,7 +190,7 @@ generatetest::GenerateTest(std::string utility,
 	 */
 	if (annotation_set.find("*") == annotation_set.end()) {
 		command = utility + " 2>&1 </dev/null";
-		output = utils::Execute(command.c_str());
+		output = utils::Execute(command);
 		addtestcase::NoArgsTestcase(util_with_section, output, test_fstream);
 		testcase_list.append("\tatf_add_test_case no_arguments\n");
 	}
@@ -202,13 +200,10 @@ generatetest::GenerateTest(std::string utility,
 }
 
 int
-main()
+main(int argc, char **argv)
 {
 	std::ifstream groff_list;
-	std::list<std::pair<std::string, std::string>> utility_list = {
-		std::make_pair<std::string, std::string>("enigma", "1"),
-		std::make_pair<std::string, std::string>("stdbuf", "1")
-	};
+	std::list<std::pair<std::string, std::string>> utility_list;
 	std::string test_file;  /* atf-sh test name. */
 	std::string util_name;  /* Utility name. */
 	struct stat sb;
@@ -255,12 +250,12 @@ main()
 	}
 
 	/* Generate a license to be added in the generated scripts. */
-	license = generatelicense::GenerateLicense();
+	license = generatelicense::GenerateLicense(argc, argv);
 
 	remove(failed_groff_dir);
 	boost::filesystem::create_directory(failed_groff_dir);
-
 	setlinebuf(stdout);
+
 	for (const auto &util : utility_list) {
 		test_file = tests_dir + util.first + "_test.sh";
 		/* TODO(shivansh) Check before overwriting existing test scripts. */
@@ -268,52 +263,8 @@ main()
 		std::cout << "Generating test for: " + util.first
 			   + '('+ util.second + ')' << " ...";
 
-		boost::thread api_caller(generatetest::GenerateTest, util.first, util.second, license);
-
-		if (api_caller.try_join_for(boost::chrono::seconds(TIMEOUT))) {
-			/* API call successfully returned within TIMEOUT (seconds). */
-			std::cout << "Successful\n";
-		} else {
-			/* API call timed out.
-			 * TODO(shivansh) The thread needs to be killed at this point.
-			 * To achieve this, we first detach the thread (which I am assuming places
-			 * the thread in a different thread group), and then send it a SIGINT.
-			 * The expected behavior of this is that the thread represented by "thread_handle"
-			 * will be killed, and the execution will continue normally.
-			 * However, the observed behavior for this is that pthread_kill() returns with
-			 * an exit status 22, and the entire program terminates. A plausible reasoning
-			 * behind this is the "thread_handle" is of the currently running process itself.
-			 * Another reason for this can be that the detached thread is still in the thread
-			 * group of the currently running parent process, and when the thread is
-			 * killed, the parent dies along with it.
-			 *
-			 * An alternative approach for this (which I earlier used) is that we don't
-			 * perform any cleanup for the thread corresponding to the failed test. In
-			 * that case, the next scheduled run for generating test for stdbuf(1) (which
-			 * succeeds normally) will start and then fail too <- "I haven't been able to
-			 * figure out the reason behind this behavior".
-			 */
-
-			/* Get the native handle of the boost::thread. Reference: https://goo.gl/idaQh4 */
-			boost::thread::native_handle_type thread_handle = api_caller.native_handle();
-
-			/* This part of the current if-statement will only execute when the currently
-			 * selected utility is doing a blocking read (e.g. "ed -x" waits on user input).
-			 * Hence, there is no way (that I can think off) that "wait()"ing on this thread
-			 * via join() will work. Hence, we detach this thread and kill it via SIGINT (a
-			 * better choice would have been SIGTERM, but SIGINT works too for shell utilities.
-			 * And there "might" be signal handlers too for SIGINT ensuring proper cleanup).
-			 */
-			pthread_detach(thread_handle);
-
-			/* Send a SIGINT to the detached thread corresponding to thread_handle. */
-			std::cerr << "Exit: " << pthread_kill(thread_handle, 2) << std::endl;
-
-			std::cout << "Failed!\n";
-			/* Remove the incomplete test file. */
-			remove((tests_dir + util.first + "_test.sh").c_str());
-			rename((groff_dir + util.first + ".1").c_str(), (failed_groff_dir + util.first + ".1").c_str());
-		}
+		generatetest::GenerateTest(util.first, util.second, license);
+		std::cout << "Done!\n";
 	}
 
 	return EXIT_SUCCESS;

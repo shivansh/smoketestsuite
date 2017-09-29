@@ -27,14 +27,26 @@
  */
 
 #include <array>
+#include <cstdlib>
+#include <fcntl.h>
 #include <fstream>
 #include <iostream>
-#include <cstdlib>
+#include <pthread.h>
+#include <signal.h>
+#include <string.h>
+#include <sys/select.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
 #include "utils.h"
 
-namespace chrono = std::chrono;
+#define READ 0
+#define WRITE 1
+#define STDIN_FILENO 0
+#define STDOUT_FILENO 1
+#define BUFSIZE 128
+#define TIMEOUT 2       /* threshold (seconds) for a function call to return. */
+
 /*
  * Insert a list of user-defined option definitions
  * into a hashmap. These specific option definitions
@@ -153,43 +165,153 @@ utils::OptDefinition::CheckOpts(std::string utility)
 }
 
 /*
- * Executes the passed argument "cmd" in a shell
+ * When pclose() is called on the stream returned by popen(),
+ * it waits indefinitely for the created shell process to
+ * terminate in cases where the shell command waits for the
+ * user input via a blocking read (e.g. passwd(1)).
+ * Hence, we define a custom function which alongside
+ * returning the FILE* stream (as with popen()) also returns
+ * the pid of the newly created (child) shell process. This
+ * pid can later be used for sending a signal to the child.
+ *
+ * NOTE For the sake of completeness, we also specify actions
+ * to be taken corresponding to the "w" (write) type. However,
+ * in this context only the "r" (read) type will be required.
+ */
+FILE*
+utils::POpen(const char *command, const char *type, pid_t& pid)
+{
+	int pdes[2];
+	int pdes_unused_in_parent;
+	char *argv[4];
+	FILE *iop;
+	pid_t child_pid;
+
+	/* Create a pipe with ~
+	 *   - pdes[READ]: read end
+	 *   - pdes[WRITE]: write end
+	 */
+	if (pipe2(pdes, O_CLOEXEC) < 0)
+		return (NULL);
+
+	if (*type == 'r') {
+		iop = fdopen(pdes[READ], type);
+		pdes_unused_in_parent = pdes[WRITE];
+	} else if (*type == 'w') {
+		iop = fdopen(pdes[WRITE], type);
+		pdes_unused_in_parent = pdes[READ];
+	} else
+		return (NULL);
+
+	if (iop == NULL) {
+		close(pdes[READ]);
+		close(pdes[WRITE]);
+		return (NULL);
+	}
+
+	argv[0] = (char *)"sh"; 	/* Type-cast to avoid compiler warning [-Wwrite-strings]. */
+	argv[1] = (char *)"-c";
+	argv[2] = (char *)command;
+	argv[3] = NULL;
+
+	switch (child_pid = vfork()) {
+		case -1: 		/* Error. */
+			close(pdes_unused_in_parent);
+			fclose(iop);
+			return (NULL);
+		case 0: 		/* Child. */
+			if (*type == 'r') {
+				if (pdes[WRITE] != STDOUT_FILENO)
+					dup2(pdes[WRITE], STDOUT_FILENO);
+				else
+					fcntl(pdes[WRITE], F_SETFD, 0);
+			} else {
+				if (pdes[READ] != STDIN_FILENO)
+					dup2(pdes[READ], STDIN_FILENO);
+				else
+					fcntl(pdes[READ], F_SETFD, 0);
+			}
+
+			/*
+			 * For current usecase, it might so happen that the child gets
+			 * stuck on a blocking read (e.g. passwd(1)) waiting for user
+			 * input. In that case the child will be killed via a signal.
+			 * To avoid any effect on the parent's execution, we place the
+			 * child in a separate process group with pgid set as child_pid.
+			 */
+			setpgid(child_pid, child_pid);
+			execve("/bin/sh", argv, NULL);
+			exit(127);
+	}
+
+	/* Parent */
+	close(pdes_unused_in_parent);
+	pid = child_pid;
+
+	return (iop);
+}
+
+/*
+ * Executes the passed argument "command" in a shell
  * and returns its output and the exit status.
  */
 std::pair<std::string, int>
-utils::Execute(const char *cmd)
+utils::Execute(std::string command)
 {
-	std::cerr << "Starting\n";
-	const int bufsize = 128;
+	const int bufsize = BUFSIZE;
+	pid_t pid;
+	int result;
 	std::array<char, bufsize> buffer;
 	std::string usage_output;
-	FILE *pipe = popen(cmd, "r");
-	chrono::steady_clock::time_point t1, t2;
-	chrono::duration<double> time_span;
+	struct timeval tv;
+	fd_set readfds;
+	FILE *pipe = utils::POpen(command.c_str(), "r", pid);
 
-	if (!pipe)
-		throw std::runtime_error("popen() failed!");
+	if (!pipe) {
+		perror ("popen()");
+		exit(EXIT_FAILURE);
+	}
 
-	t1 = chrono::steady_clock::now();
+	/*
+	 * Set a timeout value for the spawned shell
+	 * process to complete its execution.
+	 */
+	tv.tv_sec = TIMEOUT;
+	tv.tv_usec = 0;
 
-	try {
-		while (!feof(pipe)) {
-			if (std::fgets(buffer.data(), bufsize, pipe) != NULL)
-				usage_output += buffer.data();
-			else
-				break; 		/* Is it justified to "break" in this case ? */
+	FD_ZERO(&readfds);
+	FD_SET(fileno(pipe), &readfds);
+	result = select(fileno(pipe) + 1, &readfds, NULL, NULL, &tv);
 
-			t2 = chrono::steady_clock::now();
-			if (chrono::duration_cast<chrono::duration<double>>(t2 - t1).count() > 0.1)
-				break;
+	if (result > 0) {
+		try {
+			while (!feof(pipe)) {
+				if (std::fgets(buffer.data(), bufsize, pipe) != NULL)
+					usage_output += buffer.data();
+			}
 		}
-	}
-	catch(...) {
-		pclose(pipe);
-		throw "Unable to execute the command: " + std::string(cmd);
+		catch(...) {
+			pclose(pipe);
+			throw "Unable to execute the command: " + std::string(command);
+		}
+
+	} else if (result == -1) {
+		perror("select()");
+		exit(EXIT_FAILURE);
 	}
 
-	std::cerr << "Exiting\n";
+	/*
+	 * We gave a relaxed value of 2 seconds for the shell process
+	 * to complete it's execution. If at this point it is still
+	 * alive, it (most probably) is stuck on a blocking read
+	 * waiting for the user input. Since few of the utilities
+	 * performing such blocking reads don't respond to SIGINT
+	 * (e.g. pax(1)), we terminate the shell process via SIGTERM.
+	 */
+	if (kill(pid, SIGTERM) < 0) {
+		perror("kill()");
+	}
+
 	return std::make_pair<std::string, int>
 		((std::string)usage_output, WEXITSTATUS(pclose(pipe)));
 }
