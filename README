@@ -31,9 +31,7 @@ Dependencies
 
 Instructions
 ============
-* The directory "groff" should be populated with the relevant groff scripts before proceeding for test generation. These scripts are available in the FreeBSD source tree. For filtering the utilities section wise, fetch_groff.sh (scripts/fetch_groff.sh) sets the variable `section` to a default value of 1. This value can be changed at will. However, it should be noted that currently the tool is tested to successfully generate section 1 utilities and might probably fail for other section numbers.
-
-* The variable `src` in fetch_groff.sh (scripts/fetch_groff.sh) should be updated to the location of the local FreeBSD source. The default value is `$HOME/freebsd`.
+* The directory "groff" should be populated with the relevant groff scripts before proceeding for test generation. These scripts are available in the FreeBSD source tree.
 
 * For populating the directory "groff", execute the following from the project root -
 
@@ -46,7 +44,3 @@ Execute the following from the project root -
 
 	make clean
 	make && make run
-
-
-When generating the tests via `make run`, it will so happen that the tool will start showing failures after generating tests for first 10 utilities. I wrote on this issue briefly sometime back (https://lists.freebsd.org/pipermail/soc-status/2017-September/001107.html) and this problem was largely solved by closing stdin (as suggested by @asomers). But utilities like ed(1) and pax(1) aren't affected by closing stdin, and hence the behavior which was described in the previous link is reproduced.
-A quick and dirty solution for this (for the time being) is to remove these groff scripts from the locally extracted ones: "ed.1", "pax.1", "passwd.1".
