@@ -40,12 +40,12 @@
 
 #include "utils.h"
 
-#define READ 0
-#define WRITE 1
+#define READ 0  	/* Pipe descriptor: read end. */
+#define WRITE 1 	/* Pipe descriptor: write end. */
 #define STDIN_FILENO 0
 #define STDOUT_FILENO 1
-#define BUFSIZE 128
-#define TIMEOUT 2       /* threshold (seconds) for a function call to return. */
+#define BUFSIZE 128 	/* Buffer size (used for buffering output from a utility's execution). */
+#define TIMEOUT 2 	/* threshold (seconds) for a function call to return. */
 
 /*
  * Insert a list of user-defined option definitions
@@ -67,8 +67,8 @@ utils::OptDefinition::InsertOpts()
 	v_def.keyword = "version";
 
 	/*
-	 * `opt_map` contains all the options
-	 * which can be "easily" tested.
+	 * "opt_map" contains all the options
+	 * which can be easily tested.
 	 */
 	opt_map.insert(std::make_pair<std::string, OptRelation>
 		      ("h", (OptRelation)h_def));
@@ -93,71 +93,73 @@ utils::OptDefinition::CheckOpts(std::string utility)
 	int space_index;                        /* First occurrence of space character
 					         * in a multi-word option definition.
 					         */
-	std::list<OptRelation *> identified_opt_list;  /* List of identified option relations (OptRelation's). */
+	std::list<OptRelation *> identified_opt_list;  /* List of identified option relations. */
+	std::list<std::string> supported_sections = { "1", "8" };
 
 	/* Generate the hashmap opt_map. */
 	InsertOpts();
 
-	/* TODO(shivansh) Section number cannot be hardcoded. */
-	std::ifstream infile("groff/" + utility + ".1");
+	for (const auto &section : supported_sections) {
+		std::ifstream infile("groff/" + utility + "." + section);
 
-	/*
-	 * Search for all the options accepted by the
-	 * utility and collect those present in `opt_map`.
-	 */
-	while (std::getline(infile, line)) {
-		if ((opt_position = line.find(opt_identifier)) != std::string::npos) {
-			opt_position += opt_identifier.length() + 1;    /* Locate the position of option name. */
+		/*
+		 * Search for all the options accepted by the
+		 * utility and collect those present in "opt_map".
+		 */
+		while (std::getline(infile, line)) {
+			if ((opt_position = line.find(opt_identifier)) != std::string::npos) {
+				opt_position += opt_identifier.length() + 1;    /* Locate the position of option name. */
 
-			if (opt_position > line.length()) {
-				/*
-				 * This condition will trigger when a utility
-				 * supports an empty argument, e.g. tset(issue #9)
-				 */
-				continue;
-			}
-
-			/*
-			 * Check for long options ; While here, also sanitize
-			 * multi-word option definitions in a man page to properly
-			 * extract short options from option definitions such as:
-			 * .It Fl r Ar seconds (taken from date(1)).
-			 */
-			if ((space_index = line.find(" ", opt_position + 1, 1))
-					!= std::string::npos)
-				opt_name = line.substr(opt_position, space_index - opt_position);
-			else
-				opt_name = line.substr(opt_position);
-
-			/*
-			 * Check if the identified option matches the identifier.
-			 * `opt_list.back()` is the previously checked option, the
-			 * description of which is now stored in `buffer`.
-			 */
-			if (!opt_list.empty() &&
-					(opt_map_iter = opt_map.find(opt_list.back()))
-					!= opt_map.end() &&
-					buffer.find((opt_map_iter->second).keyword) != std::string::npos) {
-				identified_opt_list.push_back(&(opt_map_iter->second));
+				if (opt_position > line.length()) {
+					/*
+					 * This condition will trigger when a utility
+					 * supports an empty argument, e.g. tset(issue #9)
+					 */
+					continue;
+				}
 
 				/*
-				 * Since the usage of the option under test
-				 * is known, we remove it from `opt_list`.
+				 * Check for long options ; While here, also sanitize
+				 * multi-word option definitions in a man page to properly
+				 * extract short options from option definitions such as:
+				 * 	.It Fl r Ar seconds (taken from date(1)).
 				 */
-				opt_list.pop_back();
+				if ((space_index = line.find(" ", opt_position + 1, 1))
+						!= std::string::npos)
+					opt_name = line.substr(opt_position, space_index - opt_position);
+				else
+					opt_name = line.substr(opt_position);
+
+				/*
+				 * Check if the identified option matches the identifier.
+				 * "opt_list.back()" is the previously checked option, the
+				 * description of which is now stored in "buffer".
+				 */
+				if (!opt_list.empty() &&
+						(opt_map_iter = opt_map.find(opt_list.back()))
+						!= opt_map.end() &&
+						buffer.find((opt_map_iter->second).keyword) != std::string::npos) {
+					identified_opt_list.push_back(&(opt_map_iter->second));
+
+					/*
+					 * Since the usage of the option under test
+					 * is known, we remove it from "opt_list".
+					 */
+					opt_list.pop_back();
+				}
+
+				/* Update the list of valid options. */
+				opt_list.push_back(opt_name);
+
+				/* Empty the buffer for next option's description. */
+				buffer.clear();
+			} else {
+				/*
+				 * Collect the option description until next
+				 * valid option definition is encountered.
+				 */
+				buffer.append(line);
 			}
-
-			/* Update the list of valid options. */
-			opt_list.push_back(opt_name);
-
-			/* Empty the buffer for next option's description. */
-			buffer.clear();
-		} else {
-			/*
-			 * Collect the option description until next
-			 * valid option definition is encountered.
-			 */
-			buffer.append(line);
 		}
 	}
 
@@ -192,7 +194,7 @@ utils::POpen(const char *command, const char *type, pid_t& pid)
 	 *   - pdes[WRITE]: write end
 	 */
 	if (pipe2(pdes, O_CLOEXEC) < 0)
-		return (NULL);
+		return NULL;
 
 	if (*type == 'r') {
 		iop = fdopen(pdes[READ], type);
@@ -201,12 +203,12 @@ utils::POpen(const char *command, const char *type, pid_t& pid)
 		iop = fdopen(pdes[WRITE], type);
 		pdes_unused_in_parent = pdes[READ];
 	} else
-		return (NULL);
+		return NULL;
 
 	if (iop == NULL) {
 		close(pdes[READ]);
 		close(pdes[WRITE]);
-		return (NULL);
+		return NULL;
 	}
 
 	argv[0] = (char *)"sh"; 	/* Type-cast to avoid compiler warning [-Wwrite-strings]. */
@@ -218,7 +220,7 @@ utils::POpen(const char *command, const char *type, pid_t& pid)
 		case -1: 		/* Error. */
 			close(pdes_unused_in_parent);
 			fclose(iop);
-			return (NULL);
+			return NULL;
 		case 0: 		/* Child. */
 			if (*type == 'r') {
 				if (pdes[WRITE] != STDOUT_FILENO)
@@ -237,7 +239,7 @@ utils::POpen(const char *command, const char *type, pid_t& pid)
 			 * stuck on a blocking read (e.g. passwd(1)) waiting for user
 			 * input. In that case the child will be killed via a signal.
 			 * To avoid any effect on the parent's execution, we place the
-			 * child in a separate process group with pgid set as child_pid.
+			 * child in a separate process group with pgid set as "child_pid".
 			 */
 			setpgid(child_pid, child_pid);
 			execve("/bin/sh", argv, NULL);
@@ -248,7 +250,7 @@ utils::POpen(const char *command, const char *type, pid_t& pid)
 	close(pdes_unused_in_parent);
 	pid = child_pid;
 
-	return (iop);
+	return iop;
 }
 
 /*
@@ -258,16 +260,15 @@ utils::POpen(const char *command, const char *type, pid_t& pid)
 std::pair<std::string, int>
 utils::Execute(std::string command)
 {
-	const int bufsize = BUFSIZE;
 	pid_t pid;
 	int result;
-	std::array<char, bufsize> buffer;
+	std::array<char, BUFSIZE> buffer;
 	std::string usage_output;
 	struct timeval tv;
 	fd_set readfds;
 	FILE *pipe = utils::POpen(command.c_str(), "r", pid);
 
-	if (!pipe) {
+	if (pipe == NULL) {
 		perror ("popen()");
 		exit(EXIT_FAILURE);
 	}
@@ -285,18 +286,17 @@ utils::Execute(std::string command)
 
 	if (result > 0) {
 		try {
-			while (!feof(pipe)) {
-				if (std::fgets(buffer.data(), bufsize, pipe) != NULL)
+			while (!feof(pipe))
+				if (std::fgets(buffer.data(), BUFSIZE, pipe) != NULL)
 					usage_output += buffer.data();
-			}
-		}
-		catch(...) {
+		} catch(...) {
 			pclose(pipe);
-			throw "Unable to execute the command: " + std::string(command);
+			throw "Unable to execute the command: " + command;
 		}
 
 	} else if (result == -1) {
 		perror("select()");
+		kill(pid, SIGTERM);
 		exit(EXIT_FAILURE);
 	}
 
@@ -308,9 +308,8 @@ utils::Execute(std::string command)
 	 * performing such blocking reads don't respond to SIGINT
 	 * (e.g. pax(1)), we terminate the shell process via SIGTERM.
 	 */
-	if (kill(pid, SIGTERM) < 0) {
+	if (kill(pid, SIGTERM) < 0)
 		perror("kill()");
-	}
 
 	return std::make_pair<std::string, int>
 		((std::string)usage_output, WEXITSTATUS(pclose(pipe)));

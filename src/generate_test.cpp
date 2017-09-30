@@ -32,6 +32,7 @@
 #include <cstdlib>
 #include <dirent.h>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <memory>
 #include <pthread.h>
@@ -252,15 +253,17 @@ main(int argc, char **argv)
 
 	remove(failed_groff_dir);
 	boost::filesystem::create_directory(failed_groff_dir);
-	setlinebuf(stdout);
+
+	/* Generate a tabular-like format. */
+	std::cout << std::endl;
+	std::cout << std::setw(21) << "Utility | " << "Progress\n";
+	std::cout << std::setw(32) << "----------+-----------\n";
 
 	for (const auto &util : utility_list) {
-		test_file = tests_dir + util.first + "_test.sh";
 		/* TODO(shivansh) Check before overwriting existing test scripts. */
-
-		std::cout << "Generating test for: " + util.first
-			   + '('+ util.second + ')' << " ...";
-
+		test_file = tests_dir + util.first + "_test.sh";
+		std::cout << std::setw(21) << util.first + '(' + util.second + ") | ";
+		fflush(stdout); 	/* Useful in debugging. */
 		generatetest::GenerateTest(util.first, util.second, license);
 		std::cout << "Done!\n";
 	}

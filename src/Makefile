@@ -29,6 +29,7 @@ clean:
 		generate_tests \
 		scripts/utils_list \
 		groff \
+		failed_groff \
 		generated_tests
 
 fetch_groff:
