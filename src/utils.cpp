@@ -286,14 +286,9 @@ utils::Execute(std::string command)
 	result = select(fileno(pipe) + 1, &readfds, NULL, NULL, &tv);
 
 	if (result > 0) {
-		try {
-			while (!feof(pipe))
-				if (std::fgets(buffer.data(), BUFSIZE, pipe) != NULL)
-					usage_output += buffer.data();
-		} catch(...) {
-			pclose(pipe);
-			throw "Unable to execute the command: " + command;
-		}
+		while (!feof(pipe))
+			if (fgets(buffer.data(), BUFSIZE, pipe) != NULL)
+				usage_output += buffer.data();
 
 	} else if (result == -1) {
 		perror("select()");
