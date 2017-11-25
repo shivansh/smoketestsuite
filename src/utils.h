@@ -47,9 +47,15 @@ namespace utils {
 
 	class OptDefinition {
 		public:
-			std::list<std::string> opt_list;    	/* list of all the accepted options with unknown usage. */
-			std::unordered_map<std::string, opt_relation> opt_map;   /* Map "option value" to "option definition". */
-			std::unordered_map<std::string, opt_relation>::iterator opt_map_iter;
+			std::list<std::string> opt_list;  /* list of all the accepted options
+							   * with unknown usage.
+							   */
+			std::unordered_map<std::string,
+					   opt_relation> opt_map;   /* Map "option value" to
+					   			     * "option definition".
+					   			     */
+			std::unordered_map<std::string,
+					   opt_relation>::iterator opt_map_iter;
 
 			void InsertOpts();
 			std::list<opt_relation *> CheckOpts(std::string);

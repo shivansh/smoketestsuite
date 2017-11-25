@@ -44,7 +44,9 @@
 #define WRITE 1 	/* Pipe descriptor: write end. */
 #define STDIN_FILENO 0
 #define STDOUT_FILENO 1
-#define BUFSIZE 128 	/* Buffer size (used for buffering output from a utility's execution). */
+#define BUFSIZE 128 	/* Buffer size (used for buffering output
+			 * from a utility's execution).
+			 */
 #define TIMEOUT 2 	/* threshold (seconds) for a function call to return. */
 
 /*
@@ -108,7 +110,8 @@ utils::OptDefinition::CheckOpts(std::string utility)
 		 */
 		while (std::getline(infile, line)) {
 			if ((opt_position = line.find(opt_identifier)) != std::string::npos) {
-				opt_position += opt_identifier.length() + 1;    /* Locate the position of option name. */
+				/* Locate the position of option name. */
+				opt_position += opt_identifier.length() + 1;
 
 				if (opt_position > line.length()) {
 					/*
