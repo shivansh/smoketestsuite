@@ -42,8 +42,6 @@
 
 #define READ 0  	/* Pipe descriptor: read end. */
 #define WRITE 1 	/* Pipe descriptor: write end. */
-#define STDIN_FILENO 0
-#define STDOUT_FILENO 1
 #define BUFSIZE 128 	/* Buffer size (used for buffering output
 			 * from a utility's execution).
 			 */
