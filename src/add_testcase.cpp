@@ -144,7 +144,7 @@ addtestcase::NoArgsTestcase(std::string util_with_section,
 			}
 		} else {
 			descr = "\"Verify that " + util_with_section
-				+ "fails silently when no arguments are supplied\"" ;
+				+ " fails silently when no arguments are supplied\"" ;
 			test_script << descr + "\n}\n\nno_arguments_body()\n{"
 				     + "\n\tatf_check -s not-exit:0 -e empty "
 				     + utility;
