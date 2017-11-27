@@ -173,7 +173,7 @@ utils::OptDefinition::CheckOpts(std::string utility)
  * terminate in cases where the shell command waits for the
  * user input via a blocking read (e.g. passwd(1)).
  * Hence, we define a custom function which alongside
- * returning the FILE* stream (as with popen()) also returns
+ * returning the read-write file descriptors, also returns
  * the pid of the newly created (child) shell process. This
  * pid can later be used for sending a signal to the child.
  *
@@ -181,14 +181,14 @@ utils::OptDefinition::CheckOpts(std::string utility)
  * to be taken corresponding to the "w" (write) type. However,
  * in this context only the "r" (read) type will be required.
  */
-FILE*
-utils::POpen(const char *command, const char *type, pid_t& pid)
+
+utils::PipeDescriptor*
+utils::POpen(const char *command)
 {
 	int pdes[2];
-	int pdes_unused_in_parent;
 	char *argv[4];
-	FILE *iop;
 	pid_t child_pid;
+	PipeDescriptor *descr = (PipeDescriptor *)malloc(sizeof(PipeDescriptor));
 
 	/* Create a pipe with ~
 	 *   - pdes[READ]: read end
@@ -197,20 +197,8 @@ utils::POpen(const char *command, const char *type, pid_t& pid)
 	if (pipe2(pdes, O_CLOEXEC) < 0)
 		return NULL;
 
-	if (*type == 'r') {
-		iop = fdopen(pdes[READ], type);
-		pdes_unused_in_parent = pdes[WRITE];
-	} else if (*type == 'w') {
-		iop = fdopen(pdes[WRITE], type);
-		pdes_unused_in_parent = pdes[READ];
-	} else
-		return NULL;
-
-	if (iop == NULL) {
-		close(pdes[READ]);
-		close(pdes[WRITE]);
-		return NULL;
-	}
+	descr->readfd = pdes[READ];
+	descr->writefd = pdes[WRITE];
 
 	argv[0] = (char *)"sh"; 	/* Type-cast to avoid compiler warning [-Wwrite-strings]. */
 	argv[1] = (char *)"-c";
@@ -219,21 +207,19 @@ utils::POpen(const char *command, const char *type, pid_t& pid)
 
 	switch (child_pid = vfork()) {
 		case -1: 		/* Error. */
-			close(pdes_unused_in_parent);
-			fclose(iop);
 			return NULL;
 		case 0: 		/* Child. */
-			if (*type == 'r') {
-				if (pdes[WRITE] != STDOUT_FILENO)
-					dup2(pdes[WRITE], STDOUT_FILENO);
-				else
-					fcntl(pdes[WRITE], F_SETFD, 0);
-			} else {
-				if (pdes[READ] != STDIN_FILENO)
-					dup2(pdes[READ], STDIN_FILENO);
-				else
-					fcntl(pdes[READ], F_SETFD, 0);
-			}
+			// TODO Verify if the following operations on both read
+			// and write file-descriptors (irrespective of the value
+			// of 'type', which is no longer being used) is safe.
+			if (pdes[WRITE] != STDOUT_FILENO)
+				dup2(pdes[WRITE], STDOUT_FILENO);
+			else
+				fcntl(pdes[WRITE], F_SETFD, 0);
+			if (pdes[READ] != STDIN_FILENO)
+				dup2(pdes[READ], STDIN_FILENO);
+			else
+				fcntl(pdes[READ], F_SETFD, 0);
 
 			/*
 			 * For current usecase, it might so happen that the child gets
@@ -247,11 +233,8 @@ utils::POpen(const char *command, const char *type, pid_t& pid)
 			exit(127);
 	}
 
-	/* Parent */
-	close(pdes_unused_in_parent);
-	pid = child_pid;
-
-	return iop;
+	descr->pid = child_pid;
+	return descr;
 }
 
 /*
@@ -261,16 +244,27 @@ utils::POpen(const char *command, const char *type, pid_t& pid)
 std::pair<std::string, int>
 utils::Execute(std::string command)
 {
-	pid_t pid;
 	int result;
 	std::array<char, BUFSIZE> buffer;
 	std::string usage_output;
 	struct timeval tv;
 	fd_set readfds;
-	FILE *pipe = utils::POpen(command.c_str(), "r", pid);
+	FILE *pipe;
+	PipeDescriptor *pipe_descr;
 
+	pipe_descr = utils::POpen(command.c_str());
+	if (pipe_descr == NULL) {
+		perror("utils::POpen()");
+		exit(EXIT_FAILURE);
+	}
+
+	// Close the unrequired file-descriptor.
+	close(pipe_descr->writefd);
+
+	pipe = fdopen(pipe_descr->readfd, "r");
 	if (pipe == NULL) {
-		perror ("popen()");
+		close(pipe_descr->readfd);
+		perror("fdopen()");
 		exit(EXIT_FAILURE);
 	}
 
@@ -292,7 +286,7 @@ utils::Execute(std::string command)
 
 	} else if (result == -1) {
 		perror("select()");
-		kill(pid, SIGTERM);
+		kill(pipe_descr->pid, SIGTERM);
 		exit(EXIT_FAILURE);
 	}
 
@@ -304,7 +298,7 @@ utils::Execute(std::string command)
 	 * performing such blocking reads don't respond to SIGINT
 	 * (e.g. pax(1)), we terminate the shell process via SIGTERM.
 	 */
-	if (kill(pid, SIGTERM) < 0)
+	if (kill(pipe_descr->pid, SIGTERM) < 0)
 		perror("kill()");
 
 	return std::make_pair<std::string, int>

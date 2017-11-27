@@ -42,8 +42,17 @@ namespace utils {
 				       */
 	} opt_relation;
 
+	/*
+	 * Read/Write file descriptors for a pipe.
+	 */
+	struct PipeDescriptor {
+		int readfd;
+		int writefd;
+		pid_t pid;    // PID of the forked child.
+	};
+
 	std::pair<std::string, int> Execute(std::string);
-	FILE* POpen(const char*, const char*, pid_t&);
+	PipeDescriptor* POpen(const char*);
 
 	class OptDefinition {
 		public:
