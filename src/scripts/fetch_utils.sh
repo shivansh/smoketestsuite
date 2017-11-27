@@ -30,7 +30,7 @@
 
 set -e
 script_dir="scripts"
-src="../../../"
+src="$(dirname $0)/../../../../"
 
 fetch_utils() {
 	cd "$src"

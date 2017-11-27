@@ -30,7 +30,7 @@
 
 set -e
 
-src="../../../"
+src="$(dirname $0)/../../../../"
 dir_list="tools/tools/smoketestsuite/scripts/utils_list"
 groff_src="tools/tools/smoketestsuite/groff"
 
