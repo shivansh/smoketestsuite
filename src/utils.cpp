@@ -188,7 +188,7 @@ utils::POpen(const char *command)
 	int pdes[2];
 	char *argv[4];
 	pid_t child_pid;
-	PipeDescriptor *descr = (PipeDescriptor *)malloc(sizeof(PipeDescriptor));
+	PipeDescriptor *pipe_descr = (PipeDescriptor *)malloc(sizeof(PipeDescriptor));
 
 	/* Create a pipe with ~
 	 *   - pdes[READ]: read end
@@ -197,8 +197,8 @@ utils::POpen(const char *command)
 	if (pipe2(pdes, O_CLOEXEC) < 0)
 		return NULL;
 
-	descr->readfd = pdes[READ];
-	descr->writefd = pdes[WRITE];
+	pipe_descr->readfd = pdes[READ];
+	pipe_descr->writefd = pdes[WRITE];
 
 	argv[0] = (char *)"sh"; 	/* Type-cast to avoid compiler warning [-Wwrite-strings]. */
 	argv[1] = (char *)"-c";
@@ -233,8 +233,9 @@ utils::POpen(const char *command)
 			exit(127);
 	}
 
-	descr->pid = child_pid;
-	return descr;
+	pipe_descr->pid = child_pid;
+
+	return pipe_descr;
 }
 
 /*
