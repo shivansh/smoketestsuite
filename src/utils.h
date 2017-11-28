@@ -34,13 +34,13 @@ namespace utils {
 	 * Option relation which maps option names to
 	 * a unique identifier in their description.
 	 */
-	typedef struct OptRelation {
+	struct OptRelation {
 		char type;            /* Option type: (s)short/(l)long. */
 		std::string value;    /* Name of the option. */
 		std::string keyword;  /* The keyword which should be looked up in usage
 				       * message (if) produced when using this option.
 				       */
-	} opt_relation;
+	};
 
 	/*
 	 * Read/Write file descriptors for a pipe.
@@ -60,13 +60,13 @@ namespace utils {
 							   * with unknown usage.
 							   */
 			std::unordered_map<std::string,
-					   opt_relation> opt_map;   /* Map "option value" to
+					   OptRelation> opt_map;   /* Map "option value" to
 					   			     * "option definition".
 					   			     */
 			std::unordered_map<std::string,
-					   opt_relation>::iterator opt_map_iter;
+					   OptRelation>::iterator opt_map_iter;
 
 			void InsertOpts();
-			std::list<opt_relation *> CheckOpts(std::string);
+			std::list<OptRelation *> CheckOpts(std::string);
 	};
 }
