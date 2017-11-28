@@ -263,6 +263,7 @@ utils::Execute(std::string command)
 	close(pipe_descr->writefd);
 
 	pipe = fdopen(pipe_descr->readfd, "r");
+	free(pipe_descr);
 	if (pipe == NULL) {
 		close(pipe_descr->readfd);
 		perror("fdopen()");
