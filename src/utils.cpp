@@ -288,20 +288,21 @@ utils::Execute(std::string command)
 
 	} else if (result == -1) {
 		perror("select()");
-		kill(pipe_descr->pid, SIGTERM);
+		if (kill(pipe_descr->pid, SIGTERM) < 0)
+			perror("kill()");
 		exit(EXIT_FAILURE);
+	} else if (result == 0) {
+		/*
+		 * We gave a relaxed value of 2 seconds for the shell process
+		 * to complete it's execution. If at this point it is still
+		 * alive, it (most probably) is stuck on a blocking read
+		 * waiting for the user input. Since few of the utilities
+		 * performing such blocking reads don't respond to SIGINT
+		 * (e.g. pax(1)), we terminate the shell process via SIGTERM.
+		 */
+		if (kill(pipe_descr->pid, SIGTERM) < 0)
+			perror("kill()");
 	}
-
-	/*
-	 * We gave a relaxed value of 2 seconds for the shell process
-	 * to complete it's execution. If at this point it is still
-	 * alive, it (most probably) is stuck on a blocking read
-	 * waiting for the user input. Since few of the utilities
-	 * performing such blocking reads don't respond to SIGINT
-	 * (e.g. pax(1)), we terminate the shell process via SIGTERM.
-	 */
-	if (kill(pipe_descr->pid, SIGTERM) < 0)
-		perror("kill()");
 
 	return std::make_pair<std::string, int>
 		((std::string)usage_output, WEXITSTATUS(pclose(pipe)));
