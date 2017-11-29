@@ -47,3 +47,7 @@ do
 		esac
 	done
 done< "$dir_list"
+
+# Remove the groff scripts for which the tool
+# (still) hangs waiting for user input.
+rm -f "$groff_src"/pax.1
