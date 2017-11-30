@@ -39,13 +39,17 @@ rm -rf "$groff_src" && mkdir "$groff_src"
 
 while IFS= read -r dir_entry
 do
-	for file in "$dir_entry"/*
-	do
-		case "$file" in
-			*.1) cp "$file" "$groff_src" ;;
-			*.8) cp "$file" "$groff_src" ;;
-		esac
-	done
+	# Copy the groff scripts only for the
+	# utilities which do not contain tests.
+	if [ ! -d "$dir_entry/tests" ]; then
+		for file in "$dir_entry"/*
+		do
+			case "$file" in
+				*.1) cp "$file" "$groff_src" ;;
+				*.8) cp "$file" "$groff_src" ;;
+			esac
+		done
+	fi
 done< "$dir_list"
 
 # Remove the groff scripts for which the tool
