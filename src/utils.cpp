@@ -46,7 +46,7 @@
 #define BUFSIZE 128 	/* Buffer size (used for buffering output
 			 * from a utility's execution).
 			 */
-#define TIMEOUT 2 	/* threshold (seconds) for a function call to return. */
+#define TIMEOUT 1 	/* threshold (seconds) for a function call to return. */
 
 /*
  * Insert a list of user-defined option definitions
