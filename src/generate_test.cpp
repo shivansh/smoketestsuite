@@ -177,7 +177,7 @@ generatetest::GenerateTest(std::string utility,
 		testcase_list.append("\tatf_add_test_case invalid_usage\n");
 		test_fstream << std::string("atf_test_case invalid_usage\ninvalid_usage_head()\n")
 			  + "{\n\tatf_set \"descr\" \"Verify that an invalid usage "
-			  + "with a supported option produces a valid error message"
+			  + "with a supported option \" \\\n\t\t\t\"produces a valid error message"
 			  + "\"\n}\n\ninvalid_usage_body()\n{";
 
 		test_fstream << testcase_buffer + "\n}\n\n";

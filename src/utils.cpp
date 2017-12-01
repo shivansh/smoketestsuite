@@ -209,9 +209,11 @@ utils::POpen(const char *command)
 		case -1: 		/* Error. */
 			return NULL;
 		case 0: 		/* Child. */
-			// TODO Verify if the following operations on both read
-			// and write file-descriptors (irrespective of the value
-			// of 'type', which is no longer being used) is safe.
+			/*
+			 * TODO Verify if the following operations on both read
+			 * and write file-descriptors (irrespective of the value
+			 * of 'type', which is no longer being used) is safe.
+			 */
 			if (pdes[WRITE] != STDOUT_FILENO)
 				dup2(pdes[WRITE], STDOUT_FILENO);
 			else
@@ -259,7 +261,7 @@ utils::Execute(std::string command)
 		exit(EXIT_FAILURE);
 	}
 
-	// Close the unrequired file-descriptor.
+	/* Close the unrequired file-descriptor. */
 	close(pipe_descr->writefd);
 
 	pipe = fdopen(pipe_descr->readfd, "r");

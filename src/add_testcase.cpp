@@ -126,16 +126,16 @@ addtestcase::NoArgsTestcase(std::string util_with_section,
 			 */
 			if (boost::iequals(output.first.substr(0, 6), "usage:")) {
 				descr = "\"Verify that " + util_with_section
-				      + " fails and generates a valid usage"
-				      + " message when no arguments are supplied\"";
+				      + " fails and generates a valid usage \" \\\n\t\t\t"
+				      + "\"message when no arguments are supplied\"";
 
 				test_script << descr + "\n}\n\nno_arguments_body()\n{"
 					       + "\n\tatf_check -s not-exit:0 -e match:\"$usage_output\" "
 					       + utility;
 			} else {
 				descr = "\"Verify that " + util_with_section
-				      + " fails and generates a valid output"
-				      + " when no arguments are supplied\"";
+				      + " fails and generates a valid output \" \\\n\t\t\t"
+				      + "\"when no arguments are supplied\"";
 
 				test_script << descr + "\n}\n\nno_arguments_body()\n{"
 					     + "\n\tatf_check -s not-exit:0 -e inline:\""
@@ -158,12 +158,12 @@ addtestcase::NoArgsTestcase(std::string util_with_section,
 		 */
 		if (!output.first.empty())
 			descr = "\"Verify that " + util_with_section
-			      + " executes successfully and produces a valid"
-			      + " output when invoked without any arguments\"";
+			      + " executes successfully and produces a valid \" \\\n\t\t\t"
+			      + "\"output when invoked without any arguments\"";
 		else
 			descr = "\"Verify that " + util_with_section
-			      + " executes successfully and silently"
-			      + " when invoked without any arguments\"";
+			      + " executes successfully and silently \" \\\n\t\t\t"
+			      + "\"when invoked without any arguments\"";
 
 		addtestcase::KnownTestcase("", util_with_section, descr,
 						 output.first, test_script);
