@@ -57,4 +57,14 @@ done< "$dir_list"
 rm -f "$groff_src/pax.1"
 
 # Remove non-executable utilities
-rm -rf "$groff_src/elfcopy.1"
+rm -f "$groff_src/elfcopy.1"
+
+# Remove utilities which generate a segmentation
+# fault during execution
+rm -f \
+	"$groff_src/readelf.1" \
+	"$groff_src/catman.8" \
+	"$groff_src/man.options.8" \
+	"$groff_src/smbutil.1" \
+	"$groff_src/mdmfs.8" \
+	"$groff_src/routed.8" \
