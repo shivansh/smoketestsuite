@@ -260,7 +260,7 @@ utils::Execute(std::string command)
 
 	pipe_descr = utils::POpen(command.c_str());
 	if (pipe_descr == NULL) {
-		DEBUGP(perror("utils::POpen()"));
+		logging::LogPerror("utils::POpen()");
 		exit(EXIT_FAILURE);
 	}
 
@@ -271,7 +271,7 @@ utils::Execute(std::string command)
 	free(pipe_descr);
 	if (pipe == NULL) {
 		close(pipe_descr->readfd);
-		DEBUGP(perror("fdopen()"));
+		logging::LogPerror("fdopen()");
 		exit(EXIT_FAILURE);
 	}
 
@@ -287,13 +287,14 @@ utils::Execute(std::string command)
 	result = select(fileno(pipe) + 1, &readfds, NULL, NULL, &tv);
 
 	if (result > 0) {
-		while (!feof(pipe))
+		while (!feof(pipe) && !ferror(pipe)) {
 			if (fgets(buffer.data(), BUFSIZE, pipe) != NULL)
 				usage_output += buffer.data();
+		}
 	} else if (result == -1) {
-		DEBUGP(perror("select()"));
+		logging::LogPerror("select()");
 		if (kill(pipe_descr->pid, SIGTERM) < 0)
-			DEBUGP(perror("kill()"));
+			logging::LogPerror("kill()");
 	} else if (result == 0) {
 		/*
 		 * We gave a relaxed value of TIMEOUT seconds for the shell process
@@ -304,7 +305,7 @@ utils::Execute(std::string command)
 		 * (e.g. pax(1)), we terminate the shell process via SIGTERM.
 		 */
 		if (kill(pipe_descr->pid, SIGTERM) < 0)
-			DEBUGP(perror("kill()"));
+			logging::LogPerror("kill()");
 	}
 
 	return std::make_pair<std::string, int>

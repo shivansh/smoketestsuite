@@ -7,7 +7,8 @@ CFLAGS=-I/usr/local/include -std=c++11
 LIBS=  -L/usr/local/lib \
        -lboost_filesystem \
        -lboost_system
-OBJS=  utils.o \
+OBJS=  logging.o \
+       utils.o \
        read_annotations.o \
        generate_license.o \
        add_testcase.o \

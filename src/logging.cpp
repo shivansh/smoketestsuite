@@ -26,15 +26,14 @@
  * $FreeBSD$
  */
 
-/* Use a gcc variadic macro to conditionally compile debug printing. */
-#ifdef DEBUG
-#define DEBUGP(...)                    \
-	fprintf(stdout, __VA_ARGS__);  \
-	fflush(stdout);
-#else
-#define DEBUGP(...) {}
-#endif
+#include <iostream>
 
-namespace logging {
-	void LogPerror(std::string);
+#include "logging.h"
+
+void
+logging::LogPerror(std::string message)
+{
+#ifdef DEBUG
+	perror(message.c_str());
+#endif
 }
