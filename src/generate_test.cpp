@@ -108,7 +108,7 @@ generatetest::GenerateTest(std::string utility,
 								   output.second, testcase_buffer);
 			} else {
 				addtestcase::KnownTestcase(i->value, util_with_section,
-								 NULL, output.first, test_fstream);
+								 "", output.first, test_fstream);
 			}
 			testcase_list.append("\tatf_add_test_case " + i->value + "_flag\n");
 		}
