@@ -3,7 +3,7 @@
 # Makefile for building the test generation tool
 
 CC=    c++
-CFLAGS=-I/usr/local/include -std=c++11
+CFLAGS=-I/usr/local/include -std=c++11 -DDEBUG
 LIBS=  -L/usr/local/lib \
        -lboost_system \
        -lboost_filesystem

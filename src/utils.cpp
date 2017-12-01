@@ -39,6 +39,7 @@
 #include <unistd.h>
 
 #include "utils.h"
+#include "logging.h"
 
 #define READ 0  	/* Pipe descriptor: read end. */
 #define WRITE 1 	/* Pipe descriptor: write end. */
@@ -254,6 +255,8 @@ utils::Execute(std::string command)
 	fd_set readfds;
 	FILE *pipe;
 	PipeDescriptor *pipe_descr;
+
+	DEBUGP("Executing: %s\n", command.c_str());
 
 	pipe_descr = utils::POpen(command.c_str());
 	if (pipe_descr == NULL) {
