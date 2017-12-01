@@ -290,12 +290,10 @@ utils::Execute(std::string command)
 		while (!feof(pipe))
 			if (fgets(buffer.data(), BUFSIZE, pipe) != NULL)
 				usage_output += buffer.data();
-
 	} else if (result == -1) {
 		perror("select()");
 		if (kill(pipe_descr->pid, SIGTERM) < 0)
 			perror("kill()");
-		exit(EXIT_FAILURE);
 	} else if (result == 0) {
 		/*
 		 * We gave a relaxed value of 2 seconds for the shell process
