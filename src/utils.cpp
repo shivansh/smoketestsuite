@@ -260,7 +260,7 @@ utils::Execute(std::string command)
 
 	pipe_descr = utils::POpen(command.c_str());
 	if (pipe_descr == NULL) {
-		perror("utils::POpen()");
+		DEBUGP(perror("utils::POpen()"));
 		exit(EXIT_FAILURE);
 	}
 
@@ -271,7 +271,7 @@ utils::Execute(std::string command)
 	free(pipe_descr);
 	if (pipe == NULL) {
 		close(pipe_descr->readfd);
-		perror("fdopen()");
+		DEBUGP(perror("fdopen()"));
 		exit(EXIT_FAILURE);
 	}
 
@@ -291,12 +291,12 @@ utils::Execute(std::string command)
 			if (fgets(buffer.data(), BUFSIZE, pipe) != NULL)
 				usage_output += buffer.data();
 	} else if (result == -1) {
-		perror("select()");
+		DEBUGP(perror("select()"));
 		if (kill(pipe_descr->pid, SIGTERM) < 0)
-			perror("kill()");
+			DEBUGP(perror("kill()"));
 	} else if (result == 0) {
 		/*
-		 * We gave a relaxed value of 2 seconds for the shell process
+		 * We gave a relaxed value of TIMEOUT seconds for the shell process
 		 * to complete it's execution. If at this point it is still
 		 * alive, it (most probably) is stuck on a blocking read
 		 * waiting for the user input. Since few of the utilities
@@ -304,7 +304,7 @@ utils::Execute(std::string command)
 		 * (e.g. pax(1)), we terminate the shell process via SIGTERM.
 		 */
 		if (kill(pipe_descr->pid, SIGTERM) < 0)
-			perror("kill()");
+			DEBUGP(perror("kill()"));
 	}
 
 	return std::make_pair<std::string, int>

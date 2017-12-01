@@ -3,10 +3,10 @@
 # Makefile for building the test generation tool
 
 CC=    c++
-CFLAGS=-I/usr/local/include -std=c++11 -DDEBUG
+CFLAGS=-I/usr/local/include -std=c++11
 LIBS=  -L/usr/local/lib \
-       -lboost_system \
-       -lboost_filesystem
+       -lboost_filesystem \
+       -lboost_system
 OBJS=  utils.o \
        read_annotations.o \
        generate_license.o \

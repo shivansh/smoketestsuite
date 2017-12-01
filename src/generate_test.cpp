@@ -30,6 +30,7 @@
 #include <boost/filesystem.hpp>
 #include <cstdio>
 #include <cstdlib>
+#include <chrono>
 #include <dirent.h>
 #include <fstream>
 #include <iomanip>
@@ -39,6 +40,7 @@
 #include <signal.h>
 #include <stdexcept>
 #include <sys/stat.h>
+#include <thread>
 #include <unordered_set>
 
 #include "add_testcase.h"
@@ -66,6 +68,9 @@ generatetest::GenerateTest(std::string utility,
 	std::ofstream test_fstream;                      /* Output stream for the atf-sh test. */
 	std::pair<std::string, int> output;              /* Return value type for `Execute()`. */
 	std::unordered_set<std::string> annotation_set;  /* Hashset of utility specific annotations. */
+	int progress = 0; 				 /* Number of options for which a
+							  * testcase has been generated.
+							  */
 
 	/* Read annotations and populate hash set "annotation_set". */
 	annotations::read_annotations(utility, annotation_set);
@@ -75,6 +80,10 @@ generatetest::GenerateTest(std::string utility,
 	utils::OptDefinition opt_def;
 	identified_opt_list = opt_def.CheckOpts(utility);
 	test_file = tests_dir + utility + "_test.sh";
+
+	/* Indicate the start of test generation for current utility. */
+	std::cerr << std::setw(18) << util_with_section << " | "
+		  << progress << "/" << opt_def.opt_list.size() << "\r";
 
 	/* Add license in the generated test scripts. */
 	test_fstream.open(test_file, std::ios::out);
@@ -157,6 +166,8 @@ generatetest::GenerateTest(std::string utility,
 
 			command = utility + " -" + i + " 2>&1 </dev/null";
 			output = utils::Execute(command);
+			std::cerr << std::setw(18) << util_with_section << " | "
+				  << ++progress << "/" << opt_def.opt_list.size() << "\r";
 
 			if (output.second) {
 				/* Non-zero exit status was encountered. */
@@ -173,6 +184,8 @@ generatetest::GenerateTest(std::string utility,
 						     + i + "_flag\n");
 			}
 		}
+
+		std::cerr << std::endl;
 
 		testcase_list.append("\tatf_add_test_case invalid_usage\n");
 		test_fstream << std::string("atf_test_case invalid_usage\ninvalid_usage_head()\n")
@@ -262,10 +275,9 @@ main(int argc, char **argv)
 	for (const auto &util : utility_list) {
 		/* TODO(shivansh) Check before overwriting existing test scripts. */
 		test_file = tests_dir + util.first + "_test.sh";
-		std::cout << std::setw(21) << util.first + '(' + util.second + ") | ";
 		fflush(stdout); 	/* Useful in debugging. */
 		generatetest::GenerateTest(util.first, util.second, license);
-		std::cout << "Done!\n";
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	}
 
 	return EXIT_SUCCESS;
