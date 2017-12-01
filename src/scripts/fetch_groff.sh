@@ -64,7 +64,7 @@ rm -f "$groff_src/elfcopy.1"
 rm -f \
 	"$groff_src/readelf.1" \
 	"$groff_src/catman.8" \
-	"$groff_src/man.options.8" \
+	"$groff_src/man.options.1" \
 	"$groff_src/smbutil.1" \
 	"$groff_src/mdmfs.8" \
 	"$groff_src/routed.8" \
