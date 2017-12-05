@@ -208,6 +208,9 @@ utils::POpen(const char *command)
 
 	switch (child_pid = vfork()) {
 		case -1: 		/* Error. */
+			free(pipe_descr);
+			close(pdes[READ]);
+			close(pdes[WRITE]);
 			return NULL;
 		case 0: 		/* Child. */
 			/*
