@@ -300,7 +300,7 @@ utils::Execute(std::string command)
 		 * We gave a relaxed value of TIMEOUT seconds for the shell process
 		 * to complete it's execution. If at this point it is still
 		 * alive, it (most probably) is stuck on a blocking read
-		 * waiting for the user input. Since few of the utilities
+		 * waiting for the user input. Since a few of the utilities
 		 * performing such blocking reads don't respond to SIGINT
 		 * (e.g. pax(1)), we terminate the shell process via SIGTERM.
 		 */

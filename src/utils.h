@@ -37,9 +37,10 @@ namespace utils {
 	struct OptRelation {
 		char type;            /* Option type: (s)short/(l)long. */
 		std::string value;    /* Name of the option. */
-		std::string keyword;  /* The keyword which should be looked up in usage
-				       * message (if) produced when using this option.
-				       */
+		/* The keyword which should be looked up in usage
+		 * message (if) produced when using this options.
+		 */
+		std::string keyword;
 	};
 
 	/*
@@ -48,7 +49,7 @@ namespace utils {
 	struct PipeDescriptor {
 		int readfd;
 		int writefd;
-		pid_t pid;    // PID of the forked child.
+		pid_t pid;  /* PID of the forked shell process. */
 	};
 
 	std::pair<std::string, int> Execute(std::string);
@@ -56,13 +57,11 @@ namespace utils {
 
 	class OptDefinition {
 		public:
-			std::list<std::string> opt_list;  /* list of all the accepted options
-							   * with unknown usage.
-							   */
+			/* List of all the accepted options with unknown usage. */
+			std::list<std::string> opt_list;
+			/* Map "option value" to "option definition". */
 			std::unordered_map<std::string,
-					   OptRelation> opt_map;   /* Map "option value" to
-					   			     * "option definition".
-					   			     */
+					   OptRelation> opt_map;
 			std::unordered_map<std::string,
 					   OptRelation>::iterator opt_map_iter;
 

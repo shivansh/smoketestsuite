@@ -68,9 +68,8 @@ generatetest::GenerateTest(std::string utility,
 	std::ofstream test_fstream;                      /* Output stream for the atf-sh test. */
 	std::pair<std::string, int> output;              /* Return value type for `Execute()`. */
 	std::unordered_set<std::string> annotation_set;  /* Hashset of utility specific annotations. */
-	int progress = 0; 				 /* Number of options for which a
-							  * testcase has been generated.
-							  */
+	/* Number of options for which a testcase has been generated. */
+	int progress = 0;
 
 	/* Read annotations and populate hash set "annotation_set". */
 	annotations::read_annotations(utility, annotation_set);
@@ -223,10 +222,9 @@ main(int argc, char **argv)
 	DIR *groff_dir_ptr;
 	char answer;          	/* User input to determine overwriting of test files. */
 	std::string license;  	/* Customized license generated during runtime. */
-	const char *failed_groff_dir = "failed_groff/";  /* Directory for collecting groff scripts
-							  * for utilities with failed test generation.
-							  */
-	const char *groff_dir = "groff/"; 		 /* Directory of groff scripts. */
+	/* Directory for collecting groff scripts for utilities with failed test generation. */
+	const char *failed_groff_dir = "failed_groff/";
+	const char *groff_dir = "groff/";  /* Directory of groff scripts. */
 
 	/*
 	 * For testing (or generating tests for only selected utilities),
