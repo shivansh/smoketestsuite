@@ -81,8 +81,10 @@ generatetest::GenerateTest(std::string utility,
 	test_file = tests_dir + utility + "_test.sh";
 
 	/* Indicate the start of test generation for current utility. */
-	std::cerr << std::setw(18) << util_with_section << " | "
-		  << progress << "/" << opt_def.opt_list.size() << "\r";
+	if (isatty(fileno(stderr))) {
+		std::cerr << std::setw(18) << util_with_section << " | "
+			  << progress << "/" << opt_def.opt_list.size() << "\r";
+	}
 
 	/* Add license in the generated test scripts. */
 	test_fstream.open(test_file, std::ios::out);
@@ -165,8 +167,10 @@ generatetest::GenerateTest(std::string utility,
 
 			command = utility + " -" + i + " 2>&1 </dev/null";
 			output = utils::Execute(command);
-			std::cerr << std::setw(18) << util_with_section << " | "
-				  << ++progress << "/" << opt_def.opt_list.size() << "\r";
+			if (isatty(fileno(stderr))) {
+				std::cerr << std::setw(18) << util_with_section << " | "
+					  << ++progress << "/" << opt_def.opt_list.size() << "\r";
+			}
 
 			if (output.second) {
 				/* Non-zero exit status was encountered. */
@@ -275,7 +279,6 @@ main(int argc, char **argv)
 		test_file = tests_dir + util.first + "_test.sh";
 		fflush(stdout); 	/* Useful in debugging. */
 		generatetest::GenerateTest(util.first, util.second, license);
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	}
 
 	return EXIT_SUCCESS;
