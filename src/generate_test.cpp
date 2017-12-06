@@ -44,6 +44,7 @@
 #include <unordered_set>
 
 #include "add_testcase.h"
+#include "fetch_groff.h"
 #include "generate_license.h"
 #include "generate_test.h"
 #include "read_annotations.h"
@@ -224,11 +225,19 @@ main(int argc, char **argv)
 	struct stat sb;
 	struct dirent *ent;
 	DIR *groff_dir_ptr;
-	char answer;          	/* User input to determine overwriting of test files. */
+	char answer;          	/* User input to determine updation of groff directory. */
 	std::string license;  	/* Customized license generated during runtime. */
 	/* Directory for collecting groff scripts for utilities with failed test generation. */
 	const char *failed_groff_dir = "failed_groff/";
 	const char *groff_dir = "groff/";  /* Directory of groff scripts. */
+
+	/* Check if the directory 'groff/' is populated with groff scripts. */
+	std::cout << "Update groff directory ? (y/n) ";
+	std::cin >> answer;
+
+	if (answer == 'y')
+		if (groff::FetchGroffScripts() == -1)
+			return EXIT_FAILURE;
 
 	/*
 	 * For testing (or generating tests for only selected utilities),

@@ -12,6 +12,7 @@ OBJS=  logging.o \
        read_annotations.o \
        generate_license.o \
        add_testcase.o \
+       fetch_groff.o \
        generate_test.o
 
 generate_tests: $(OBJS)
