@@ -43,11 +43,14 @@
 
 #define READ 0  	/* Pipe descriptor: read end. */
 #define WRITE 1 	/* Pipe descriptor: write end. */
-#define BUFSIZE 128 	/* Buffer size (used for buffering output
-			 * from a utility's execution).
-			 */
-#define TIMEOUT 1 	/* threshold (seconds) for a function call to return. */
+/*
+ * Buffer size (used for buffering output generated
+ * after executing the utility-specific command).
+ */
+#define BUFSIZE 128
+#define TIMEOUT 1 	/* Threshold (seconds) for a function call to return. */
 
+const char *utils::tmpdir = "tmpdir";
 /*
  * Insert a list of user-defined option definitions
  * into a hashmap. These specific option definitions
@@ -261,7 +264,11 @@ utils::Execute(std::string command)
 
 	DEBUGP("Executing: %s\n", command.c_str());
 
+	/* Execute "command" inside "tmpdir". */
+	chdir(tmpdir);
 	pipe_descr = utils::POpen(command.c_str());
+	chdir("..");
+
 	if (pipe_descr == NULL) {
 		logging::LogPerror("utils::POpen()");
 		exit(EXIT_FAILURE);

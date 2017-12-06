@@ -52,6 +52,14 @@ namespace utils {
 		pid_t pid;  /* PID of the forked shell process. */
 	};
 
+	/*
+	 * Temporary directory inside which the utility-specific
+	 * commands will be executed, and all the side effects
+	 * (core dumps, executables etc.) that are created will
+	 * be restricted in this directory.
+	 */
+	extern const char *tmpdir;
+
 	std::pair<std::string, int> Execute(std::string);
 	PipeDescriptor* POpen(const char*);
 

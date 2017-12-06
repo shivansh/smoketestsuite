@@ -231,6 +231,13 @@ main(int argc, char **argv)
 	const char *failed_groff_dir = "failed_groff/";
 	const char *groff_dir = "groff/";  /* Directory of groff scripts. */
 
+	/*
+	 * Create a temporary directory where all the
+	 * side-effects introduced by utility-specific
+	 * commands are restricted.
+	 */
+	boost::filesystem::create_directory(utils::tmpdir);
+
 	/* Check if the directory "groff/" is populated with groff scripts. */
 	std::cout << "Update groff directory ? (y/n) ";
 	std::cin >> answer;
@@ -289,6 +296,9 @@ main(int argc, char **argv)
 		fflush(stdout); 	/* Useful in debugging. */
 		generatetest::GenerateTest(util.first, util.second, license);
 	}
+
+	/* Remove the temporary directory. */
+	remove(utils::tmpdir);
 
 	return EXIT_SUCCESS;
 }
