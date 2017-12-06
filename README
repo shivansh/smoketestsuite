@@ -31,16 +31,8 @@ Dependencies
 
 Instructions
 ============
-* The directory "groff" should be populated with the relevant groff scripts before proceeding for test generation. These scripts are available in the FreeBSD source tree.
-
-* For populating the directory "groff", execute the following from the project root -
-
-  	make fetch_utils
-  	make fetch_groff
-
-Generating tests
-================
 Execute the following from the project root -
 
 	make clean
+	make fetch_utils
 	make && make run

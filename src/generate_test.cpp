@@ -274,8 +274,7 @@ main(int argc, char **argv)
 			}
 			closedir(groff_dir_ptr);
 		} else {
-			fprintf(stderr, "Could not open the directory: ./groff\nRefer to the "
-					"section \"Populating groff scripts\" in README!\n");
+			fprintf(stderr, "Could not open the directory: groff/");
 			return EXIT_FAILURE;
 		}
 	}
