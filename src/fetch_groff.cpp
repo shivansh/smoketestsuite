@@ -46,7 +46,6 @@ groff::FetchGroffScripts()
 {
 	std::string utils_list = "scripts/utils_list";
 	std::string groff_src = "groff/";
-	/* TODO Make the location of src tree independent of 'pwd'. */
 	std::string freebsd_src = "../../../";
 	std::string util_dir;
 	std::string pathname;
@@ -102,7 +101,7 @@ groff::FetchGroffScripts()
 	}
 
 	/* Remove non-executable utilities. */
-	if (remove(groff_src + "elfcopy.1") != 0)
+	if (remove((groff_src + "elfcopy.1").c_str()) != 0)
 		perror("remove()");
 
 	std::cout << "Successfully updated 'groff/'\n";
