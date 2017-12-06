@@ -26,7 +26,6 @@
  * $FreeBSD$
  */
 
-#include <dirent.h>
 #include <fstream>
 #include <iostream>
 #include <string>
