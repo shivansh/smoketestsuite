@@ -51,6 +51,15 @@
 
 const char *tests_dir = "generated_tests/";  /* Directory to collect generated tests. */
 
+void
+generatetest::IntHandler(int dummmy)
+{
+	std::cerr << "\nExiting...\n";
+	/* Remove the temporary directory. */
+	remove(utils::tmpdir);
+	exit(EXIT_FAILURE);
+}
+
 /* Generate a test for the given utility. */
 void
 generatetest::GenerateTest(std::string utility,
@@ -230,6 +239,9 @@ main(int argc, char **argv)
 	/* Directory for collecting groff scripts for utilities with failed test generation. */
 	const char *failed_groff_dir = "failed_groff/";
 	const char *groff_dir = "groff/";  /* Directory of groff scripts. */
+
+	/* Handle interrupts. */
+	signal(SIGINT, generatetest::IntHandler);
 
 	/*
 	 * Create a temporary directory where all the

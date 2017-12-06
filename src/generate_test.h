@@ -29,5 +29,6 @@
 #include "utils.h"
 
 namespace generatetest {
+	void IntHandler(int);
 	void GenerateTest(std::string, std::string, std::string&);
 }
