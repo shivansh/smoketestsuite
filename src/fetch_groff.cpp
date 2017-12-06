@@ -26,6 +26,7 @@
  * $FreeBSD$
  */
 
+#include <boost/filesystem.hpp>
 #include <dirent.h>
 #include <fstream>
 #include <iostream>
@@ -38,7 +39,7 @@
 /*
  * Traverses the FreeBSD src tree looking for groff
  * scripts for section 1 and section 8 utilities and
- * copies them to the directory 'groff/'.
+ * copies them to the directory "groff/".
  * TODO Use the paths of scripts instead of copying.
  */
 int
@@ -56,7 +57,7 @@ groff::FetchGroffScripts()
 	struct dirent *ent;
 	DIR *dir;
 
-	/* Check if the file 'scripts/utils_list' exists. */
+	/* Check if the file "scripts/utils_list" exists. */
 	if (stat(utils_list.c_str(), &sb) != 0) {
 		std::cerr << "scripts/utils_list does not exists.\n"
 			     "Run 'make fetch_utils' first.\n";
@@ -64,24 +65,24 @@ groff::FetchGroffScripts()
 	}
 	utils_fstream.open(utils_list);
 
-	/* Remove the state 'groff' directory and create an empty one.  */
+	/* Remove the state "groff" directory and create an empty one.  */
 	if (stat(groff_src.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode))
-		rmdir("groff");
-	mkdir("groff", ~umask(022));
+		remove(groff_src.c_str());
+	boost::filesystem::create_directory(groff_src);
 
 	while(getline(utils_fstream, util_dir)) {
 		pathname = freebsd_src + util_dir + "/tests";
 
 		/*
 		 * Copy the groff script only if the utility does not
-		 * already have tests, i.e. the 'tests' directory is absent.
+		 * already have tests, i.e. the "tests" directory is absent.
 		 */
 		if (!(stat(pathname.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode))) {
 			pathname = freebsd_src + util_dir;
 
 			if ((dir = opendir(pathname.c_str())) != NULL) {
-				ent = readdir(dir);  /* Skip directory entry for '.' */
-				ent = readdir(dir);  /* Skip directory entry for '..' */
+				ent = readdir(dir);  /* Skip directory entry for "." */
+				ent = readdir(dir);  /* Skip directory entry for ".." */
 
 				while ((ent = readdir(dir)) != NULL) {
 					/* Copy the groff scripts for section 1 and section 8 utilities. */

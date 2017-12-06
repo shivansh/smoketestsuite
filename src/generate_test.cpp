@@ -231,7 +231,7 @@ main(int argc, char **argv)
 	const char *failed_groff_dir = "failed_groff/";
 	const char *groff_dir = "groff/";  /* Directory of groff scripts. */
 
-	/* Check if the directory 'groff/' is populated with groff scripts. */
+	/* Check if the directory "groff/" is populated with groff scripts. */
 	std::cout << "Update groff directory ? (y/n) ";
 	std::cin >> answer;
 
