@@ -67,9 +67,11 @@ generatetest::GenerateTest(std::string utility,
 			   std::string& license)
 {
 	std::list<utils::OptRelation *> identified_opt_list;  /* List of identified option relations. */
-	std::vector<std::string> usage_messages;         /* Vector of usage messages. Used for validating
-							  * their consistency across different runs.
-							  */
+	/*
+	 * Vector of usage messages -- used for validating
+	 * their consistency across different runs.
+	 */
+	std::vector<std::string> usage_messages;
 	std::string command;                             /* (Utility-specific) command to be executed. */
 	std::string testcase_list;                       /* List of testcases. */
 	std::string testcase_buffer;                     /* Buffer for (temporarily) holding testcase data. */
@@ -114,7 +116,7 @@ generatetest::GenerateTest(std::string utility,
 			command = utility + " -" + i->value + " 2>&1 </dev/null";
 			output = utils::Execute(command);
 			if (boost::iequals(output.first.substr(0, 6), "usage:")) {
-				/* A usage message was produced => our guessed usage is incorrect. */
+				/* A usage message was produced, i.e. our guessed usage is incorrect. */
 				addtestcase::UnknownTestcase(i->value, util_with_section, output.first,
 								   output.second, testcase_buffer);
 			} else {
@@ -133,7 +135,6 @@ generatetest::GenerateTest(std::string utility,
 		 * TODO(shivansh) Avoid double executions of an option, i.e. one while
 		 * selecting usage message and another while generating testcase.
 		 */
-
 		if (opt_def.opt_list.size() == 1) {
 			/* Utility supports a single option, check if it produces a usage message. */
 			command = utility + " -" + opt_def.opt_list.front() + " 2>&1 </dev/null";
@@ -189,7 +190,7 @@ generatetest::GenerateTest(std::string utility,
 			} else {
 				/*
 				 * EXIT_SUCCESS was encountered. Hence,
-				 * the guessed usage was correct.
+				 * the guessed usage is correct.
 				 */
 				addtestcase::KnownTestcase(i, util_with_section, "",
 							   output.first, test_fstream);
@@ -197,7 +198,6 @@ generatetest::GenerateTest(std::string utility,
 						     + i + "_flag\n");
 			}
 		}
-
 		std::cerr << std::endl;
 
 		testcase_list.append("\tatf_add_test_case invalid_usage\n");
@@ -228,17 +228,25 @@ int
 main(int argc, char **argv)
 {
 	std::ifstream groff_list;
-	std::list<std::pair<std::string, std::string>> utility_list;
+	std::vector<std::pair<std::string, std::string>> util_vector;
+	std::vector<std::pair<std::string, std::string>>::iterator util_vector_iter;
 	std::string test_file;  /* atf-sh test name. */
 	std::string util_name;  /* Utility name. */
 	struct stat sb;
 	struct dirent *ent;
 	DIR *groff_dir_ptr;
-	char answer;          	/* User input to determine updation of groff directory. */
+	char answer;          	/* User input to determine actions to be taken. */
 	std::string license;  	/* Customized license generated during runtime. */
 	/* Directory for collecting groff scripts for utilities with failed test generation. */
 	const char *failed_groff_dir = "failed_groff/";
 	const char *groff_dir = "groff/";  /* Directory of groff scripts. */
+	/*
+	 * Instead of generating tests for all the utilities, "batch mode"
+	 * allows generation of tests for first "batch_limit" number of
+	 * utilities selected from "scripts/utils_list".
+	 */
+	bool batch_mode = false;
+	int batch_limit = 8;    	   /* Number of tests to be generated in batch mode. */
 
 	/* Handle interrupts. */
 	signal(SIGINT, generatetest::IntHandler);
@@ -251,24 +259,48 @@ main(int argc, char **argv)
 	boost::filesystem::create_directory(utils::tmpdir);
 
 	/* Check if the directory "groff/" is populated with groff scripts. */
-	std::cout << "Update groff directory ? (y/n) ";
-	std::cin >> answer;
+	std::cout << "Update groff directory ? [y/N] ";
+	std::cin.get(answer);
 
-	if (answer == 'y')
-		if (groff::FetchGroffScripts() == -1)
-			return EXIT_FAILURE;
+	switch(answer) {
+		case 'y':
+		case 'Y':
+			if (groff::FetchGroffScripts() == -1)
+				return EXIT_FAILURE;
+			break;
+		case '\n':
+		default:
+			break;
+	}
+
+	std::cout << "\nInstead of generating tests for all the utilities,\n"
+		     "'batch mode' allows generation of tests for first "
+		     + std::to_string(batch_limit) + "\nnumber of utilities "
+		     "selected from 'scripts/utils_list'.\n"
+		     "Run in 'batch mode' ? [y/N] ";
+	std::cin.get(answer);
+
+	switch(answer) {
+		case 'y':
+		case 'Y':
+			batch_mode = true;
+			break;
+		case '\n':
+		default:
+			break;
+	}
 
 	/*
 	 * For testing (or generating tests for only selected utilities),
-	 * the utility_list can be populated above during declaration.
+	 * "util_vector" can be populated above during declaration.
 	 */
-	if (utility_list.empty()) {
+	if (util_vector.empty()) {
 		if ((groff_dir_ptr = opendir(groff_dir))) {
 			readdir(groff_dir_ptr); 	/* Skip directory entry for "." */
 			readdir(groff_dir_ptr); 	/* Skip directory entry for ".." */
 			while ((ent = readdir(groff_dir_ptr))) {
 				util_name = ent->d_name;
-				utility_list.push_back(std::make_pair<std::string, std::string>
+				util_vector.push_back(std::make_pair<std::string, std::string>
 						      (util_name.substr(0, util_name.length() - 2),
 						       util_name.substr(util_name.length() - 1, 1)));
 			}
@@ -301,11 +333,24 @@ main(int argc, char **argv)
 	std::cout << std::setw(21) << "Utility | " << "Progress\n";
 	std::cout << std::setw(32) << "----------+-----------\n";
 
-	for (const auto &util : utility_list) {
-		/* TODO(shivansh) Check before overwriting existing test scripts. */
-		test_file = tests_dir + util.first + "_test.sh";
-		fflush(stdout); 	/* Useful in debugging. */
-		generatetest::GenerateTest(util.first, util.second, license);
+	if (batch_mode) {
+		/*
+		 * Generate tests for first "batch_limit" number of
+		 * utilities selected from "scripts/utils_list".
+		 */
+		for (util_vector_iter = util_vector.begin();
+		     util_vector_iter <= util_vector.begin() + batch_limit;
+		     util_vector_iter++) {
+			test_file = tests_dir + util_vector_iter->first + "_test.sh";
+			generatetest::GenerateTest(util_vector_iter->first,
+						   util_vector_iter->second, license);
+		}
+	} else {
+		for (const auto &util : util_vector) {
+			/* TODO(shivansh) Check before overwriting existing test scripts. */
+			test_file = tests_dir + util.first + "_test.sh";
+			generatetest::GenerateTest(util.first, util.second, license);
+		}
 	}
 
 	/* Remove the temporary directory. */
