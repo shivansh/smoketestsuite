@@ -48,7 +48,7 @@ do
 	test_dir="/usr/tests/bin/$utility"
 
 	(
-	cd "$test_dir" || exit
+	cd "$test_dir" 2>/dev/null || exit
 	report=$(kyua report)
 	i=2
 
