@@ -30,5 +30,7 @@
 
 namespace generatetest {
 	void IntHandler(int);
-	void GenerateTest(std::string, std::string, std::string&);
+	void GenerateMakefile(std::string, std::string);
+	void GenerateTest(std::string, std::string,
+			  std::string&, const char*);
 }

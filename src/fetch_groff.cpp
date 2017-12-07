@@ -36,6 +36,9 @@
 
 #include "fetch_groff.h"
 
+/* Hashmap mapping utility name to its location in src tree. */
+std::unordered_map<std::string, std::string> groff::util_path_map;
+
 /*
  * Traverses the FreeBSD src tree looking for groff
  * scripts for section 1 and section 8 utilities and
@@ -66,8 +69,7 @@ groff::FetchGroffScripts()
 	utils_fstream.open(utils_list);
 
 	/* Remove the state "groff" directory and create an empty one.  */
-	if (stat(groff_src.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode))
-		remove(groff_src.c_str());
+	boost::filesystem::remove_all(groff_src);
 	boost::filesystem::create_directory(groff_src);
 
 	while(getline(utils_fstream, util_dir)) {
@@ -79,6 +81,7 @@ groff::FetchGroffScripts()
 		 */
 		if (!(stat(pathname.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode))) {
 			pathname = freebsd_src + util_dir;
+			util_path_map[util_dir.substr(util_dir.find_last_of("/") + 1)] = pathname;
 
 			if ((dir = opendir(pathname.c_str())) != NULL) {
 				ent = readdir(dir);  /* Skip directory entry for "." */
@@ -102,10 +105,9 @@ groff::FetchGroffScripts()
 	}
 
 	/* Remove non-executable utilities. */
-	if (remove((groff_src + "elfcopy.1").c_str()) != 0)
-		perror("remove()");
-
+	boost::filesystem::remove(groff_src + "elfcopy.1");
 	std::cout << "Successfully updated 'groff/'\n";
 	utils_fstream.close();
+
 	return 0;
 }

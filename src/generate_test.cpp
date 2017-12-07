@@ -49,22 +49,34 @@
 #include "generate_test.h"
 #include "read_annotations.h"
 
-const char *tests_dir = "generated_tests/";  /* Directory to collect generated tests. */
-
 void
 generatetest::IntHandler(int dummmy)
 {
 	std::cerr << "\nExiting...\n";
 	/* Remove the temporary directory. */
-	remove(utils::tmpdir);
+	boost::filesystem::remove_all(utils::tmpdir);
 	exit(EXIT_FAILURE);
+}
+
+/* [Batch mode] Generate a makefile for the test of given utility. */
+void
+generatetest::GenerateMakefile(std::string utility, std::string util_dir)
+{
+	std::ofstream makefile_fstream;
+
+	makefile_fstream.open(util_dir + "/Makefile", std::ios::out);
+	makefile_fstream << "# $FreeBSD$\n\nATF_TESTS_SH+=  "
+			  + utility + "_test\n\n"
+			  + ".include <bsd.test.mk>\n";
+	makefile_fstream.close();
 }
 
 /* Generate a test for the given utility. */
 void
 generatetest::GenerateTest(std::string utility,
 			   std::string section,
-			   std::string& license)
+			   std::string& license,
+			   const char *tests_dir)
 {
 	std::list<utils::OptRelation *> identified_opt_list;  /* List of identified option relations. */
 	/*
@@ -85,9 +97,7 @@ generatetest::GenerateTest(std::string utility,
 
 	/* Read annotations and populate hash set "annotation_set". */
 	annotations::read_annotations(utility, annotation_set);
-
 	util_with_section = utility + '(' + section + ')';
-
 	utils::OptDefinition opt_def;
 	identified_opt_list = opt_def.CheckOpts(utility);
 	test_file = tests_dir + utility + "_test.sh";
@@ -237,16 +247,18 @@ main(int argc, char **argv)
 	DIR *groff_dir_ptr;
 	char answer;          	/* User input to determine actions to be taken. */
 	std::string license;  	/* Customized license generated during runtime. */
+	std::string util_dir;   /* Path to utility in src tree. */
 	/* Directory for collecting groff scripts for utilities with failed test generation. */
 	const char *failed_groff_dir = "failed_groff/";
 	const char *groff_dir = "groff/";  /* Directory of groff scripts. */
+	const char *tests_dir = "generated_tests/";  /* Directory to collect generated tests. */
 	/*
 	 * Instead of generating tests for all the utilities, "batch mode"
 	 * allows generation of tests for first "batch_limit" number of
 	 * utilities selected from "scripts/utils_list".
 	 */
 	bool batch_mode = false;
-	int batch_limit = 8;    	   /* Number of tests to be generated in batch mode. */
+	int batch_limit;  /* Number of tests to be generated in batch mode. */
 
 	/* Handle interrupts. */
 	signal(SIGINT, generatetest::IntHandler);
@@ -258,25 +270,10 @@ main(int argc, char **argv)
 	 */
 	boost::filesystem::create_directory(utils::tmpdir);
 
-	/* Check if the directory "groff/" is populated with groff scripts. */
-	std::cout << "Update groff directory ? [y/N] ";
-	std::cin.get(answer);
-
-	switch(answer) {
-		case 'y':
-		case 'Y':
-			if (groff::FetchGroffScripts() == -1)
-				return EXIT_FAILURE;
-			break;
-		case '\n':
-		default:
-			break;
-	}
-
-	std::cout << "\nInstead of generating tests for all the utilities,\n"
-		     "'batch mode' allows generation of tests for first "
-		     + std::to_string(batch_limit) + "\nnumber of utilities "
-		     "selected from 'scripts/utils_list'.\n"
+	std::cout << "\nInstead of generating tests for all the utilities, 'batch mode'\n"
+		     "allows generation of tests for first few utilities selected from\n"
+		     "'scripts/utils_list', and places them at their correct location\n"
+		     "in the src tree, with corresponding makefiles created.\n"
 		     "Run in 'batch mode' ? [y/N] ";
 	std::cin.get(answer);
 
@@ -284,10 +281,36 @@ main(int argc, char **argv)
 		case 'y':
 		case 'Y':
 			batch_mode = true;
+			if (groff::FetchGroffScripts() == -1)
+				return EXIT_FAILURE;
 			break;
 		case '\n':
 		default:
 			break;
+	}
+	if (batch_mode) {
+		std::cout << "Number of utilities to select for test generation: ";
+		std::cin >> batch_limit;
+
+		if (batch_limit <= 0) {
+			std::cerr << "Invalid number given as input. Exiting...\n";
+			return EXIT_FAILURE;
+		}
+	} else {
+		/* Check if the directory "groff/" is populated with groff scripts. */
+		std::cout << "Update groff directory ? [y/N] ";
+		std::cin.get(answer);
+
+		switch(answer) {
+			case 'y':
+			case 'Y':
+				if (groff::FetchGroffScripts() == -1)
+					return EXIT_FAILURE;
+				break;
+			case '\n':
+			default:
+				break;
+		}
 	}
 
 	/*
@@ -301,8 +324,8 @@ main(int argc, char **argv)
 			while ((ent = readdir(groff_dir_ptr))) {
 				util_name = ent->d_name;
 				util_vector.push_back(std::make_pair<std::string, std::string>
-						      (util_name.substr(0, util_name.length() - 2),
-						       util_name.substr(util_name.length() - 1, 1)));
+						     (util_name.substr(0, util_name.length() - 2),
+						      util_name.substr(util_name.length() - 1, 1)));
 			}
 			closedir(groff_dir_ptr);
 		} else {
@@ -325,7 +348,7 @@ main(int argc, char **argv)
 	/* Generate a license to be added in the generated scripts. */
 	license = generatelicense::GenerateLicense(argc, argv);
 
-	remove(failed_groff_dir);
+	boost::filesystem::remove_all(failed_groff_dir);
 	boost::filesystem::create_directory(failed_groff_dir);
 
 	/* Generate a tabular-like format. */
@@ -339,22 +362,29 @@ main(int argc, char **argv)
 		 * utilities selected from "scripts/utils_list".
 		 */
 		for (util_vector_iter = util_vector.begin();
-		     util_vector_iter <= util_vector.begin() + batch_limit;
+		     util_vector_iter != util_vector.begin() + batch_limit;
 		     util_vector_iter++) {
+			util_dir = groff::util_path_map.at(util_vector_iter->first) + "/tests/";
+			boost::filesystem::remove_all(util_dir);
+			boost::filesystem::create_directory(util_dir);
+			generatetest::GenerateMakefile(util_vector_iter->first, util_dir);
+
 			test_file = tests_dir + util_vector_iter->first + "_test.sh";
 			generatetest::GenerateTest(util_vector_iter->first,
-						   util_vector_iter->second, license);
+						   util_vector_iter->second,
+						   license, util_dir.c_str());
 		}
 	} else {
 		for (const auto &util : util_vector) {
 			/* TODO(shivansh) Check before overwriting existing test scripts. */
 			test_file = tests_dir + util.first + "_test.sh";
-			generatetest::GenerateTest(util.first, util.second, license);
+			generatetest::GenerateTest(util.first, util.second,
+						   license, tests_dir);
 		}
 	}
 
 	/* Remove the temporary directory. */
-	remove(utils::tmpdir);
+	boost::filesystem::remove_all(utils::tmpdir);
 
 	return EXIT_SUCCESS;
 }
