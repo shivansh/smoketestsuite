@@ -2,46 +2,34 @@
 #
 # Makefile for building the test generation tool
 
-CC=    c++
-CFLAGS=-I/usr/local/include -std=c++11
-LIBS=  -L/usr/local/lib \
-       -lboost_filesystem \
-       -lboost_system
-OBJS=  logging.o \
-       utils.o \
-       read_annotations.o \
-       generate_license.o \
-       add_testcase.o \
-       fetch_groff.o \
-       generate_test.o
-
-generate_tests: $(OBJS)
-	$(CC) $(CFLAGS) -o $(.TARGET) $(.ALLSRC) $(LIBS)
-
-$(OBJS): $(.PREFIX).cpp $(.PREFIX).h
-	$(CC) $(CFLAGS) -c $(.PREFIX).cpp
+PROG_CXX=	generate_tests
+LOCALBASE=	/usr/local
+MAN=
+CXXFLAGS+=	-I${LOCALBASE}/include -std=c++11
+LDFLAGS+=	-L${LOCALBASE}/lib -lboost_filesystem -lboost_system
+SRCS=	logging.cpp \
+	utils.cpp \
+	read_annotations.cpp \
+	generate_license.cpp \
+	add_testcase.cpp \
+	fetch_groff.cpp \
+	generate_test.cpp
 
 .PHONY: clean \
 	fetch_groff \
 	fetch_utils \
 	run
 
-clean:
-	rm -rf $(OBJS) \
-		generate_tests \
-		scripts/utils_list \
-		groff \
-		failed_groff \
-		generated_tests
-
 fetch_groff:
-	sh scripts/fetch_groff.sh
+	sh ${.CURDIR}/scripts/fetch_groff.sh
 
 fetch_utils:
-	sh scripts/fetch_utils.sh
+	sh ${.CURDIR}/scripts/fetch_utils.sh
 
 run:
 	@echo Generating annotations...
-	sh scripts/generate_annot.sh
+	sh ${.CURDIR}/scripts/generate_annot.sh
 	@echo Generating test files...
 	./generate_tests
+
+.include <bsd.prog.mk>
