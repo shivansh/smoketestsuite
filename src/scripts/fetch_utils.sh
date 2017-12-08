@@ -29,7 +29,7 @@
 # Script for listing all the base utilities
 
 set -e
-script_dir="scripts"
+script_dir="$(dirname $0)"
 src="$(dirname $0)/../../../../"
 
 fetch_utils() {

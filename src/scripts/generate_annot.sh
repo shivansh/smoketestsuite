@@ -39,7 +39,7 @@ printf "
 | Checking if any annotation file is to be updated |
 +--------------------------------------------------+\n"
 
-for f in "generated_tests"/*
+for f in "$(dirname $0)/generated_tests"/*
 do
 	annotations=""
 	file=$(basename "$f")
