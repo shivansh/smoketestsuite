@@ -28,19 +28,12 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
-#include <cstdio>
-#include <cstdlib>
-#include <chrono>
 #include <dirent.h>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <memory>
-#include <pthread.h>
 #include <signal.h>
-#include <stdexcept>
 #include <sys/stat.h>
-#include <thread>
 #include <unordered_set>
 
 #include "add_testcase.h"
@@ -78,20 +71,20 @@ generatetest::GenerateTest(std::string utility,
 			   std::string& license,
 			   const char *tests_dir)
 {
-	std::list<utils::OptRelation *> identified_opt_list;  /* List of identified option relations. */
 	/*
 	 * Vector of usage messages -- used for validating
 	 * their consistency across different runs.
 	 */
 	std::vector<std::string> usage_messages;
-	std::string command;                             /* (Utility-specific) command to be executed. */
-	std::string testcase_list;                       /* List of testcases. */
-	std::string testcase_buffer;                     /* Buffer for (temporarily) holding testcase data. */
-	std::string test_file;                           /* atf-sh test name. */
-	std::string util_with_section;                   /* Section number appended to utility. */
-	std::ofstream test_fstream;                      /* Output stream for the atf-sh test. */
-	std::pair<std::string, int> output;              /* Return value type for `Execute()`. */
-	std::unordered_set<std::string> annotation_set;  /* Hashset of utility specific annotations. */
+	std::vector<utils::OptRelation *> identified_opts;  /* List of identified option relations. */
+	std::string command;                                /* (Utility-specific) command to be executed. */
+	std::string testcase_list;                          /* List of testcases. */
+	std::string testcase_buffer;                        /* Buffer for (temporarily) holding testcase data. */
+	std::string test_file;                              /* atf-sh test name. */
+	std::string util_with_section;                      /* Section number appended to utility. */
+	std::ofstream test_fstream;                         /* Output stream for the atf-sh test. */
+	std::pair<std::string, int> output;                 /* Return value type for `Execute()`. */
+	std::unordered_set<std::string> annotation_set;     /* Hashset of utility specific annotations. */
 	/* Number of options for which a testcase has been generated. */
 	int progress = 0;
 
@@ -99,7 +92,7 @@ generatetest::GenerateTest(std::string utility,
 	annotations::read_annotations(utility, annotation_set);
 	util_with_section = utility + '(' + section + ')';
 	utils::OptDefinition opt_def;
-	identified_opt_list = opt_def.CheckOpts(utility);
+	identified_opts = opt_def.CheckOpts(utility);
 	test_file = tests_dir + utility + "_test.sh";
 
 	/* Indicate the start of test generation for current utility. */
@@ -113,7 +106,7 @@ generatetest::GenerateTest(std::string utility,
 	test_fstream << license;
 
 	/*
-	 * If a known option was encountered (i.e. `identified_opt_list` is
+	 * If a known option was encountered (i.e. `identified_opts` is
 	 * populated), produce a testcase to check the validity of the
 	 * result of that option. If no known option was encountered,
 	 * produce testcases to verify the correct (generated) usage
@@ -121,17 +114,17 @@ generatetest::GenerateTest(std::string utility,
 	 */
 
 	/* Add testcases for known options. */
-	if (!identified_opt_list.empty()) {
-		for (const auto &i : identified_opt_list) {
+	if (!identified_opts.empty()) {
+		for (const auto &i : identified_opts) {
 			command = utility + " -" + i->value + " 2>&1 </dev/null";
 			output = utils::Execute(command);
 			if (boost::iequals(output.first.substr(0, 6), "usage:")) {
 				/* A usage message was produced, i.e. our guessed usage is incorrect. */
 				addtestcase::UnknownTestcase(i->value, util_with_section, output.first,
-								   output.second, testcase_buffer);
+							     output.second, testcase_buffer);
 			} else {
 				addtestcase::KnownTestcase(i->value, util_with_section,
-								 "", output.first, test_fstream);
+							   "", output.first, test_fstream);
 			}
 			testcase_list.append("\tatf_add_test_case " + i->value + "_flag\n");
 		}
@@ -170,8 +163,8 @@ generatetest::GenerateTest(std::string utility,
 				if (!(usage_messages.at(j)).compare(usage_messages.at((j+1) % usage_messages.size())) &&
 					!output.first.empty()) {
 					test_fstream << "usage_output=\'"
-						  + output.first.substr(0, 7 + utility.size())
-						  + "\'\n\n";
+						      + output.first.substr(0, 7 + utility.size())
+						      + "\'\n\n";
 					break;
 				}
 			}
@@ -212,9 +205,9 @@ generatetest::GenerateTest(std::string utility,
 
 		testcase_list.append("\tatf_add_test_case invalid_usage\n");
 		test_fstream << std::string("atf_test_case invalid_usage\ninvalid_usage_head()\n")
-			  + "{\n\tatf_set \"descr\" \"Verify that an invalid usage "
-			  + "with a supported option \" \\\n\t\t\t\"produces a valid error message"
-			  + "\"\n}\n\ninvalid_usage_body()\n{";
+			      + "{\n\tatf_set \"descr\" \"Verify that an invalid usage "
+			      + "with a supported option \" \\\n\t\t\t\"produces a valid error message"
+			      + "\"\n}\n\ninvalid_usage_body()\n{";
 
 		test_fstream << testcase_buffer + "\n}\n\n";
 	}
@@ -278,15 +271,15 @@ main(int argc, char **argv)
 	std::cin.get(answer);
 
 	switch(answer) {
-		case 'y':
-		case 'Y':
-			batch_mode = true;
-			if (groff::FetchGroffScripts() == -1)
-				return EXIT_FAILURE;
-			break;
-		case '\n':
-		default:
-			break;
+	case 'y':
+	case 'Y':
+		batch_mode = true;
+		if (groff::FetchGroffScripts() == -1)
+			return EXIT_FAILURE;
+		break;
+	case '\n':
+	default:
+		break;
 	}
 	if (batch_mode) {
 		std::cout << "Number of utilities to select for test generation: ";
@@ -302,14 +295,14 @@ main(int argc, char **argv)
 		std::cin.get(answer);
 
 		switch(answer) {
-			case 'y':
-			case 'Y':
-				if (groff::FetchGroffScripts() == -1)
-					return EXIT_FAILURE;
-				break;
-			case '\n':
-			default:
-				break;
+		case 'y':
+		case 'Y':
+			if (groff::FetchGroffScripts() == -1)
+				return EXIT_FAILURE;
+			break;
+		case '\n':
+		default:
+			break;
 		}
 	}
 
@@ -385,6 +378,5 @@ main(int argc, char **argv)
 
 	/* Remove the temporary directory. */
 	boost::filesystem::remove_all(utils::tmpdir);
-
 	return EXIT_SUCCESS;
 }

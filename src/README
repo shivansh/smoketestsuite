@@ -1,7 +1,7 @@
 $FreeBSD$
 
 Smoke testing of base utilities
-===============================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test generation tool made as a part of Google Summer of Code '17 with FreeBSD (https://summerofcode.withgoogle.com/projects/#6426676740227072).
 Refer the FreeBSD wiki (https://wiki.freebsd.org/SummerOfCode2017/SmokeTestingOfBaseUtilities) for an overview and updates.
@@ -9,7 +9,7 @@ A brief description and implementation details: https://lists.freebsd.org/piperm
 The diagram "architecture.png" briefly summarizes how different components fit with the testcase-generator.
 
 Directory Structure
-===================
+~~~~~~~~~~~~~~~~~~~
 
 .
 ├── annotations
@@ -26,13 +26,27 @@ Directory Structure
 - - -
 
 Dependencies
-============
+~~~~~~~~~~~~
 * Boost C++ libraries: The tool was tested to work with the port "boost-all-1.64.0".
 
 Instructions
-============
+~~~~~~~~~~~~
+* The directory "groff" should be populated with the relevant groff scripts before proceeding for test generation. These scripts are available in the FreeBSD source tree.
+
+* For populating the directory "groff", execute the following from the project root -
+
+  	make fetch_utils
+  	make fetch_groff
+
+Generating tests
+~~~~~~~~~~~~~~~~
 Execute the following from the project root -
 
 	make clean
-	make fetch_utils
 	make && make run
+
+ToDo
+~~~~
+The following features/functionalities are planned to be integrated in the tool -
+* [Batch mode] Run the generated tests and report success/failure.
+* [Batch mode] Appropriately update `BSD.tests.dist`.

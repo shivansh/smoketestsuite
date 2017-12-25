@@ -3,11 +3,12 @@
 
 set -e
 
-cd "$(dirname $0)/.."
 # NOTE The following location needs to be updated
 # to point to the correct local FreeBSD src tree.
-src="$(dirname $0)/../../../source-codes/freebsd/tools/tools/smoketestsuite"
+src="$HOME/freebsd/tools/tools/smoketestsuite"
 echo $(pwd)
+
+cd "$(dirname $0)/.."
 
 rsync -avzHP \
 	annotations \

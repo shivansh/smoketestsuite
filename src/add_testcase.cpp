@@ -35,10 +35,10 @@
 /* Adds a test-case for an option with known usage. */
 void
 addtestcase::KnownTestcase(std::string option,
-				 std::string util_with_section,
-				 std::string descr,
-				 std::string output,
-				 std::ofstream& test_script)
+			   std::string util_with_section,
+			   std::string descr,
+			   std::string output,
+			   std::ofstream& test_script)
 {
 	std::string testcase_name;
 	std::string utility = util_with_section.substr(0,
@@ -81,10 +81,10 @@ addtestcase::KnownTestcase(std::string option,
 /* Adds a test-case for an option with unknown usage. */
 void
 addtestcase::UnknownTestcase(std::string option,
-				   std::string util_with_section,
-				   std::string output,
-				   int exitstatus,
-				   std::string& testcase_buffer)
+			     std::string util_with_section,
+			     std::string output,
+			     int exitstatus,
+			     std::string& testcase_buffer)
 {
 	std::string utility = util_with_section.substr(0,
 			      util_with_section.length() - 3);
@@ -108,8 +108,8 @@ addtestcase::UnknownTestcase(std::string option,
 /* Adds a test-case for usage without any arguments. */
 void
 addtestcase::NoArgsTestcase(std::string util_with_section,
-				  std::pair<std::string, int> output,
-				  std::ofstream& test_script)
+			    std::pair<std::string, int> output,
+			    std::ofstream& test_script)
 {
 	std::string descr;
 	std::string utility = util_with_section.substr(0,

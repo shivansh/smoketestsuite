@@ -6,3 +6,7 @@ src/scripts/utils_list
 
 # Exclude object files
 *.o
+
+# Exclude generated files
+*.debug
+*.full
