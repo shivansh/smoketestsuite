@@ -67,7 +67,7 @@ generatetest::GenerateMakefile(std::string utility, std::string util_dir)
 /* Generate a test for the given utility. */
 void
 generatetest::GenerateTest(std::string utility,
-			   std::string section,
+			   char section,
 			   std::string& license,
 			   const char *tests_dir)
 {
@@ -112,102 +112,96 @@ generatetest::GenerateTest(std::string utility,
 	 * produce testcases to verify the correct (generated) usage
 	 * message when using the supported options incorrectly.
 	 */
+	for (const auto &i : identified_opts) {
+		command = utils::GenerateCommand(utility, i->value);
+		output = utils::Execute(command);
+		if (boost::iequals(output.first.substr(0, 6), "usage:")) {
+			/* Our guessed usage is incorrect as usage message is produced. */
+			addtestcase::UnknownTestcase(i->value, util_with_section, output.first,
+						     output.second, testcase_buffer);
+		} else {
+			addtestcase::KnownTestcase(i->value, util_with_section,
+						   "", output.first, test_fstream);
+		}
+		testcase_list.append("\tatf_add_test_case " + i->value + "_flag\n");
+	}
 
-	/* Add testcases for known options. */
-	if (!identified_opts.empty()) {
-		for (const auto &i : identified_opts) {
-			command = utility + " -" + i->value + " 2>&1 </dev/null";
+	/* Add testcases for the options whose usage is not yet known.
+	 * For the purpose of adding a "$usage_output" variable,
+	 * we choose the option which produces one.
+	 * TODO Avoid double executions of an option, i.e. one while
+	 * selecting usage message and another while generating testcase.
+	 */
+	if (opt_def.opt_list.size() == 1) {
+		/* Check if the single option produces a usage message. */
+		command = utils::GenerateCommand(utility, opt_def.opt_list.front());
+		output = utils::Execute(command);
+		if (output.second && !output.first.empty())
+			test_fstream << "usage_output=\'" + output.first + "\'\n\n";
+	} else if (opt_def.opt_list.size() > 1) {
+		/*
+		 * Utility supports multiple options. In case the usage message
+		 * is consistent for atleast "two" options, we reduce duplication
+		 * by assigning a variable "usage_output" in the test script.
+		 */
+		for (const auto &i : opt_def.opt_list) {
+			command = utils::GenerateCommand(utility, i);
 			output = utils::Execute(command);
-			if (boost::iequals(output.first.substr(0, 6), "usage:")) {
-				/* A usage message was produced, i.e. our guessed usage is incorrect. */
-				addtestcase::UnknownTestcase(i->value, util_with_section, output.first,
-							     output.second, testcase_buffer);
-			} else {
-				addtestcase::KnownTestcase(i->value, util_with_section,
-							   "", output.first, test_fstream);
+			if (output.second && usage_messages.size() < 3)
+				usage_messages.push_back(output.first);
+		}
+
+		for (int j = 0; j < usage_messages.size(); j++) {
+			if (!usage_messages[j].compare
+					(usage_messages[(j+1) % usage_messages.size()])) {
+				test_fstream << "usage_output=\'"
+					      + output.first.substr(0, 7 + utility.size())
+					      + "\'\n\n";
+				break;
 			}
-			testcase_list.append("\tatf_add_test_case " + i->value + "_flag\n");
 		}
 	}
 
-	/* Add testcases for the options whose usage is not yet known. */
-	if (!opt_def.opt_list.empty()) {
-		/*
-		 * For the purpose of adding a "$usage_output" variable,
-		 * we choose the option which produces one.
-		 * TODO(shivansh) Avoid double executions of an option, i.e. one while
-		 * selecting usage message and another while generating testcase.
-		 */
-		if (opt_def.opt_list.size() == 1) {
-			/* Utility supports a single option, check if it produces a usage message. */
-			command = utility + " -" + opt_def.opt_list.front() + " 2>&1 </dev/null";
-			output = utils::Execute(command);
+	/*
+	 * Execute the utility with supported options
+	 * and add (+ve)/(-ve) testcases accordingly.
+	 */
+	for (const auto &i : opt_def.opt_list) {
+		/* If the option is annotated, ignore it. */
+		if (annotation_set.find(i) != annotation_set.end())
+			continue;
 
-			if (output.second && !output.first.empty())
-				test_fstream << "usage_output=\'" + output.first + "\'\n\n";
+		command = utils::GenerateCommand(utility, i);
+		output = utils::Execute(command);
+		if (isatty(fileno(stderr))) {
+			std::cerr << std::setw(18) << util_with_section
+				  << " | " << ++progress << "/"
+				  << opt_def.opt_list.size() << "\r";
+		}
+
+		if (output.second) {
+			/* Non-zero exit status was encountered. */
+			addtestcase::UnknownTestcase(i, util_with_section, output.first,
+						     output.second, testcase_buffer);
 		} else {
 			/*
-			 * Utility supports multiple options. In case the usage message
-			 * is consistent for atleast "two" options, we reduce duplication
-			 * by assigning a variable "usage_output" in the test script.
+			 * EXIT_SUCCESS was encountered. Hence,
+			 * the guessed usage is correct.
 			 */
-			for (const auto &i : opt_def.opt_list) {
-				command = utility + " -" + i + " 2>&1 </dev/null";
-				output = utils::Execute(command);
-
-				if (output.second && usage_messages.size() < 3)
-					usage_messages.push_back(output.first);
-			}
-
-			for (int j = 0; j < usage_messages.size(); j++) {
-				if (!(usage_messages.at(j)).compare(usage_messages.at((j+1) % usage_messages.size())) &&
-					!output.first.empty()) {
-					test_fstream << "usage_output=\'"
-						      + output.first.substr(0, 7 + utility.size())
-						      + "\'\n\n";
-					break;
-				}
-			}
+			addtestcase::KnownTestcase(i, util_with_section, "",
+						   output.first, test_fstream);
+			testcase_list.append(std::string("\tatf_add_test_case ")
+					     + i + "_flag\n");
 		}
+	}
+	std::cout << std::endl;
 
-		/*
-		 * Execute the utility with supported options
-		 * and add (+ve)/(-ve) testcases accordingly.
-		 */
-		for (const auto &i : opt_def.opt_list) {
-			/* If the option is annotated, ignore it. */
-			if (annotation_set.find(i) != annotation_set.end())
-				continue;
-
-			command = utility + " -" + i + " 2>&1 </dev/null";
-			output = utils::Execute(command);
-			if (isatty(fileno(stderr))) {
-				std::cerr << std::setw(18) << util_with_section << " | "
-					  << ++progress << "/" << opt_def.opt_list.size() << "\r";
-			}
-
-			if (output.second) {
-				/* Non-zero exit status was encountered. */
-				addtestcase::UnknownTestcase(i, util_with_section, output.first,
-							     output.second, testcase_buffer);
-			} else {
-				/*
-				 * EXIT_SUCCESS was encountered. Hence,
-				 * the guessed usage is correct.
-				 */
-				addtestcase::KnownTestcase(i, util_with_section, "",
-							   output.first, test_fstream);
-				testcase_list.append(std::string("\tatf_add_test_case ")
-						     + i + "_flag\n");
-			}
-		}
-		std::cerr << std::endl;
-
+	if (!opt_def.opt_list.empty()) {
 		testcase_list.append("\tatf_add_test_case invalid_usage\n");
-		test_fstream << std::string("atf_test_case invalid_usage\ninvalid_usage_head()\n")
-			      + "{\n\tatf_set \"descr\" \"Verify that an invalid usage "
-			      + "with a supported option \" \\\n\t\t\t\"produces a valid error message"
-			      + "\"\n}\n\ninvalid_usage_body()\n{";
+		test_fstream << "atf_test_case invalid_usage\ninvalid_usage_head()\n"
+			     << "{\n\tatf_set \"descr\" \"Verify that an invalid usage "
+			     << "with a supported option \" \\\n\t\t\t\"produces a valid "
+			     << "error message\"\n}\n\ninvalid_usage_body()\n{";
 
 		test_fstream << testcase_buffer + "\n}\n\n";
 	}
@@ -217,7 +211,7 @@ generatetest::GenerateTest(std::string utility,
 	 * running the utility without any arguments.
 	 */
 	if (annotation_set.find("*") == annotation_set.end()) {
-		command = utility + " 2>&1 </dev/null";
+		command = utils::GenerateCommand(utility, "");
 		output = utils::Execute(command);
 		addtestcase::NoArgsTestcase(util_with_section, output, test_fstream);
 		testcase_list.append("\tatf_add_test_case no_arguments\n");
@@ -231,8 +225,7 @@ int
 main(int argc, char **argv)
 {
 	std::ifstream groff_list;
-	std::vector<std::pair<std::string, std::string>> util_vector;
-	std::vector<std::pair<std::string, std::string>>::iterator util_vector_iter;
+	std::vector<std::pair<std::string, char>> util_vector;
 	std::string test_file;  /* atf-sh test name. */
 	std::string util_name;  /* Utility name. */
 	struct stat sb;
@@ -241,7 +234,7 @@ main(int argc, char **argv)
 	char answer;          	/* User input to determine actions to be taken. */
 	std::string license;  	/* Customized license generated during runtime. */
 	std::string util_dir;   /* Path to utility in src tree. */
-	/* Directory for collecting groff scripts for utilities with failed test generation. */
+	/* Directory to collect groff scripts for utilities with failed test generation. */
 	const char *failed_groff_dir = "failed_groff/";
 	const char *groff_dir = "groff/";  /* Directory of groff scripts. */
 	const char *tests_dir = "generated_tests/";  /* Directory to collect generated tests. */
@@ -257,9 +250,8 @@ main(int argc, char **argv)
 	signal(SIGINT, generatetest::IntHandler);
 
 	/*
-	 * Create a temporary directory where all the
-	 * side-effects introduced by utility-specific
-	 * commands are restricted.
+	 * Create a temporary directory where all the side-effects
+	 * introduced by utility-specific commands are restricted.
 	 */
 	boost::filesystem::create_directory(utils::tmpdir);
 
@@ -286,7 +278,7 @@ main(int argc, char **argv)
 		std::cin >> batch_limit;
 
 		if (batch_limit <= 0) {
-			std::cerr << "Invalid number given as input. Exiting...\n";
+			std::cerr << "Invalid input. Exiting...\n";
 			return EXIT_FAILURE;
 		}
 	} else {
@@ -312,13 +304,13 @@ main(int argc, char **argv)
 	 */
 	if (util_vector.empty()) {
 		if ((groff_dir_ptr = opendir(groff_dir))) {
-			readdir(groff_dir_ptr); 	/* Skip directory entry for "." */
-			readdir(groff_dir_ptr); 	/* Skip directory entry for ".." */
+			readdir(groff_dir_ptr);  /* Skip directory entry for "." */
+			readdir(groff_dir_ptr);  /* Skip directory entry for ".." */
 			while ((ent = readdir(groff_dir_ptr))) {
 				util_name = ent->d_name;
-				util_vector.push_back(std::make_pair<std::string, std::string>
-						     (util_name.substr(0, util_name.length() - 2),
-						      util_name.substr(util_name.length() - 1, 1)));
+				util_vector.push_back(std::make_pair<std::string, char>
+						     (util_name.substr(0, util_name.size()-2),
+						     (char)util_name[util_name.size()-1]));
 			}
 			closedir(groff_dir_ptr);
 		} else {
@@ -331,9 +323,9 @@ main(int argc, char **argv)
 	if (stat(tests_dir, &sb) || !S_ISDIR(sb.st_mode)) {
 		boost::filesystem::path dir(tests_dir);
 		if (boost::filesystem::create_directory(dir))
-			std::cout << "Directory created: " << tests_dir << std::endl;
+			std::cout << "Directory created: " << tests_dir << "\n";
 		else {
-			std::cerr << "Unable to create directory: " << tests_dir << std::endl;
+			std::cerr << "Unable to create directory: " << tests_dir << "\n";
 			return EXIT_FAILURE;
 		}
 	}
@@ -354,29 +346,27 @@ main(int argc, char **argv)
 		 * Generate tests for first "batch_limit" number of
 		 * utilities selected from "scripts/utils_list".
 		 */
-		for (util_vector_iter = util_vector.begin();
-		     util_vector_iter != util_vector.begin() + batch_limit;
-		     util_vector_iter++) {
-			util_dir = groff::util_path_map.at(util_vector_iter->first) + "/tests/";
+		for (auto util = util_vector.begin();
+		     util != util_vector.begin() + batch_limit; util++) {
+			util_dir = groff::util_path_map.at(util->first) + "/tests/";
 			boost::filesystem::remove_all(util_dir);
 			boost::filesystem::create_directory(util_dir);
-			generatetest::GenerateMakefile(util_vector_iter->first, util_dir);
+			generatetest::GenerateMakefile(util->first, util_dir);
 
-			test_file = tests_dir + util_vector_iter->first + "_test.sh";
-			generatetest::GenerateTest(util_vector_iter->first,
-						   util_vector_iter->second,
+			test_file = tests_dir + util->first + "_test.sh";
+			generatetest::GenerateTest(util->first, util->second,
 						   license, util_dir.c_str());
 		}
 	} else {
 		for (const auto &util : util_vector) {
-			/* TODO(shivansh) Check before overwriting existing test scripts. */
+			/* TODO Check before overwriting existing test scripts. */
 			test_file = tests_dir + util.first + "_test.sh";
 			generatetest::GenerateTest(util.first, util.second,
 						   license, tests_dir);
 		}
 	}
 
-	/* Remove the temporary directory. */
+	/* Cleanup. */
 	boost::filesystem::remove_all(utils::tmpdir);
 	return EXIT_SUCCESS;
 }

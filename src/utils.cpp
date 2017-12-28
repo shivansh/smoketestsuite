@@ -167,6 +167,19 @@ utils::OptDefinition::CheckOpts(std::string utility)
 	return identified_opts;
 }
 
+/* Generates command for execution. */
+std::string
+utils::GenerateCommand(std::string utility, std::string opt)
+{
+	std::string command = utility;
+
+	if (!opt.empty())
+		command += " -" + opt;
+	command += " 2>&1 </dev/null";
+
+	return command;
+}
+
 /*
  * When pclose() is called on the stream returned by popen(),
  * it waits indefinitely for the created shell process to
@@ -243,8 +256,8 @@ utils::POpen(const char *command)
 }
 
 /*
- * Executes the passed argument "command" in a shell
- * and returns its output and the exit status.
+ * Executes the command passed as argument in a
+ * shell and returns its output and exit status.
  */
 std::pair<std::string, int>
 utils::Execute(std::string command)

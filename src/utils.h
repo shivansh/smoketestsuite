@@ -60,6 +60,7 @@ namespace utils {
 	 */
 	extern const char *tmpdir;
 
+	std::string GenerateCommand(std::string, std::string);
 	std::pair<std::string, int> Execute(std::string);
 	PipeDescriptor* POpen(const char*);
 
