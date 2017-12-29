@@ -27,6 +27,7 @@
  */
 
 #include <boost/filesystem.hpp>
+#include <boost/thread.hpp>
 #include <dirent.h>
 #include <fstream>
 #include <iostream>
@@ -35,14 +36,23 @@
 #include <unistd.h>
 
 #include "fetch_groff.h"
+#include "logging.h"
 
-/* Hashmap mapping utility name to its location in src tree. */
-std::unordered_map<std::string, std::string> groff::util_path_map;
+/* Map of utility name and its location in src tree. */
+std::unordered_map<std::string, std::string> groff::utilpath_map;
+
+void
+groff::Copy(std::string src, std::string dst)
+{
+	std::ifstream src_stream(src);
+	std::ofstream dst_stream(dst);
+
+	dst_stream << src_stream.rdbuf();
+}
 
 /*
- * Traverses the FreeBSD src tree looking for groff
- * scripts for section 1 and section 8 utilities and
- * copies them to the directory "groff/".
+ * Traverses the FreeBSD src tree looking for groff scripts for section
+ * 1 and section 8 utilities and copies them to the directory "groff/".
  * TODO Use the paths of scripts instead of copying.
  */
 int
@@ -54,8 +64,7 @@ groff::FetchGroffScripts()
 	std::string util_dir;
 	std::string pathname;
 	std::ifstream utils_fstream;
-	std::regex section_1 ("(.*).1");
-	std::regex section_8 ("(.*).8");
+	std::regex section ("(.*).(?:1|8)");
 	struct stat sb;
 	struct dirent *ent;
 	DIR *dir;
@@ -64,50 +73,46 @@ groff::FetchGroffScripts()
 	if (stat(utils_list.c_str(), &sb) != 0) {
 		std::cerr << "scripts/utils_list does not exists.\n"
 			     "Run 'make fetch_utils' first.\n";
-		return -1;
+		return EXIT_FAILURE;
 	}
 	utils_fstream.open(utils_list);
 
-	/* Remove the state "groff" directory and create an empty one.  */
+	/* Remove the stale directory "groff/" and create an empty one. */
 	boost::filesystem::remove_all(groff_src);
 	boost::filesystem::create_directory(groff_src);
 
-	while(getline(utils_fstream, util_dir)) {
+	while (getline(utils_fstream, util_dir)) {
 		pathname = freebsd_src + util_dir + "/tests";
-
 		/*
 		 * Copy the groff script only if the utility does not
 		 * already have tests, i.e. the "tests" directory is absent.
 		 */
 		if (!(stat(pathname.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode))) {
-			pathname = freebsd_src + util_dir;
-			util_path_map[util_dir.substr(util_dir.find_last_of("/") + 1)] = pathname;
-
+			pathname = freebsd_src + util_dir + "/";
+			utilpath_map[util_dir.substr
+				(util_dir.find_last_of("/") + 1)] = pathname;
 			if ((dir = opendir(pathname.c_str())) != NULL) {
 				ent = readdir(dir);  /* Skip directory entry for "." */
 				ent = readdir(dir);  /* Skip directory entry for ".." */
-
 				while ((ent = readdir(dir)) != NULL) {
-					/* Copy the groff scripts for section 1 and section 8 utilities. */
-					if (std::regex_match(ent->d_name, section_1) ||
-					    std::regex_match(ent->d_name, section_8)) {
-						std::ifstream src(pathname + "/" + ent->d_name, std::ios::binary);
-						std::ofstream dst(groff_src + ent->d_name, std::ios::binary);
-						dst << src.rdbuf();
+					if (std::regex_match(ent->d_name, section)) {
+						boost::thread copy_thread(Copy,
+								pathname + ent->d_name,
+								groff_src + ent->d_name);
+						copy_thread.join();
 					}
 				}
-
 				closedir(dir);
 			} else {
-				perror("opendir()");
+				logging::LogPerror("opendir()");
 			}
 		}
 	}
 
 	/* Remove non-executable utilities. */
 	boost::filesystem::remove(groff_src + "elfcopy.1");
-	std::cout << "Successfully updated 'groff/'\n";
 	utils_fstream.close();
+	std::cout << "Successfully updated 'groff/'\n";
 
-	return 0;
+	return EXIT_SUCCESS;
 }

@@ -6,7 +6,7 @@ PROG_CXX=	generate_tests
 LOCALBASE=	/usr/local
 MAN=
 CXXFLAGS+=	-I${LOCALBASE}/include -std=c++11
-LDFLAGS+=	-L${LOCALBASE}/lib -lboost_filesystem -lboost_system
+LDFLAGS+=	-L${LOCALBASE}/lib -lboost_filesystem -lboost_system -lboost_thread
 SRCS=	logging.cpp \
 	utils.cpp \
 	read_annotations.cpp \
