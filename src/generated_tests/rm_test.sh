@@ -27,7 +27,18 @@
 # $FreeBSD$
 #
 
-usage_output='usage: ln'
+usage_output='usage: rm'
+
+atf_test_case f_flag
+f_flag_head()
+{
+	atf_set "descr" "Verify the usage of option 'f'"
+}
+
+f_flag_body()
+{
+	atf_check -s exit:0 -o empty rm -f
+}
 
 atf_test_case invalid_usage
 invalid_usage_head()
@@ -38,32 +49,32 @@ invalid_usage_head()
 
 invalid_usage_body()
 {
-	atf_check -s not-exit:0 -e match:"$usage_output" ln -F
-	atf_check -s not-exit:0 -e match:"$usage_output" ln -L
-	atf_check -s not-exit:0 -e match:"$usage_output" ln -P
-	atf_check -s not-exit:0 -e match:"$usage_output" ln -f
-	atf_check -s not-exit:0 -e match:"$usage_output" ln -h
-	atf_check -s not-exit:0 -e match:"$usage_output" ln -i
-	atf_check -s not-exit:0 -e match:"$usage_output" ln -n
-	atf_check -s not-exit:0 -e match:"$usage_output" ln -s
-	atf_check -s not-exit:0 -e match:"$usage_output" ln -v
-	atf_check -s not-exit:0 -e match:"$usage_output" ln -w
+	atf_check -s not-exit:0 -e match:"$usage_output" rm -d
+	atf_check -s not-exit:0 -e match:"$usage_output" rm -i
+	atf_check -s not-exit:0 -e match:"$usage_output" rm -I
+	atf_check -s not-exit:0 -e match:"$usage_output" rm -P
+	atf_check -s not-exit:0 -e match:"$usage_output" rm -R
+	atf_check -s not-exit:0 -e match:"$usage_output" rm -r
+	atf_check -s not-exit:0 -e match:"$usage_output" rm -v
+	atf_check -s not-exit:0 -e match:"$usage_output" rm -W
+	atf_check -s not-exit:0 -e match:"$usage_output" rm -x
 }
 
 atf_test_case no_arguments
 no_arguments_head()
 {
-	atf_set "descr" "Verify that ln(1) fails and generates a valid usage " \
+	atf_set "descr" "Verify that rm(1) fails and generates a valid usage " \
 			"message when no arguments are supplied"
 }
 
 no_arguments_body()
 {
-	atf_check -s not-exit:0 -e match:"$usage_output" ln
+	atf_check -s not-exit:0 -e match:"$usage_output" rm
 }
 
 atf_init_test_cases()
 {
+	atf_add_test_case f_flag
 	atf_add_test_case invalid_usage
 	atf_add_test_case no_arguments
 }
