@@ -28,11 +28,11 @@
 
 /* Use a gcc variadic macro to conditionally compile debug printing. */
 #ifdef DEBUG
-#define DEBUG(...)                    \
+#define DEBUGP(...)                    \
 	fprintf(stdout, __VA_ARGS__);  \
 	fflush(stdout);
 #else
-#define DEBUG(...) {}
+#define DEBUGP(...) {}
 #endif
 
 namespace logging {

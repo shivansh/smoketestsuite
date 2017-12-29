@@ -330,11 +330,9 @@ utils::Execute(std::string command)
 		pid = wait4(pipe_descr->pid, &pstat, 0, (struct rusage *)0);
 	} while (pid == -1 && errno == EINTR);
 
-	/* exitstatus = WEXITSTATUS(pclose(pipe)); */
+	fclose(pipe);
 	exitstatus = (pid == -1) ? -1 : WEXITSTATUS(pstat);
 	DEBUGP("Command: %s, exit status: %d\n", command.c_str(), exitstatus);
-
-	fclose(pipe);
 
 	return std::make_pair<std::string, int>
 		((std::string)usage_output, (int)exitstatus);

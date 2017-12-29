@@ -40,6 +40,7 @@
 #include "fetch_groff.h"
 #include "generate_license.h"
 #include "generate_test.h"
+#include "logging.h"
 #include "read_annotations.h"
 
 void
@@ -76,15 +77,15 @@ generatetest::GenerateTest(std::string utility,
 	 * their consistency across different runs.
 	 */
 	std::vector<std::string> usage_messages;
-	std::vector<utils::OptRelation *> identified_opts;  /* List of identified option relations. */
-	std::string command;                                /* (Utility-specific) command to be executed. */
-	std::string testcase_list;                          /* List of testcases. */
-	std::string testcase_buffer;                        /* Buffer for (temporarily) holding testcase data. */
-	std::string test_file;                              /* atf-sh test name. */
-	std::string util_with_section;                      /* Section number appended to utility. */
-	std::ofstream test_fstream;                         /* Output stream for the atf-sh test. */
-	std::pair<std::string, int> output;                 /* Return value type for `Execute()`. */
-	std::unordered_set<std::string> annotation_set;     /* Hashset of utility specific annotations. */
+	std::vector<utils::OptRelation *> identified_opts;
+	std::string command;            /* (Utility-specific) command to be executed. */
+	std::string testcase_list;      /* List of testcases. */
+	std::string testcase_buffer;    /* Buffer for (temporarily) holding testcase data. */
+	std::string test_file;          /* atf-sh test name. */
+	std::string util_with_section;  /* Section number appended to utility. */
+	std::ofstream test_fstream;     /* Output stream for the atf-sh test. */
+	std::pair<std::string, int> output;
+	std::unordered_set<std::string> annotation_set;  /* Utility specific annotations. */
 	/* Number of options for which a testcase has been generated. */
 	int progress = 0;
 
@@ -95,11 +96,13 @@ generatetest::GenerateTest(std::string utility,
 	identified_opts = opt_def.CheckOpts(utility);
 	test_file = tests_dir + utility + "_test.sh";
 
+#ifndef DEBUG
 	/* Indicate the start of test generation for current utility. */
 	if (isatty(fileno(stderr))) {
 		std::cerr << std::setw(18) << util_with_section << " | "
 			  << progress << "/" << opt_def.opt_list.size() << "\r";
 	}
+#endif
 
 	/* Add license in the generated test scripts. */
 	test_fstream.open(test_file, std::ios::out);
@@ -117,8 +120,8 @@ generatetest::GenerateTest(std::string utility,
 		output = utils::Execute(command);
 		if (boost::iequals(output.first.substr(0, 6), "usage:")) {
 			/* Our guessed usage is incorrect as usage message is produced. */
-			addtestcase::UnknownTestcase(i->value, util_with_section, output.first,
-						     output.second, testcase_buffer);
+			addtestcase::UnknownTestcase(i->value, util_with_section,
+						     output, testcase_buffer);
 		} else {
 			addtestcase::KnownTestcase(i->value, util_with_section,
 						   "", output.first, test_fstream);
@@ -173,16 +176,17 @@ generatetest::GenerateTest(std::string utility,
 
 		command = utils::GenerateCommand(utility, i);
 		output = utils::Execute(command);
+#ifndef DEBUG
 		if (isatty(fileno(stderr))) {
 			std::cerr << std::setw(18) << util_with_section
 				  << " | " << ++progress << "/"
 				  << opt_def.opt_list.size() << "\r";
 		}
-
+#endif
 		if (output.second) {
 			/* Non-zero exit status was encountered. */
-			addtestcase::UnknownTestcase(i, util_with_section, output.first,
-						     output.second, testcase_buffer);
+			addtestcase::UnknownTestcase(i, util_with_section, output,
+						     testcase_buffer);
 		} else {
 			/*
 			 * EXIT_SUCCESS was encountered. Hence,
@@ -226,7 +230,6 @@ main(int argc, char **argv)
 {
 	std::ifstream groff_list;
 	std::vector<std::pair<std::string, char>> util_vector;
-	std::string test_file;  /* atf-sh test name. */
 	std::string util_name;  /* Utility name. */
 	struct stat sb;
 	struct dirent *ent;
@@ -336,10 +339,12 @@ main(int argc, char **argv)
 	boost::filesystem::remove_all(failed_groff_dir);
 	boost::filesystem::create_directory(failed_groff_dir);
 
+#ifndef DEBUG
 	/* Generate a tabular-like format. */
 	std::cout << std::endl;
 	std::cout << std::setw(21) << "Utility | " << "Progress\n";
 	std::cout << std::setw(32) << "----------+-----------\n";
+#endif
 
 	if (batch_mode) {
 		/*
@@ -348,19 +353,16 @@ main(int argc, char **argv)
 		 */
 		for (auto util = util_vector.begin();
 		     util != util_vector.begin() + batch_limit; util++) {
-			util_dir = groff::util_path_map.at(util->first) + "/tests/";
+			util_dir = groff::utilpath_map.at(util->first) + "/tests/";
 			boost::filesystem::remove_all(util_dir);
 			boost::filesystem::create_directory(util_dir);
 			generatetest::GenerateMakefile(util->first, util_dir);
-
-			test_file = tests_dir + util->first + "_test.sh";
 			generatetest::GenerateTest(util->first, util->second,
 						   license, util_dir.c_str());
 		}
 	} else {
 		for (const auto &util : util_vector) {
 			/* TODO Check before overwriting existing test scripts. */
-			test_file = tests_dir + util.first + "_test.sh";
 			generatetest::GenerateTest(util.first, util.second,
 						   license, tests_dir);
 		}

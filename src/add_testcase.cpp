@@ -42,7 +42,7 @@ addtestcase::KnownTestcase(std::string option,
 {
 	std::string testcase_name;
 	std::string utility = util_with_section.substr(0,
-			      util_with_section.length() - 3);
+			      util_with_section.size() - 3);
 
 	/* Add testcase name. */
 	test_script << "atf_test_case ";
@@ -82,20 +82,22 @@ addtestcase::KnownTestcase(std::string option,
 void
 addtestcase::UnknownTestcase(std::string option,
 			     std::string util_with_section,
-			     std::string output,
-			     int exitstatus,
+			     std::pair<std::string, int> output,
 			     std::string& testcase_buffer)
 {
 	std::string utility = util_with_section.substr(0,
-			      util_with_section.length() - 3);
+			      util_with_section.size() - 3);
 
-	testcase_buffer.append("\n\tatf_check -s not-exit:0 -e ");
+	if (output.second)
+		testcase_buffer.append("\n\tatf_check -s not-exit:0 -e ");
+	else
+		testcase_buffer.append("\n\tatf_check -s exit:0 -o ");
 
 	/* Check if a usage message was produced (case-insensitive match). */
-	if (boost::iequals(output.substr(0, 6), "usage:"))
+	if (boost::iequals(output.first.substr(0, 6), "usage:"))
 		testcase_buffer.append("match:\"$usage_output\" ");
-	else if (!output.empty())
-		testcase_buffer.append("inline:\"" + output + "\" ");
+	else if (!output.first.empty())
+		testcase_buffer.append("inline:\"" + output.first + "\" ");
 	else
 		testcase_buffer.append("empty ");
 
@@ -113,7 +115,7 @@ addtestcase::NoArgsTestcase(std::string util_with_section,
 {
 	std::string descr;
 	std::string utility = util_with_section.substr(0,
-			      util_with_section.length() - 3);
+			      util_with_section.size() - 3);
 
 	if (output.second) {
 		/* An error was encountered. */
@@ -130,8 +132,8 @@ addtestcase::NoArgsTestcase(std::string util_with_section,
 				      + "\"message when no arguments are supplied\"";
 
 				test_script << descr + "\n}\n\nno_arguments_body()\n{"
-					       + "\n\tatf_check -s not-exit:0 -e match:\"$usage_output\" "
-					       + utility;
+					     + "\n\tatf_check -s not-exit:0 -e match:\""
+					     + "$usage_output\" " + utility;
 			} else {
 				descr = "\"Verify that " + util_with_section
 				      + " fails and generates a valid output \" \\\n\t\t\t"
@@ -166,6 +168,6 @@ addtestcase::NoArgsTestcase(std::string util_with_section,
 			      + "\"when invoked without any arguments\"";
 
 		addtestcase::KnownTestcase("", util_with_section, descr,
-						 output.first, test_script);
+					   output.first, test_script);
 	}
 }
