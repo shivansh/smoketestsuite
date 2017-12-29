@@ -251,6 +251,9 @@ main(int argc, char **argv)
 		     "allows generation of tests for first few utilities selected from\n"
 		     "'scripts/utils_list', and places them at their correct location\n"
 		     "in the src tree, with corresponding makefiles created.\n"
+		     "NOTE: You will be prompted for the superuser password when\n"
+		     "creating test directory under '/usr/tests/' and when installing\n"
+		     "the tests via `sudo make install`.\n";
 		     "Run in 'batch mode' ? [y/N] ";
 	std::cin.get(answer);
 
@@ -293,21 +296,81 @@ main(int argc, char **argv)
 #endif
 
 	if (batch_mode) {
+		std::string hops;  /* Number of hops required to reach '/'. */
+		std::string command;
+		std::string testdir;
+		int retval;
+		int maxdepth = 32;
+		std::unordered_map<std::string, std::string>::iterator it;
+		/* Remember pwd so that we can return back. */
+		boost::filesystem::path tooldir = boost::filesystem::current_path();
+
+		/*
+		 * Discover number of hops required to reach root directory.
+		 * To avoid an infinite loop in case directory "usr/" doesn't
+		 * exist in the filesystem, we assume that the maximum depth
+		 * from root directory at which pwd is located is "maxdepth".
+		 */
+		while (maxdepth--) {
+			if (chdir("..") == -1) {
+				perror("chdir");
+				return EXIT_FAILURE;
+			}
+			hops += "../";
+			if (stat("usr", &sb) == 0 && S_ISDIR(sb.st_mode))
+				break;
+		}
+		boost::filesystem::current_path(tooldir);
+
 		/*
 		 * Generate tests for first "batch_limit" number of
 		 * utilities selected from "scripts/utils_list".
 		 */
-		auto it = groff::groff_map.begin();
+		it = groff::groff_map.begin();
 		while (batch_limit-- && it != groff::groff_map.end()) {
 			groffpath = groff::groff_map.at(it->first);
 			utildir = groffpath.substr
-				(0, groffpath.size() - 2 - it->first.size()) + "tests/";
+				(0, groffpath.size() - 2 - it->first.size());
+			testdir = hops + "usr/tests/" + utildir.substr(9);
+			utildir += "tests/";
+
+			/* Populate "tests/" directory. */
 			boost::filesystem::remove_all(utildir);
 			boost::filesystem::create_directory(utildir);
 			generatetest::GenerateMakefile(it->first, utildir);
 			generatetest::GenerateTest(it->first, it->second.back(),
 						   license, utildir.c_str());
 			std::advance(it, 1);
+
+			/* Execute the generated test and note success/failure. */
+			if (stat(testdir.c_str(), &sb) != 0 || S_ISDIR(sb.st_mode)) {
+				command = "sudo mkdir " + testdir;
+				system(command.c_str());
+			}
+
+			/* Install the test. */
+			chdir(utildir.c_str());
+			if ((retval = system("sudo make install")) == -1) {
+				perror("system");
+				return EXIT_FAILURE;
+			} else if (retval) {
+				boost::filesystem::current_path(tooldir);
+				continue;
+			}
+			boost::filesystem::current_path(tooldir);
+
+			/* Run the test. */
+			chdir(testdir.c_str());
+			if ((retval = system("kyua test")) == -1) {
+				perror("system");
+				return EXIT_FAILURE;
+			} else if (retval) {
+				/* The test failed, cleanup. */
+				boost::filesystem::current_path(tooldir);
+				boost::filesystem::remove_all(utildir);
+				continue;
+			}
+			boost::filesystem::current_path(tooldir);
 		}
 	} else {
 		for (const auto &it : groff::groff_map) {
