@@ -28,7 +28,6 @@
 #include <unordered_map>
 
 namespace groff {
-	extern std::unordered_map<std::string, std::string> utilpath_map;
-	void Copy(std::string, std::string);
+	extern std::unordered_map<std::string, std::string> groff_map;
 	int FetchGroffScripts();
 }

@@ -54,11 +54,11 @@ generatetest::IntHandler(int dummmy)
 
 /* [Batch mode] Generate a makefile for the test of given utility. */
 void
-generatetest::GenerateMakefile(std::string utility, std::string util_dir)
+generatetest::GenerateMakefile(std::string utility, std::string utildir)
 {
 	std::ofstream makefile_fstream;
 
-	makefile_fstream.open(util_dir + "/Makefile", std::ios::out);
+	makefile_fstream.open(utildir + "/Makefile", std::ios::out);
 	makefile_fstream << "# $FreeBSD$\n\nATF_TESTS_SH+=  "
 			  + utility + "_test\n\n"
 			  + ".include <bsd.test.mk>\n";
@@ -72,16 +72,12 @@ generatetest::GenerateTest(std::string utility,
 			   std::string& license,
 			   const char *tests_dir)
 {
-	/*
-	 * Vector of usage messages -- used for validating
-	 * their consistency across different runs.
-	 */
 	std::vector<std::string> usage_messages;
 	std::vector<utils::OptRelation *> identified_opts;
 	std::string command;            /* (Utility-specific) command to be executed. */
 	std::string testcase_list;      /* List of testcases. */
-	std::string testcase_buffer;    /* Buffer for (temporarily) holding testcase data. */
-	std::string test_file;          /* atf-sh test name. */
+	std::string buffer;             /* Buffer for (temporarily) holding testcase data. */
+	std::string testfile;           /* atf-sh test name. */
 	std::string util_with_section;  /* Section number appended to utility. */
 	std::ofstream test_fstream;     /* Output stream for the atf-sh test. */
 	std::pair<std::string, int> output;
@@ -94,7 +90,7 @@ generatetest::GenerateTest(std::string utility,
 	util_with_section = utility + '(' + section + ')';
 	utils::OptDefinition opt_def;
 	identified_opts = opt_def.CheckOpts(utility);
-	test_file = tests_dir + utility + "_test.sh";
+	testfile = tests_dir + utility + "_test.sh";
 
 #ifndef DEBUG
 	/* Indicate the start of test generation for current utility. */
@@ -103,9 +99,8 @@ generatetest::GenerateTest(std::string utility,
 			  << progress << "/" << opt_def.opt_list.size() << "\r";
 	}
 #endif
-
 	/* Add license in the generated test scripts. */
-	test_fstream.open(test_file, std::ios::out);
+	test_fstream.open(testfile, std::ios::out);
 	test_fstream << license;
 
 	/*
@@ -121,7 +116,7 @@ generatetest::GenerateTest(std::string utility,
 		if (boost::iequals(output.first.substr(0, 6), "usage:")) {
 			/* Our guessed usage is incorrect as usage message is produced. */
 			addtestcase::UnknownTestcase(i->value, util_with_section,
-						     output, testcase_buffer);
+						     output, buffer);
 		} else {
 			addtestcase::KnownTestcase(i->value, util_with_section,
 						   "", output.first, test_fstream);
@@ -166,11 +161,11 @@ generatetest::GenerateTest(std::string utility,
 	}
 
 	/*
-	 * Execute the utility with supported options
-	 * and add (+ve)/(-ve) testcases accordingly.
+	 * Execute the utility with supported options, while
+	 * adding positive and negative testcases accordingly.
 	 */
 	for (const auto &i : opt_def.opt_list) {
-		/* If the option is annotated, ignore it. */
+		/* Ignore the option if it is annotated. */
 		if (annotation_set.find(i) != annotation_set.end())
 			continue;
 
@@ -184,21 +179,17 @@ generatetest::GenerateTest(std::string utility,
 		}
 #endif
 		if (output.second) {
-			/* Non-zero exit status was encountered. */
 			addtestcase::UnknownTestcase(i, util_with_section, output,
-						     testcase_buffer);
+						     buffer);
 		} else {
-			/*
-			 * EXIT_SUCCESS was encountered. Hence,
-			 * the guessed usage is correct.
-			 */
+			/* Guessed usage is correct as EXIT_SUCCESS is encountered */
 			addtestcase::KnownTestcase(i, util_with_section, "",
 						   output.first, test_fstream);
 			testcase_list.append(std::string("\tatf_add_test_case ")
 					     + i + "_flag\n");
 		}
 	}
-	std::cout << std::endl;
+	std::cout << std::endl;  /* Takes care of the last '\r'. */
 
 	if (!opt_def.opt_list.empty()) {
 		testcase_list.append("\tatf_add_test_case invalid_usage\n");
@@ -207,7 +198,7 @@ generatetest::GenerateTest(std::string utility,
 			     << "with a supported option \" \\\n\t\t\t\"produces a valid "
 			     << "error message\"\n}\n\ninvalid_usage_body()\n{";
 
-		test_fstream << testcase_buffer + "\n}\n\n";
+		test_fstream << buffer + "\n}\n\n";
 	}
 
 	/*
@@ -229,18 +220,13 @@ int
 main(int argc, char **argv)
 {
 	std::ifstream groff_list;
-	std::vector<std::pair<std::string, char>> util_vector;
-	std::string util_name;  /* Utility name. */
 	struct stat sb;
 	struct dirent *ent;
-	DIR *groff_dir_ptr;
-	char answer;          	/* User input to determine actions to be taken. */
-	std::string license;  	/* Customized license generated during runtime. */
-	std::string util_dir;   /* Path to utility in src tree. */
-	/* Directory to collect groff scripts for utilities with failed test generation. */
-	const char *failed_groff_dir = "failed_groff/";
-	const char *groff_dir = "groff/";  /* Directory of groff scripts. */
-	const char *tests_dir = "generated_tests/";  /* Directory to collect generated tests. */
+	char answer;
+	std::string license;
+	std::string utildir;  /* Path to utility in src tree. */
+	std::string groffpath;
+	const char *tests_dir = "generated_tests/";
 	/*
 	 * Instead of generating tests for all the utilities, "batch mode"
 	 * allows generation of tests for first "batch_limit" number of
@@ -251,6 +237,9 @@ main(int argc, char **argv)
 
 	/* Handle interrupts. */
 	signal(SIGINT, generatetest::IntHandler);
+
+	if (groff::FetchGroffScripts() == -1)
+		return EXIT_FAILURE;
 
 	/*
 	 * Create a temporary directory where all the side-effects
@@ -269,14 +258,6 @@ main(int argc, char **argv)
 	case 'y':
 	case 'Y':
 		batch_mode = true;
-		if (groff::FetchGroffScripts() == -1)
-			return EXIT_FAILURE;
-		break;
-	case '\n':
-	default:
-		break;
-	}
-	if (batch_mode) {
 		std::cout << "Number of utilities to select for test generation: ";
 		std::cin >> batch_limit;
 
@@ -284,42 +265,10 @@ main(int argc, char **argv)
 			std::cerr << "Invalid input. Exiting...\n";
 			return EXIT_FAILURE;
 		}
-	} else {
-		/* Check if the directory "groff/" is populated with groff scripts. */
-		std::cout << "Update groff directory ? [y/N] ";
-		std::cin.get(answer);
-
-		switch(answer) {
-		case 'y':
-		case 'Y':
-			if (groff::FetchGroffScripts() == -1)
-				return EXIT_FAILURE;
-			break;
-		case '\n':
-		default:
-			break;
-		}
-	}
-
-	/*
-	 * For testing (or generating tests for only selected utilities),
-	 * "util_vector" can be populated above during declaration.
-	 */
-	if (util_vector.empty()) {
-		if ((groff_dir_ptr = opendir(groff_dir))) {
-			readdir(groff_dir_ptr);  /* Skip directory entry for "." */
-			readdir(groff_dir_ptr);  /* Skip directory entry for ".." */
-			while ((ent = readdir(groff_dir_ptr))) {
-				util_name = ent->d_name;
-				util_vector.push_back(std::make_pair<std::string, char>
-						     (util_name.substr(0, util_name.size()-2),
-						     (char)util_name[util_name.size()-1]));
-			}
-			closedir(groff_dir_ptr);
-		} else {
-			fprintf(stderr, "Could not open the directory: groff/");
-			return EXIT_FAILURE;
-		}
+		break;
+	case '\n':
+	default:
+		break;
 	}
 
 	/* Check if the directory "tests_dir" exists. */
@@ -336,9 +285,6 @@ main(int argc, char **argv)
 	/* Generate a license to be added in the generated scripts. */
 	license = generatelicense::GenerateLicense(argc, argv);
 
-	boost::filesystem::remove_all(failed_groff_dir);
-	boost::filesystem::create_directory(failed_groff_dir);
-
 #ifndef DEBUG
 	/* Generate a tabular-like format. */
 	std::cout << std::endl;
@@ -351,19 +297,21 @@ main(int argc, char **argv)
 		 * Generate tests for first "batch_limit" number of
 		 * utilities selected from "scripts/utils_list".
 		 */
-		for (auto util = util_vector.begin();
-		     util != util_vector.begin() + batch_limit; util++) {
-			util_dir = groff::utilpath_map.at(util->first) + "/tests/";
-			boost::filesystem::remove_all(util_dir);
-			boost::filesystem::create_directory(util_dir);
-			generatetest::GenerateMakefile(util->first, util_dir);
-			generatetest::GenerateTest(util->first, util->second,
-						   license, util_dir.c_str());
+		auto it = groff::groff_map.begin();
+		while (batch_limit-- && it != groff::groff_map.end()) {
+			groffpath = groff::groff_map.at(it->first);
+			utildir = groffpath.substr
+				(0, groffpath.size() - 2 - it->first.size()) + "tests/";
+			boost::filesystem::remove_all(utildir);
+			boost::filesystem::create_directory(utildir);
+			generatetest::GenerateMakefile(it->first, utildir);
+			generatetest::GenerateTest(it->first, it->second.back(),
+						   license, utildir.c_str());
+			std::advance(it, 1);
 		}
 	} else {
-		for (const auto &util : util_vector) {
-			/* TODO Check before overwriting existing test scripts. */
-			generatetest::GenerateTest(util.first, util.second,
+		for (const auto &it : groff::groff_map) {
+			generatetest::GenerateTest(it.first, it.second.back(),
 						   license, tests_dir);
 		}
 	}

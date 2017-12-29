@@ -31,7 +31,6 @@
 #include <fcntl.h>
 #include <fstream>
 #include <iostream>
-#include <pthread.h>
 #include <signal.h>
 #include <string.h>
 #include <sys/select.h>
@@ -39,6 +38,7 @@
 #include <unistd.h>
 
 #include "utils.h"
+#include "fetch_groff.h"
 #include "logging.h"
 
 #define READ 0  	/* Pipe descriptor: read end. */
@@ -100,67 +100,63 @@ utils::OptDefinition::CheckOpts(std::string utility)
 
 	/* Generate the hashmap "opt_map". */
 	InsertOpts();
+	std::ifstream infile(groff::groff_map[utility]);
 
-	for (const auto &section : supported_sections) {
-		std::ifstream infile("groff/" + utility + "." + section);
-
-		/*
-		 * Search for all the options accepted by the
-		 * utility and collect those present in "opt_map".
-		 */
-		while (std::getline(infile, line)) {
-			if ((opt_pos = line.find(opt_id)) != std::string::npos) {
-				/* Locate the position of option name. */
-				opt_pos += opt_id.size() + 1;
-
-				if (opt_pos > line.size()) {
-					/*
-					 * This condition will trigger when a utility
-					 * supports an empty argument, e.g. tset(issue #9)
-					 */
-					continue;
-				}
-
+	/*
+	 * Search for all the options accepted by the
+	 * utility and collect those present in "opt_map".
+	 */
+	while (std::getline(infile, line)) {
+		if ((opt_pos = line.find(opt_id)) != std::string::npos) {
+			/* Locate the position of option name. */
+			opt_pos += opt_id.size() + 1;
+			if (opt_pos > line.size()) {
 				/*
-				 * Check for long options ; While here, also sanitize
-				 * multi-word option definitions in a man page to properly
-				 * extract short options from option definitions such as:
-				 * 	.It Fl r Ar seconds (taken from date(1)).
+				 * This condition will trigger when a utility
+				 * supports an empty argument, e.g. tset(issue #9)
 				 */
-				if ((space_index = line.find(" ", opt_pos + 1, 1))
-						!= std::string::npos)
-					opt_name = line.substr(opt_pos, space_index - opt_pos);
-				else
-					opt_name = line.substr(opt_pos);
-
-				/*
-				 * Check if the identified option matches the identifier.
-				 * "opt_list.back()" is the previously checked option, the
-				 * description of which is now stored in "buffer".
-				 */
-				if (!opt_list.empty() &&
-				   (opt_map_iter = opt_map.find(opt_list.back()))
-						!= opt_map.end() &&
-				    buffer.find((opt_map_iter->second).keyword) != std::string::npos) {
-					identified_opts.push_back(&(opt_map_iter->second));
-					/*
-					 * Since the usage of the option under test
-					 * is known, we remove it from "opt_list".
-					 */
-					opt_list.pop_back();
-				}
-
-				/* Update the list of valid options. */
-				opt_list.push_back(opt_name);
-				/* Empty the buffer for next option's description. */
-				buffer.clear();
-			} else {
-				/*
-				 * Collect the option description until next
-				 * valid option definition is encountered.
-				 */
-				buffer.append(line);
+				continue;
 			}
+
+			/*
+			 * Check for long options ; While here, also sanitize
+			 * multi-word option definitions in a man page to properly
+			 * extract short options from option definitions such as:
+			 * 	.It Fl r Ar seconds (taken from date(1)).
+			 */
+			if ((space_index = line.find(" ", opt_pos + 1, 1))
+					!= std::string::npos)
+				opt_name = line.substr(opt_pos, space_index - opt_pos);
+			else
+				opt_name = line.substr(opt_pos);
+
+			/*
+			 * Check if the identified option matches the identifier.
+			 * "opt_list.back()" is the previously checked option, the
+			 * description of which is now stored in "buffer".
+			 */
+			if (!opt_list.empty() &&
+			   (opt_map_iter = opt_map.find(opt_list.back()))
+					!= opt_map.end() &&
+			    buffer.find((opt_map_iter->second).keyword) != std::string::npos) {
+				identified_opts.push_back(&(opt_map_iter->second));
+				/*
+				 * Since the usage of the option under test
+				 * is known, we remove it from "opt_list".
+				 */
+				opt_list.pop_back();
+			}
+
+			/* Update the list of valid options. */
+			opt_list.push_back(opt_name);
+			/* Empty the buffer for next option's description. */
+			buffer.clear();
+		} else {
+			/*
+			 * Collect the option description until next
+			 * valid option definition is encountered.
+			 */
+			buffer.append(line);
 		}
 	}
 

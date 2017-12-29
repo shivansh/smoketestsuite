@@ -16,12 +16,8 @@ SRCS=	logging.cpp \
 	generate_test.cpp
 
 .PHONY: clean \
-	fetch_groff \
 	fetch_utils \
 	run
-
-fetch_groff:
-	sh ${.CURDIR}/scripts/fetch_groff.sh
 
 fetch_utils:
 	sh ${.CURDIR}/scripts/fetch_utils.sh
