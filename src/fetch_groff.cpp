@@ -73,7 +73,7 @@ groff::FetchGroffScripts()
 		 * Copy the groff script only if the utility does not
 		 * already have tests, i.e. the "tests" directory is absent.
 		 */
-		if (!(stat(path.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode))) {
+		if (stat(path.c_str(), &sb) || !S_ISDIR(sb.st_mode)) {
 			path = src + utildir + "/";
 			utilname = utildir.substr(utildir.find_last_of("/") + 1);
 			if ((dir = opendir(path.c_str())) != NULL) {

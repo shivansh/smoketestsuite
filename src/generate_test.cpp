@@ -343,7 +343,7 @@ main(int argc, char **argv)
 			std::advance(it, 1);
 
 			/* Execute the generated test and note success/failure. */
-			if (stat(testdir.c_str(), &sb) != 0 || S_ISDIR(sb.st_mode)) {
+			if (stat(testdir.c_str(), &sb) || !S_ISDIR(sb.st_mode)) {
 				command = "sudo mkdir " + testdir;
 				system(command.c_str());
 			}
