@@ -69,10 +69,8 @@ namespace utils {
 		/* List of all the accepted options with unknown usage. */
 		std::vector<std::string> opt_list;
 		/* Map "option value" to "option definition". */
-		std::unordered_map<std::string,
-				   OptRelation> opt_map;
-		std::unordered_map<std::string,
-				   OptRelation>::iterator opt_map_iter;
+		std::unordered_map<std::string, OptRelation> opt_map;
+		std::unordered_map<std::string, OptRelation>::iterator opt_map_iter;
 
 		void InsertOpts();
 		std::vector<OptRelation *> CheckOpts(std::string);

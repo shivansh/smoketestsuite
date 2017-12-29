@@ -88,14 +88,14 @@ utils::OptDefinition::InsertOpts()
 std::vector<utils::OptRelation *>
 utils::OptDefinition::CheckOpts(std::string utility)
 {
-	std::string line;                       /* An individual line in a man-page. */
-	std::string opt_name;                   /* Name of the option. */
-	std::string opt_identifier = ".It Fl";  /* Identifier for an option in man page. */
-	std::string buffer;                     /* Option description extracted from man-page. */
-	std::string opt_string;                 /* Identified option names. */
-	int opt_position;                       /* Starting index of the (identified) option. */
-	int space_index; 			/* First occurrence of space in option definition. */
-	std::vector<OptRelation *> identified_opts;  /* List of identified option relations. */
+	std::string opt_id = ".It Fl";  /* Option identifier in man page. */
+	std::string line;        /* An individual line in a man-page. */
+	std::string opt_name;    /* Name of the option. */
+	std::string buffer;      /* Option description extracted from man-page. */
+	std::string opt_string;  /* Identified option names. */
+	int opt_pos;        /* Starting index of the (identified) option. */
+	int space_index;         /* First occurrence of space in option definition. */
+	std::vector<OptRelation *> identified_opts;
 	std::vector<std::string> supported_sections = { "1", "8" };
 
 	/* Generate the hashmap "opt_map". */
@@ -109,11 +109,11 @@ utils::OptDefinition::CheckOpts(std::string utility)
 		 * utility and collect those present in "opt_map".
 		 */
 		while (std::getline(infile, line)) {
-			if ((opt_position = line.find(opt_identifier)) != std::string::npos) {
+			if ((opt_pos = line.find(opt_id)) != std::string::npos) {
 				/* Locate the position of option name. */
-				opt_position += opt_identifier.length() + 1;
+				opt_pos += opt_id.size() + 1;
 
-				if (opt_position > line.length()) {
+				if (opt_pos > line.size()) {
 					/*
 					 * This condition will trigger when a utility
 					 * supports an empty argument, e.g. tset(issue #9)
@@ -127,11 +127,11 @@ utils::OptDefinition::CheckOpts(std::string utility)
 				 * extract short options from option definitions such as:
 				 * 	.It Fl r Ar seconds (taken from date(1)).
 				 */
-				if ((space_index = line.find(" ", opt_position + 1, 1))
+				if ((space_index = line.find(" ", opt_pos + 1, 1))
 						!= std::string::npos)
-					opt_name = line.substr(opt_position, space_index - opt_position);
+					opt_name = line.substr(opt_pos, space_index - opt_pos);
 				else
-					opt_name = line.substr(opt_position);
+					opt_name = line.substr(opt_pos);
 
 				/*
 				 * Check if the identified option matches the identifier.
@@ -213,7 +213,8 @@ utils::POpen(const char *command)
 	pipe_descr->readfd = pdes[READ];
 	pipe_descr->writefd = pdes[WRITE];
 
-	argv[0] = (char *)"sh"; 	/* Type-cast to avoid compiler warning [-Wwrite-strings]. */
+	/* Type-cast to avoid compiler warnings [-Wwrite-strings]. */
+	argv[0] = (char *)"sh";
 	argv[1] = (char *)"-c";
 	argv[2] = (char *)command;
 	argv[3] = NULL;
@@ -263,14 +264,15 @@ std::pair<std::string, int>
 utils::Execute(std::string command)
 {
 	int result;
+	int exitstatus;
 	std::array<char, BUFSIZE> buffer;
 	std::string usage_output;
 	struct timeval tv;
 	fd_set readfds;
 	FILE *pipe;
 	PipeDescriptor *pipe_descr;
-
-	DEBUG("Executing: %s\n", command.c_str());
+	pid_t pid;
+	int pstat;
 
 	/* Execute "command" inside "tmpdir". */
 	chdir(tmpdir);
@@ -293,10 +295,7 @@ utils::Execute(std::string command)
 		exit(EXIT_FAILURE);
 	}
 
-	/*
-	 * Set a timeout value for the spawned shell
-	 * process to complete its execution.
-	 */
+	/* Set a timeout for shell process to complete its execution. */
 	tv.tv_sec = TIMEOUT;
 	tv.tv_usec = 0;
 
@@ -326,6 +325,17 @@ utils::Execute(std::string command)
 			logging::LogPerror("kill()");
 	}
 
+	/* Retrieve exit status of the shell process. */
+	do {
+		pid = wait4(pipe_descr->pid, &pstat, 0, (struct rusage *)0);
+	} while (pid == -1 && errno == EINTR);
+
+	/* exitstatus = WEXITSTATUS(pclose(pipe)); */
+	exitstatus = (pid == -1) ? -1 : WEXITSTATUS(pstat);
+	DEBUGP("Command: %s, exit status: %d\n", command.c_str(), exitstatus);
+
+	fclose(pipe);
+
 	return std::make_pair<std::string, int>
-		((std::string)usage_output, WEXITSTATUS(pclose(pipe)));
+		((std::string)usage_output, (int)exitstatus);
 }
