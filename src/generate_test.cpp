@@ -296,7 +296,8 @@ main(int argc, char **argv)
 #endif
 
 	if (batch_mode) {
-		std::string hops;  /* Number of hops required to reach '/'. */
+		/* Number of hops required to reach root directory. */
+		std::string hops = "../../../../";
 		std::string command;
 		std::string testdir;
 		int retval;
