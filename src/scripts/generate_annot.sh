@@ -28,7 +28,7 @@
 
 # Script for generating annotations based on generated tests.
 
-set -e
+set -eu
 
 update_annotations() {
 	cd "$testdir" 2>/dev/null

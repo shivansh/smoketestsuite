@@ -1,7 +1,7 @@
 #!/bin/sh
 # Script for updating the src tree.
 
-set -e
+set -eu
 
 # NOTE The following location needs to be updated
 # to point to the correct local FreeBSD src tree.

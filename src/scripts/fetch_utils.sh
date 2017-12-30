@@ -28,7 +28,8 @@
 
 # Script for listing all the base utilities
 
-set -e
+set -eu
+
 script_dir="$(dirname $0)"
 src="$(dirname $0)/../../../../"
 
