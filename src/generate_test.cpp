@@ -84,6 +84,7 @@ generatetest::GenerateTest(std::string utility,
 	std::unordered_set<std::string> annotation_set;  /* Utility specific annotations. */
 	/* Number of options for which a testcase has been generated. */
 	int progress = 0;
+	bool usage_output = false;  /* Tracks whether '$usage_output' variable is used. */
 
 	/* Read annotations and populate hash set "annotation_set". */
 	annotations::read_annotations(utility, annotation_set);
@@ -116,7 +117,7 @@ generatetest::GenerateTest(std::string utility,
 		if (boost::iequals(output.first.substr(0, 6), "usage:")) {
 			/* Our guessed usage is incorrect as usage message is produced. */
 			addtestcase::UnknownTestcase(i->value, util_with_section,
-						     output, buffer);
+						     output, buffer, usage_output);
 		} else {
 			addtestcase::KnownTestcase(i->value, util_with_section,
 						   "", output.first, test_fstream);
@@ -134,8 +135,10 @@ generatetest::GenerateTest(std::string utility,
 		/* Check if the single option produces a usage message. */
 		command = utils::GenerateCommand(utility, opt_def.opt_list.front());
 		output = utils::Execute(command);
-		if (output.second && !output.first.empty())
+		if (output.second && !output.first.empty()) {
+			usage_output = true;
 			test_fstream << "usage_output=\'" + output.first + "\'\n\n";
+		}
 	} else if (opt_def.opt_list.size() > 1) {
 		/*
 		 * Utility supports multiple options. In case the usage message
@@ -152,6 +155,7 @@ generatetest::GenerateTest(std::string utility,
 		for (int j = 0; j < usage_messages.size(); j++) {
 			if (!usage_messages[j].compare
 					(usage_messages[(j+1) % usage_messages.size()])) {
+				usage_output = true;
 				test_fstream << "usage_output=\'"
 					      + output.first.substr(0, 7 + utility.size())
 					      + "\'\n\n";
@@ -180,7 +184,7 @@ generatetest::GenerateTest(std::string utility,
 #endif
 		if (output.second) {
 			addtestcase::UnknownTestcase(i, util_with_section, output,
-						     buffer);
+						     buffer, usage_output);
 		} else {
 			/* Guessed usage is correct as EXIT_SUCCESS is encountered */
 			addtestcase::KnownTestcase(i, util_with_section, "",
@@ -208,7 +212,8 @@ generatetest::GenerateTest(std::string utility,
 	if (annotation_set.find("*") == annotation_set.end()) {
 		command = utils::GenerateCommand(utility, "");
 		output = utils::Execute(command);
-		addtestcase::NoArgsTestcase(util_with_section, output, test_fstream);
+		addtestcase::NoArgsTestcase(util_with_section, output,
+					    test_fstream, usage_output);
 		testcase_list.append("\tatf_add_test_case no_arguments\n");
 	}
 
@@ -253,7 +258,7 @@ main(int argc, char **argv)
 		     "in the src tree, with corresponding makefiles created.\n"
 		     "NOTE: You will be prompted for the superuser password when\n"
 		     "creating test directory under '/usr/tests/' and when installing\n"
-		     "the tests via `sudo make install`.\n";
+		     "the tests via `sudo make install`.\n"
 		     "Run in 'batch mode' ? [y/N] ";
 	std::cin.get(answer);
 

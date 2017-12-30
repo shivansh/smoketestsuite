@@ -26,7 +26,6 @@
  * $FreeBSD$
  */
 
-#include <boost/algorithm/string.hpp>
 #include <fstream>
 #include <iostream>
 
@@ -83,7 +82,8 @@ void
 addtestcase::UnknownTestcase(std::string option,
 			     std::string util_with_section,
 			     std::pair<std::string, int> output,
-			     std::string& testcase_buffer)
+			     std::string& testcase_buffer,
+			     bool usage_output)
 {
 	std::string utility = util_with_section.substr(0,
 			      util_with_section.size() - 3);
@@ -94,7 +94,7 @@ addtestcase::UnknownTestcase(std::string option,
 		testcase_buffer.append("\n\tatf_check -s exit:0 -o ");
 
 	/* Check if a usage message was produced (case-insensitive match). */
-	if (boost::iequals(output.first.substr(0, 6), "usage:"))
+	if (usage_output)
 		testcase_buffer.append("match:\"$usage_output\" ");
 	else if (!output.first.empty())
 		testcase_buffer.append("inline:\"" + output.first + "\" ");
@@ -111,7 +111,8 @@ addtestcase::UnknownTestcase(std::string option,
 void
 addtestcase::NoArgsTestcase(std::string util_with_section,
 			    std::pair<std::string, int> output,
-			    std::ofstream& test_script)
+			    std::ofstream& test_script,
+			    bool usage_output)
 {
 	std::string descr;
 	std::string utility = util_with_section.substr(0,
@@ -126,7 +127,7 @@ addtestcase::NoArgsTestcase(std::string util_with_section,
 			 * We expect a usage message to be generated in this case
 			 * (case-insensitive match).
 			 */
-			if (boost::iequals(output.first.substr(0, 6), "usage:")) {
+			if (usage_output) {
 				descr = "\"Verify that " + util_with_section
 				      + " fails and generates a valid usage \" \\\n\t\t\t"
 				      + "\"message when no arguments are supplied\"";

@@ -28,11 +28,11 @@
 
 namespace addtestcase {
 	void KnownTestcase(std::string, std::string, std::string, \
-				std::string, std::ofstream&);
+			   std::string, std::ofstream&);
 
-	void UnknownTestcase(std::string, std::string, \
-			     std::pair<std::string, int>, std::string&);
+	void UnknownTestcase(std::string, std::string, std::pair<std::string, int>, \
+			     std::string&, bool);
 
 	void NoArgsTestcase(std::string, std::pair<std::string, int>, \
-				std::ofstream&);
+			    std::ofstream&, bool);
 }
