@@ -20,6 +20,7 @@ Directory Structure
 ├── add_testcase.cpp ...........:: Testcase generator
 ├── generate_license.cpp .......:: Customized license generator
 ├── generate_test.cpp ..........:: Test generator
+├── logging.cpp ................:: Logger
 ├── read_annotations.cpp .......:: Annotation parser
 └── utils.cpp ..................:: Index generator
 
@@ -28,25 +29,22 @@ Directory Structure
 Dependencies
 ~~~~~~~~~~~~
 * Boost C++ libraries: The tool was tested to work with the port "boost-all-1.64.0".
+* Kyua
 
 Instructions
 ~~~~~~~~~~~~
-* The directory "groff" should be populated with the relevant groff scripts before proceeding for test generation. These scripts are available in the FreeBSD source tree.
+* The tool needs to know about the utilities in src which don't already have tests. The list of all such utilities can be generated via -
 
-* For populating the directory "groff", execute the following from the project root -
+    	make fetch_utils
 
-  	make fetch_utils
-  	make fetch_groff
+  This will generate the file "scripts/utils_list".
 
-Generating tests
-~~~~~~~~~~~~~~~~
-Execute the following from the project root -
+* For generating the tests, execute the following -
 
-	make clean
-	make && make run
+  	make clean
+  	make && make run
 
 ToDo
 ~~~~
-The following features/functionalities are planned to be integrated in the tool -
-* [Batch mode] Run the generated tests and report success/failure.
+The following features/functionalities are planned to be integrated -
 * [Batch mode] Appropriately update `BSD.tests.dist`.
