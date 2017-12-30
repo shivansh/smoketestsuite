@@ -28,29 +28,15 @@
 
 # Script for generating annotations based on generated tests.
 
-suffix="_test"
-extension=".sh"
-update_required=0
+set -e
 
-message="Following annotation files were updated. \n"
-
-printf "
-+--------------------------------------------------+
-| Checking if any annotation file is to be updated |
-+--------------------------------------------------+\n"
-
-for f in "$(dirname $0)/generated_tests"/*
-do
-	annotations=""
-	file=$(basename "$f")
-	test=${file%$extension}
-	utility=${test%$suffix}
-	test_dir="/usr/tests/bin/$utility"
-
-	(
-	cd "$test_dir" 2>/dev/null || exit
+update_annotations() {
+	cd "$testdir" 2>/dev/null
 	report=$(kyua report)
+	cd -
 	i=2
+	annotations=""
+	diff=""
 
 	while true
 	do
@@ -58,22 +44,21 @@ do
 		status=$(printf "%s" "$report" | awk 'NR=='"$i"' {print $3}')
 		check=$(printf "%s" "$testcase" | cut -s -f1 -d":")
 
-		if [ "$check" != "$test" ]; then
-			if [ "$annotations" ]; then
-				if [ $update_required = 0 ]; then
-					printf $message
-					update_required=1
+		if [ "$check" != "$test" ] && [ "$annotations" ]; then
+			file="$tooldir/annotations/$test.ant"  # Annotations file
+			# Append only the new annotations
+			printf "$annotations" > "$file.temp"
+			[ ! -e "$file" ] && touch "$file"
+			diff=$(comm -13 "$file" "$file.temp")
+			if [ "$diff" ]; then
+				if [ $prompt = 0 ]; then
+					prompt=1
+					printf "\nModified annotation files -\n"
 				fi
-
-				annotations_file="annotations/$test.annot"
-				# Append only the new annotations
-				printf "$annotations" > "$annotations_file.temp"
-				[ ! -e "$annotations_file" ] && touch "$annotations_file"
-				comm -13 "$annotations_file" "$annotations_file.temp" >> \
-					"$annotations_file" && printf "\t%s\n" "annotations/$test.annot"
-				rm -f "$annotations_file.temp"
+				printf "$diff\n" >> "$file"
+				printf "  * %s\n" "$test.ant"
 			fi
-
+			rm -f "$file.temp"
 			break
 		fi
 
@@ -81,11 +66,22 @@ do
 			testcase=${testcase#"$test:"}
 			annotations="$annotations$testcase\n"
 		fi
-
 		i=$((i+1))
 	done
-	)
+}
 
+suffix="_test"
+extension=".sh"
+prompt=0
+tooldir=$(dirname $0)/..
+
+for f in "$tooldir/generated_tests"/*
+do
+	file=$(basename "$f")
+	test=${file%$extension}
+	utility=${test%$suffix}
+	testdir="/usr/tests/bin/$utility"
+	update_annotations
 done
 
-printf "==============================================================================\n\n"
+[ $prompt = 1 ] && printf "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n"

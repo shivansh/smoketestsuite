@@ -70,7 +70,7 @@ void
 generatetest::GenerateTest(std::string utility,
 			   char section,
 			   std::string& license,
-			   const char *tests_dir)
+			   const char *testsdir)
 {
 	std::vector<std::string> usage_messages;
 	std::vector<utils::OptRelation *> identified_opts;
@@ -91,7 +91,7 @@ generatetest::GenerateTest(std::string utility,
 	util_with_section = utility + '(' + section + ')';
 	utils::OptDefinition opt_def;
 	identified_opts = opt_def.CheckOpts(utility);
-	testfile = tests_dir + utility + "_test.sh";
+	testfile = testsdir + utility + "_test.sh";
 
 #ifndef DEBUG
 	/* Indicate the start of test generation for current utility. */
@@ -231,7 +231,7 @@ main(int argc, char **argv)
 	std::string license;
 	std::string utildir;  /* Path to utility in src tree. */
 	std::string groffpath;
-	const char *tests_dir = "generated_tests/";
+	const char *testsdir = "generated_tests/";
 	/*
 	 * Instead of generating tests for all the utilities, "batch mode"
 	 * allows generation of tests for first "batch_limit" number of
@@ -279,13 +279,13 @@ main(int argc, char **argv)
 		break;
 	}
 
-	/* Check if the directory "tests_dir" exists. */
-	if (stat(tests_dir, &sb) || !S_ISDIR(sb.st_mode)) {
-		boost::filesystem::path dir(tests_dir);
+	/* Check if the directory "testsdir" exists. */
+	if (stat(testsdir, &sb) || !S_ISDIR(sb.st_mode)) {
+		boost::filesystem::path dir(testsdir);
 		if (boost::filesystem::create_directory(dir))
-			std::cout << "Directory created: " << tests_dir << "\n";
+			std::cout << "Directory created: " << testsdir << "\n";
 		else {
-			std::cerr << "Unable to create directory: " << tests_dir << "\n";
+			std::cerr << "Unable to create directory: " << testsdir << "\n";
 			return EXIT_FAILURE;
 		}
 	}
@@ -296,7 +296,7 @@ main(int argc, char **argv)
 #ifndef DEBUG
 	/* Generate a tabular-like format. */
 	std::cout << std::endl;
-	std::cout << std::setw(21) << "Utility | " << "Progress\n";
+	std::cout << std::setw(30) << "Utility | Progress\n";
 	std::cout << std::setw(32) << "----------+-----------\n";
 #endif
 
@@ -304,7 +304,7 @@ main(int argc, char **argv)
 		/* Number of hops required to reach root directory. */
 		std::string hops = "../../../../";
 		std::string command;
-		std::string testdir;
+		std::string installdir;  /* Directory where tests are installed. */
 		int retval;
 		int maxdepth = 32;
 		std::unordered_map<std::string, std::string>::iterator it;
@@ -340,10 +340,8 @@ main(int argc, char **argv)
 			groffpath = groff::groff_map.at(it->first);
 			utildir = groffpath.substr
 				(0, groffpath.size() - 2 - it->first.size());
-			testdir = hops + "usr/tests/" + utildir.substr(9);
+			installdir = hops + "usr/tests/" + utildir.substr(9);
 			utildir += "tests/";
-
-			DEBUGP("testdir: %s, utildir: %s\n", testdir.c_str(), utildir.c_str());
 
 			/* Populate "tests/" directory. */
 			boost::filesystem::remove_all(utildir);
@@ -351,11 +349,14 @@ main(int argc, char **argv)
 			generatetest::GenerateMakefile(it->first, utildir);
 			generatetest::GenerateTest(it->first, it->second.back(),
 						   license, utildir.c_str());
+			boost::filesystem::copy_file(utildir + it->first + "_test.sh",
+				testsdir + it->first + "_test.sh",
+				boost::filesystem::copy_option::overwrite_if_exists);
 			std::advance(it, 1);
 
 			/* Execute the generated test and note success/failure. */
-			if (stat(testdir.c_str(), &sb) || !S_ISDIR(sb.st_mode)) {
-				command = "sudo mkdir -p " + testdir;
+			if (stat(installdir.c_str(), &sb) || !S_ISDIR(sb.st_mode)) {
+				command = "sudo mkdir -p " + installdir;
 				if ((retval = system(command.c_str())) == -1) {
 					perror("system");
 					return EXIT_FAILURE;
@@ -379,7 +380,7 @@ main(int argc, char **argv)
 			boost::filesystem::current_path(tooldir);
 
 			/* Run the test. */
-			chdir(testdir.c_str());
+			chdir(installdir.c_str());
 			if ((retval = system("kyua test")) == -1) {
 				perror("system");
 				return EXIT_FAILURE;
@@ -392,7 +393,7 @@ main(int argc, char **argv)
 	} else {
 		for (const auto &it : groff::groff_map) {
 			generatetest::GenerateTest(it.first, it.second.back(),
-						   license, tests_dir);
+						   license, testsdir);
 		}
 	}
 
