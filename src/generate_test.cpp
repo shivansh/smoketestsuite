@@ -317,6 +317,7 @@ main(int argc, char **argv)
 		 * exist in the filesystem, we assume that the maximum depth
 		 * from root directory at which pwd is located is "maxdepth".
 		 */
+		chdir(hops.c_str());  /* Move outside FreeBSD src. */
 		while (maxdepth--) {
 			if (chdir("..") == -1) {
 				perror("chdir");
@@ -326,7 +327,6 @@ main(int argc, char **argv)
 			if (stat("usr", &sb) == 0 && S_ISDIR(sb.st_mode))
 				break;
 		}
-		boost::filesystem::current_path(tooldir);
 
 		/*
 		 * Generate tests for first "batch_limit" number of
@@ -334,11 +334,16 @@ main(int argc, char **argv)
 		 */
 		it = groff::groff_map.begin();
 		while (batch_limit-- && it != groff::groff_map.end()) {
+			/* Move back to the tool's directory. */
+			boost::filesystem::current_path(tooldir);
+
 			groffpath = groff::groff_map.at(it->first);
 			utildir = groffpath.substr
 				(0, groffpath.size() - 2 - it->first.size());
 			testdir = hops + "usr/tests/" + utildir.substr(9);
 			utildir += "tests/";
+
+			DEBUGP("testdir: %s, utildir: %s\n", testdir.c_str(), utildir.c_str());
 
 			/* Populate "tests/" directory. */
 			boost::filesystem::remove_all(utildir);
@@ -350,8 +355,15 @@ main(int argc, char **argv)
 
 			/* Execute the generated test and note success/failure. */
 			if (stat(testdir.c_str(), &sb) || !S_ISDIR(sb.st_mode)) {
-				command = "sudo mkdir " + testdir;
-				system(command.c_str());
+				command = "sudo mkdir -p " + testdir;
+				if ((retval = system(command.c_str())) == -1) {
+					perror("system");
+					return EXIT_FAILURE;
+				} else if (retval) {
+					boost::filesystem::current_path(tooldir);
+					boost::filesystem::remove_all(utildir);
+					continue;
+				}
 			}
 
 			/* Install the test. */
@@ -361,6 +373,7 @@ main(int argc, char **argv)
 				return EXIT_FAILURE;
 			} else if (retval) {
 				boost::filesystem::current_path(tooldir);
+				boost::filesystem::remove_all(utildir);
 				continue;
 			}
 			boost::filesystem::current_path(tooldir);
@@ -371,12 +384,10 @@ main(int argc, char **argv)
 				perror("system");
 				return EXIT_FAILURE;
 			} else if (retval) {
-				/* The test failed, cleanup. */
 				boost::filesystem::current_path(tooldir);
 				boost::filesystem::remove_all(utildir);
 				continue;
 			}
-			boost::filesystem::current_path(tooldir);
 		}
 	} else {
 		for (const auto &it : groff::groff_map) {
