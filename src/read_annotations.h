@@ -26,9 +26,14 @@
  * $FreeBSD$
  */
 
+#ifndef _READ_ANNOTATIONS_H_
+#define _READ_ANNOTATIONS_H_
+
 #include <unordered_set>
 
 namespace annotations {
 	void read_annotations(std::string, \
 			      std::unordered_set<std::string>&);
 }
+
+#endif  /* _READ_ANNOTATIONS_H_ */

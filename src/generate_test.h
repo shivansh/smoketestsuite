@@ -26,6 +26,9 @@
  * $FreeBSD$
  */
 
+#ifndef _GENERATE_TEST_H_
+#define _GENERATE_TEST_H_
+
 #include "utils.h"
 
 namespace generatetest {
@@ -34,3 +37,5 @@ namespace generatetest {
 	void GenerateTest(std::string, char,
 			  std::string&, const char*);
 }
+
+#endif  /* _GENERATE_TEST_H_ */

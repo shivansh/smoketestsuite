@@ -26,6 +26,9 @@
  * $FreeBSD$
  */
 
+#ifndef _UTILS_H_
+#define _UTILS_H_
+
 #include <unordered_map>
 #include <vector>
 
@@ -76,3 +79,5 @@ namespace utils {
 		std::vector<OptRelation *> CheckOpts(std::string);
 	};
 }
+
+#endif  /* _UTILS_H_ */

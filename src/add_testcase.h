@@ -26,6 +26,9 @@
  * $FreeBSD$
  */
 
+#ifndef _ADD_TESTCASE_H_
+#define _ADD_TESTCASE_H_
+
 namespace addtestcase {
 	void KnownTestcase(std::string, std::string, std::string, \
 			   std::string, std::ofstream&);
@@ -36,3 +39,5 @@ namespace addtestcase {
 	void NoArgsTestcase(std::string, std::pair<std::string, int>, \
 			    std::ofstream&, bool);
 }
+
+#endif  /* _ADD_TESTCASE_H_ */

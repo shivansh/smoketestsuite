@@ -26,6 +26,11 @@
  * $FreeBSD$
  */
 
+#ifndef _GENERATE_LICENSE_H_
+#define _GENERATE_LICENSE_H_
+
 namespace generatelicense {
 	std::string GenerateLicense(int, char **);
 }
+
+#endif  /* _GENERATE_LICENSE_H_ */

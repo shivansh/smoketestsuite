@@ -25,9 +25,15 @@
  *
  * $FreeBSD$
  */
+
+#ifndef _FETCH_GROFF_H_
+#define _FETCH_GROFF_H_
+
 #include <unordered_map>
 
 namespace groff {
 	extern std::unordered_map<std::string, std::string> groff_map;
 	int FetchGroffScripts();
 }
+
+#endif  /* _FETCH_GROFF_H_ */

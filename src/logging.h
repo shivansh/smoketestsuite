@@ -26,6 +26,9 @@
  * $FreeBSD$
  */
 
+#ifndef _LOGGING_H_
+#define _LOGGING_H_
+
 /* Use a gcc variadic macro to conditionally compile debug printing. */
 #ifdef DEBUG
 #define DEBUGP(...)                    \
@@ -33,8 +36,10 @@
 	fflush(stdout);
 #else
 #define DEBUGP(...) {}
-#endif
+#endif  /* DEBUG */
 
 namespace logging {
 	void LogPerror(std::string);
 }
+
+#endif  /* _LOGGING_H_ */
