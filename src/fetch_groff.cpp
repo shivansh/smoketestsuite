@@ -26,14 +26,15 @@
  * $FreeBSD$
  */
 
+#include <dirent.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
 #include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
-#include <dirent.h>
 #include <fstream>
 #include <iostream>
 #include <regex>
-#include <sys/stat.h>
-#include <unistd.h>
 
 #include "fetch_groff.h"
 #include "logging.h"
@@ -53,7 +54,7 @@ groff::FetchGroffScripts()
 	std::string utildir;
 	std::string utilname;
 	std::string path;
-	std::ifstream util_fstream;
+	std::ifstream file;
 	std::regex section ("(.*).(?:1|8)");
 	struct stat sb;
 	struct dirent *ent;
@@ -65,9 +66,9 @@ groff::FetchGroffScripts()
 			     "Run 'make fetch_utils' first.\n";
 		return EXIT_FAILURE;
 	}
-	util_fstream.open(utils_list);
+	file.open(utils_list);
 
-	while (getline(util_fstream, utildir)) {
+	while (getline(file, utildir)) {
 		path = src + utildir + "/tests";
 		/*
 		 * Copy the groff script only if the utility does not
@@ -77,8 +78,9 @@ groff::FetchGroffScripts()
 			path = src + utildir + "/";
 			utilname = utildir.substr(utildir.find_last_of("/") + 1);
 			if ((dir = opendir(path.c_str())) != NULL) {
-				ent = readdir(dir);  /* Skip directory entry for "." */
-				ent = readdir(dir);  /* Skip directory entry for ".." */
+				/* Skip directory entry for "." and "..". */
+				ent = readdir(dir);
+				ent = readdir(dir);
 				while ((ent = readdir(dir)) != NULL) {
 					if (std::regex_match(ent->d_name, section)) {
 						groff_map[utilname] = path + ent->d_name;
@@ -90,7 +92,7 @@ groff::FetchGroffScripts()
 			}
 		}
 	}
-	util_fstream.close();
 
+	file.close();
 	return EXIT_SUCCESS;
 }

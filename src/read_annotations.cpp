@@ -32,23 +32,19 @@
 
 #include "read_annotations.h"
 
-/*
- * Read the annotation files and skip
- * generation of the respective tests.
- */
+/* Read the annotation files and skip generation of respective tests. */
 void
 annotations::read_annotations(std::string utility,
 			      std::unordered_set<std::string>& annotation_set)
 {
 	std::string line;
-	std::ifstream annotation_fstream;
-	annotation_fstream.open("annotation_set/" + utility + "_test.annot");
+	std::ifstream file;
+	file.open("annotations/" + utility + "_test.annot");
 
-	while (getline(annotation_fstream, line)) {
+	while (getline(file, line)) {
 		/* Add a unique identifier for no_arguments testcase */
 		if (!line.compare(0, 12, "no_arguments"))
 			annotation_set.insert("*");
-
 		/*
 		 * Add flag value for supported argument testcases
 		 * Doing so we ignore the "invalid_usage" testcase
@@ -58,5 +54,5 @@ annotations::read_annotations(std::string utility,
 			annotation_set.insert(line.substr(0, 1));
 	}
 
-	annotation_fstream.close();
+	file.close();
 }

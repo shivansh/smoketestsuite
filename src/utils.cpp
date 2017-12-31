@@ -26,16 +26,17 @@
  * $FreeBSD$
  */
 
-#include <array>
-#include <cstdlib>
 #include <fcntl.h>
-#include <fstream>
-#include <iostream>
 #include <signal.h>
 #include <string.h>
 #include <sys/select.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
+#include <array>
+#include <cstdlib>
+#include <fstream>
+#include <iostream>
 
 #include "utils.h"
 #include "fetch_groff.h"

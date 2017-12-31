@@ -58,7 +58,8 @@ addtestcase::KnownTestcase(std::string option,
 	if (!descr.empty())
 		test_script << descr;
 	else
-		test_script << "\"Verify the usage of option \'" + option + "\'\"";
+		test_script << "\"Verify the usage of option \'"
+			     + option + "\'\"";
 	test_script << "\n}\n\n";
 
 	/* Add body of the testcase. */
@@ -124,35 +125,37 @@ addtestcase::NoArgsTestcase(std::string util_with_section,
 			     + "no_arguments_head()\n{\n\tatf_set \"descr\" ";
 		if (!output.first.empty()) {
 			/*
-			 * We expect a usage message to be generated in this case
-			 * (case-insensitive match).
+			 * We expect a usage message to be generated in this
+			 * case (case-insensitive match).
 			 */
 			if (usage_output) {
 				descr = "\"Verify that " + util_with_section
-				      + " fails and generates a valid usage \" \\\n\t\t\t"
-				      + "\"message when no arguments are supplied\"";
+				      + " fails and generates a valid usage \" "
+				      + "\\\n\t\t\t\"message when no arguments "
+				      + "are supplied\"";
 
-				test_script << descr + "\n}\n\nno_arguments_body()\n{"
-					     + "\n\tatf_check -s not-exit:0 -e match:\""
-					     + "$usage_output\" " + utility;
+				test_script << descr
+					+ "\n}\n\nno_arguments_body()\n{"
+					+ "\n\tatf_check -s not-exit:0 -e match:"
+					+ "\"$usage_output\" " + utility;
 			} else {
 				descr = "\"Verify that " + util_with_section
-				      + " fails and generates a valid output \" \\\n\t\t\t"
-				      + "\"when no arguments are supplied\"";
+				      + " fails and generates a valid output \" "
+				      + "\\\n\t\t\t\"when no arguments are supplied\"";
 
-				test_script << descr + "\n}\n\nno_arguments_body()\n{"
-					     + "\n\tatf_check -s not-exit:0 -e inline:\""
-					     + output.first + "\" "
-					     + utility;
+				test_script << descr
+					+ "\n}\n\nno_arguments_body()\n{"
+					+ "\n\tatf_check -s not-exit:0 -e inline:"
+					+ "\"" + output.first + "\" "
+					+ utility;
 			}
 		} else {
-			descr = "\"Verify that " + util_with_section
-				+ " fails silently when no arguments are supplied\"" ;
+			descr = "\"Verify that " + util_with_section + " fails "
+			      + "silently when no arguments are supplied\"" ;
 			test_script << descr + "\n}\n\nno_arguments_body()\n{"
 				     + "\n\tatf_check -s not-exit:0 -e empty "
 				     + utility;
 		}
-
 		test_script << "\n}\n\n";
 	} else {
 		/*
@@ -160,13 +163,13 @@ addtestcase::NoArgsTestcase(std::string util_with_section,
 		 * a correct usage for the utility under test.
 		 */
 		if (!output.first.empty())
-			descr = "\"Verify that " + util_with_section
-			      + " executes successfully and produces a valid \" \\\n\t\t\t"
+			descr = "\"Verify that " + util_with_section + " executes "
+			      + "successfully and produces a valid \" \\\n\t\t\t"
 			      + "\"output when invoked without any arguments\"";
 		else
 			descr = "\"Verify that " + util_with_section
-			      + " executes successfully and silently \" \\\n\t\t\t"
-			      + "\"when invoked without any arguments\"";
+			      + " executes successfully and silently \" \\\n"
+			      + "\t\t\t\"when invoked without any arguments\"";
 
 		addtestcase::KnownTestcase("", util_with_section, descr,
 					   output.first, test_script);

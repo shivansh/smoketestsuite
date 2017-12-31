@@ -84,4 +84,6 @@ do
 	update_annotations
 done
 
-[ $prompt = 1 ] && printf "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n"
+if [ $prompt = 1 ]; then
+	printf "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n"
+fi

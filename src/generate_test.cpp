@@ -26,14 +26,15 @@
  * $FreeBSD$
  */
 
+#include <dirent.h>
+#include <signal.h>
+#include <sys/stat.h>
+
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
-#include <dirent.h>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <signal.h>
-#include <sys/stat.h>
 #include <unordered_set>
 
 #include "add_testcase.h"
@@ -56,13 +57,13 @@ generatetest::IntHandler(int dummmy)
 void
 generatetest::GenerateMakefile(std::string utility, std::string utildir)
 {
-	std::ofstream makefile_fstream;
+	std::ofstream file;
 
-	makefile_fstream.open(utildir + "/Makefile", std::ios::out);
-	makefile_fstream << "# $FreeBSD$\n\nATF_TESTS_SH+=  "
+	file.open(utildir + "/Makefile", std::ios::out);
+	file << "# $FreeBSD$\n\nATF_TESTS_SH+=  "
 			  + utility + "_test\n\n"
 			  + ".include <bsd.test.mk>\n";
-	makefile_fstream.close();
+	file.close();
 }
 
 /* Generate a test for the given utility. */
@@ -74,14 +75,14 @@ generatetest::GenerateTest(std::string utility,
 {
 	std::vector<std::string> usage_messages;
 	std::vector<utils::OptRelation *> identified_opts;
-	std::string command;            /* (Utility-specific) command to be executed. */
-	std::string testcase_list;      /* List of testcases. */
-	std::string buffer;             /* Buffer for (temporarily) holding testcase data. */
-	std::string testfile;           /* atf-sh test name. */
-	std::string util_with_section;  /* Section number appended to utility. */
-	std::ofstream test_fstream;     /* Output stream for the atf-sh test. */
+	std::string command;
+	std::string testcase_list;
+	std::string buffer;
+	std::string testfile;
+	std::string util_with_section;
+	std::ofstream file;
 	std::pair<std::string, int> output;
-	std::unordered_set<std::string> annotation_set;  /* Utility specific annotations. */
+	std::unordered_set<std::string> annotation_set;
 	/* Number of options for which a testcase has been generated. */
 	int progress = 0;
 	bool usage_output = false;  /* Tracks whether '$usage_output' variable is used. */
@@ -101,8 +102,8 @@ generatetest::GenerateTest(std::string utility,
 	}
 #endif
 	/* Add license in the generated test scripts. */
-	test_fstream.open(testfile, std::ios::out);
-	test_fstream << license;
+	file.open(testfile, std::ios::out);
+	file << license;
 
 	/*
 	 * If a known option was encountered (i.e. `identified_opts` is
@@ -120,7 +121,7 @@ generatetest::GenerateTest(std::string utility,
 						     output, buffer, usage_output);
 		} else {
 			addtestcase::KnownTestcase(i->value, util_with_section,
-						   "", output.first, test_fstream);
+						   "", output.first, file);
 		}
 		testcase_list.append("\tatf_add_test_case " + i->value + "_flag\n");
 	}
@@ -137,7 +138,7 @@ generatetest::GenerateTest(std::string utility,
 		output = utils::Execute(command);
 		if (output.second && !output.first.empty()) {
 			usage_output = true;
-			test_fstream << "usage_output=\'" + output.first + "\'\n\n";
+			file << "usage_output=\'" + output.first + "\'\n\n";
 		}
 	} else if (opt_def.opt_list.size() > 1) {
 		/*
@@ -156,7 +157,7 @@ generatetest::GenerateTest(std::string utility,
 			if (!usage_messages[j].compare
 					(usage_messages[(j+1) % usage_messages.size()])) {
 				usage_output = true;
-				test_fstream << "usage_output=\'"
+				file << "usage_output=\'"
 					      + output.first.substr(0, 7 + utility.size())
 					      + "\'\n\n";
 				break;
@@ -188,7 +189,7 @@ generatetest::GenerateTest(std::string utility,
 		} else {
 			/* Guessed usage is correct as EXIT_SUCCESS is encountered */
 			addtestcase::KnownTestcase(i, util_with_section, "",
-						   output.first, test_fstream);
+						   output.first, file);
 			testcase_list.append(std::string("\tatf_add_test_case ")
 					     + i + "_flag\n");
 		}
@@ -197,12 +198,12 @@ generatetest::GenerateTest(std::string utility,
 
 	if (!opt_def.opt_list.empty()) {
 		testcase_list.append("\tatf_add_test_case invalid_usage\n");
-		test_fstream << "atf_test_case invalid_usage\ninvalid_usage_head()\n"
+		file << "atf_test_case invalid_usage\ninvalid_usage_head()\n"
 			     << "{\n\tatf_set \"descr\" \"Verify that an invalid usage "
 			     << "with a supported option \" \\\n\t\t\t\"produces a valid "
 			     << "error message\"\n}\n\ninvalid_usage_body()\n{";
 
-		test_fstream << buffer + "\n}\n\n";
+		file << buffer + "\n}\n\n";
 	}
 
 	/*
@@ -213,12 +214,12 @@ generatetest::GenerateTest(std::string utility,
 		command = utils::GenerateCommand(utility, "");
 		output = utils::Execute(command);
 		addtestcase::NoArgsTestcase(util_with_section, output,
-					    test_fstream, usage_output);
+					    file, usage_output);
 		testcase_list.append("\tatf_add_test_case no_arguments\n");
 	}
 
-	test_fstream << "atf_init_test_cases()\n{\n" + testcase_list + "}\n";
-	test_fstream.close();
+	file << "atf_init_test_cases()\n{\n" + testcase_list + "}\n";
+	file.close();
 }
 
 int
