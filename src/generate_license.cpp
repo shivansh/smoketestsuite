@@ -1,5 +1,5 @@
 /*-
- * Copyright 2018 Shivansh Rai
+ * Copyright 2017-2018 Shivansh Rai
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,7 +51,7 @@ generatelicense::GenerateLicense(int argc, char **argv)
 
 	license =
 		"#\n"
-		"# Copyright 2018 " + copyright_owner + "\n"
+		"# Copyright 2017-2018 " + copyright_owner + "\n"
 		"# All rights reserved.\n"
 		"#\n"
 		"# Redistribution and use in source and binary forms, with or without\n"
