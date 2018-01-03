@@ -41,12 +41,12 @@ update_annotations() {
 	while true
 	do
 		testcase=$(printf "%s" "$report" | awk 'NR=='"$i"' {print $1}')
-		status=$(printf "%s" "$report" | awk 'NR=='"$i"' {print $3}')
+		exitstatus=$(printf "%s" "$report" | awk 'NR=='"$i"' {print $3}')
 		check=$(printf "%s" "$testcase" | cut -s -f1 -d":")
 
-		if [ "$check" != "$test" ] && [ "$annotations" ]; then
+		if [ ! "$check" ] && [ "$annotations" ]; then
 			file="$tooldir/annotations/$test.ant"  # Annotations file
-			# Append only the new annotations
+			# Append only the new annotations.
 			printf "$annotations" > "$file.temp"
 			[ ! -e "$file" ] && touch "$file"
 			diff=$(comm -13 "$file" "$file.temp")
@@ -62,9 +62,11 @@ update_annotations() {
 			break
 		fi
 
-		if [ "$status" = "failed:" ]; then
+		if [ "$exitstatus" = "failed:" ]; then
 			testcase=${testcase#"$test:"}
 			annotations="$annotations$testcase\n"
+		elif [ ! "$exitstatus" ]; then
+			break
 		fi
 		i=$((i+1))
 	done
@@ -75,12 +77,29 @@ extension=".sh"
 prompt=0
 tooldir=$(dirname $0)/..
 
+# Check if the directory "generated_tests/" is populated.
+if [ ! -d "$tooldir/generated_tests" ] || \
+	[ -z "$(ls -A $tooldir/generated_tests)" ]; then
+	exit
+fi
+
 for f in "$tooldir/generated_tests"/*
 do
 	file=$(basename "$f")
 	test=${file%$extension}
 	utility=${test%$suffix}
-	testdir="/usr/tests/bin/$utility"
+
+	# Guess the correct installation directory.
+	if [ -d "/usr/tests/bin/$utility" ]; then
+		testdir="/usr/tests/bin/$utility"
+	elif [ -d "/usr/tests/usr.bin/$utility" ]; then
+		testdir="/usr/tests/usr.bin/$utility"
+	elif [ -d "/usr/tests/usr.sbin/$utility" ]; then
+		testdir="/usr/tests/usr.sbin/$utility"
+	else
+		printf "Unable to find installation directory.\n"
+		exit
+	fi
 	update_annotations
 done
 
