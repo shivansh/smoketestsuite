@@ -244,7 +244,7 @@ main(int argc, char **argv)
 	/* Handle interrupts. */
 	signal(SIGINT, generatetest::IntHandler);
 
-	if (groff::FetchGroffScripts() == -1)
+	if (groff::FetchGroffScripts() == EXIT_FAILURE)
 		return EXIT_FAILURE;
 
 	/*
