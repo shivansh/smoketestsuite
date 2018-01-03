@@ -31,9 +31,9 @@
 #include "logging.h"
 
 void
-logging::LogPerror(std::string message)
+logging::LogPerror(const char *message)
 {
 #ifdef DEBUG
-	perror(message.c_str());
+	perror(message);
 #endif
 }

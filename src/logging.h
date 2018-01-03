@@ -39,7 +39,7 @@
 #endif  /* DEBUG */
 
 namespace logging {
-	void LogPerror(std::string);
+	void LogPerror(const char *);
 }
 
 #endif  /* _LOGGING_H_ */
