@@ -97,8 +97,7 @@ do
 	elif [ -d "/usr/tests/usr.sbin/$utility" ]; then
 		testdir="/usr/tests/usr.sbin/$utility"
 	else
-		printf "Unable to find installation directory.\n"
-		exit
+		continue
 	fi
 	update_annotations
 done

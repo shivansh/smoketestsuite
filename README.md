@@ -3,9 +3,8 @@
 Test generation tool made as a part of [Google Summer of Code '17 with FreeBSD](https://summerofcode.withgoogle.com/projects/#6426676740227072).  
 **Refer the [FreeBSD wiki](https://wiki.freebsd.org/SummerOfCode2017/SmokeTestingOfBaseUtilities) for an overview and updates.**
 
-## Directory Structure
+## Project layout
 ```
-.
 ├── deprecated_tests
 │   └── ............................:: Tests pertaining to initial test plan
 └── src ............................:: Automation tool pertaining to new test plan

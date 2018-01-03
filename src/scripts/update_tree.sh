@@ -12,6 +12,7 @@ cd "$(dirname $0)/.."
 
 rsync -avzHP \
 	annotations \
+	README \
 	Makefile \
 	add_testcase.cpp add_testcase.h \
 	fetch_groff.cpp fetch_groff.h \

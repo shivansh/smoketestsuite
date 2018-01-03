@@ -8,8 +8,8 @@ Refer the FreeBSD wiki (https://wiki.freebsd.org/SummerOfCode2017/SmokeTestingOf
 A brief description and implementation details: https://lists.freebsd.org/pipermail/soc-status/2017-July/001079.html.
 The diagram "architecture.png" briefly summarizes how different components fit with the testcase-generator.
 
-Directory Structure
-~~~~~~~~~~~~~~~~~~~
+Project layout
+~~~~~~~~~~~~~~
 
 .
 ├── annotations
