@@ -35,6 +35,8 @@ The following diagram summarizes how different components fit with the testcase-
 * [Kyua](https://github.com/jmmv/kyua/)
 
 ## Instructions
+**NOTE:** The tool is yet to be merged in the FreeBSD src, and the status can be tracked [here](https://reviews.freebsd.org/D12249). In case using it before the merge, the contents of [src](src) should be copied under `<local_FreeBSD_src>/tools/tools/smoketestsuite` before proceeding further.
+
 * The tool needs to know about the utilities in src which don't already have tests. The list of all such utilities can be generated via -  
   ```
   make fetch_utils
