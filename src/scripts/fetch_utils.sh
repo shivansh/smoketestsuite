@@ -31,7 +31,7 @@
 set -eu
 
 script_dir="$(dirname $0)"
-src="$(dirname $0)/../../../../"
+src="/"
 
 fetch_utils() {
 	cd "$src"
