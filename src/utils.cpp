@@ -186,12 +186,7 @@ utils::GenerateCommand(std::string utility, std::string opt)
  * returning the read-write file descriptors, also returns
  * the pid of the newly created (child) shell process. This
  * pid can later be used for sending a signal to the child.
- *
- * NOTE For the sake of completeness, we also specify actions
- * to be taken corresponding to the "w" (write) type. However,
- * in this context only the "r" (read) type will be required.
  */
-
 utils::PipeDescriptor*
 utils::POpen(const char *command)
 {
@@ -200,13 +195,13 @@ utils::POpen(const char *command)
 	pid_t child_pid;
 	PipeDescriptor *pipe_descr = (PipeDescriptor *)malloc(sizeof(PipeDescriptor));
 
-	/* Create a pipe with ~
+	/*
+	 * Create a pipe with ~
 	 *   - pdes[READ]: read end
 	 *   - pdes[WRITE]: write end
 	 */
 	if (pipe2(pdes, O_CLOEXEC) < 0)
 		return NULL;
-
 	pipe_descr->readfd = pdes[READ];
 	pipe_descr->writefd = pdes[WRITE];
 
@@ -223,11 +218,6 @@ utils::POpen(const char *command)
 		close(pdes[WRITE]);
 		return NULL;
 	case 0: 		/* Child. */
-		/*
-		 * TODO Verify if the following operations on both read
-		 * and write file-descriptors (irrespective of the value
-		 * of 'type', which is no longer being used) is safe.
-		 */
 		if (pdes[WRITE] != STDOUT_FILENO)
 			dup2(pdes[WRITE], STDOUT_FILENO);
 		else
@@ -236,7 +226,6 @@ utils::POpen(const char *command)
 			dup2(pdes[READ], STDIN_FILENO);
 		else
 			fcntl(pdes[READ], F_SETFD, 0);
-
 		/*
 		 * For current usecase, it might so happen that the child gets
 		 * stuck on a blocking read (e.g. passwd(1)) waiting for user
@@ -275,7 +264,6 @@ utils::Execute(std::string command)
 	chdir(tmpdir);
 	pipe_descr = utils::POpen(command.c_str());
 	chdir("..");
-
 	if (pipe_descr == NULL) {
 		logging::LogPerror("utils::POpen()");
 		exit(EXIT_FAILURE);
@@ -283,7 +271,6 @@ utils::Execute(std::string command)
 
 	/* Close the unrequired file-descriptor. */
 	close(pipe_descr->writefd);
-
 	pipe = fdopen(pipe_descr->readfd, "r");
 	free(pipe_descr);
 	if (pipe == NULL) {
@@ -295,7 +282,6 @@ utils::Execute(std::string command)
 	/* Set a timeout for shell process to complete its execution. */
 	tv.tv_sec = TIMEOUT;
 	tv.tv_usec = 0;
-
 	FD_ZERO(&readfds);
 	FD_SET(fileno(pipe), &readfds);
 	result = select(fileno(pipe) + 1, &readfds, NULL, NULL, &tv);

@@ -61,8 +61,8 @@ generatetest::GenerateMakefile(std::string utility, std::string utildir)
 
 	file.open(utildir + "/Makefile", std::ios::out);
 	file << "# $FreeBSD$\n\nATF_TESTS_SH+=  "
-			  + utility + "_test\n\n"
-			  + ".include <bsd.test.mk>\n";
+		  + utility + "_test\n\n"
+		  + ".include <bsd.test.mk>\n";
 	file.close();
 }
 
@@ -199,11 +199,10 @@ generatetest::GenerateTest(std::string utility,
 	if (!opt_def.opt_list.empty()) {
 		testcase_list.append("\tatf_add_test_case invalid_usage\n");
 		file << "atf_test_case invalid_usage\ninvalid_usage_head()\n"
-			     << "{\n\tatf_set \"descr\" \"Verify that an invalid usage "
-			     << "with a supported option \" \\\n\t\t\t\"produces a valid "
-			     << "error message\"\n}\n\ninvalid_usage_body()\n{";
-
-		file << buffer + "\n}\n\n";
+			"{\n\tatf_set \"descr\" \"Verify that an invalid usage "
+			"with a supported option \" \\\n\t\t\t\"produces a valid "
+			"error message\"\n}\n\ninvalid_usage_body()\n{"
+		      + buffer + "\n}\n\n";
 	}
 
 	/*
@@ -254,12 +253,9 @@ main(int argc, char **argv)
 	boost::filesystem::create_directory(utils::tmpdir);
 
 	std::cout << "\nInstead of generating tests for all the utilities, 'batch mode'\n"
-		     "allows generation of tests for first few utilities selected from\n"
+		     "allows generation of tests for first N utilities selected from\n"
 		     "'scripts/utils_list', and places them at their correct location\n"
 		     "in the src tree, with corresponding makefiles created.\n"
-		     "NOTE: You will be prompted for the superuser password when\n"
-		     "creating test directory under '/usr/tests/' and when installing\n"
-		     "the tests via `sudo make install`.\n"
 		     "Run in 'batch mode' ? [y/N] ";
 	std::cin.get(answer);
 
@@ -302,32 +298,8 @@ main(int argc, char **argv)
 #endif
 
 	if (batch_mode) {
-		/* Number of hops required to reach root directory. */
-		std::string hops = "../../../../";
 		std::string command;
-		std::string installdir;  /* Directory where tests are installed. */
-		int retval;
-		int maxdepth = 32;
 		std::unordered_map<std::string, std::string>::iterator it;
-		/* Remember pwd so that we can return back. */
-		boost::filesystem::path tooldir = boost::filesystem::current_path();
-
-		/*
-		 * Discover number of hops required to reach root directory.
-		 * To avoid an infinite loop in case directory "usr/" doesn't
-		 * exist in the filesystem, we assume that the maximum depth
-		 * from root directory at which pwd is located is "maxdepth".
-		 */
-		chdir(hops.c_str());  /* Move outside FreeBSD src. */
-		while (maxdepth--) {
-			if (chdir("..") == -1) {
-				perror("chdir");
-				return EXIT_FAILURE;
-			}
-			hops += "../";
-			if (stat("usr", &sb) == 0 && S_ISDIR(sb.st_mode))
-				break;
-		}
 
 		/*
 		 * Generate tests for first "batch_limit" number of
@@ -335,13 +307,9 @@ main(int argc, char **argv)
 		 */
 		it = groff::groff_map.begin();
 		while (batch_limit-- && it != groff::groff_map.end()) {
-			/* Move back to the tool's directory. */
-			boost::filesystem::current_path(tooldir);
-
 			groffpath = groff::groff_map.at(it->first);
 			utildir = groffpath.substr
 				(0, groffpath.size() - 2 - it->first.size());
-			installdir = hops + "usr/tests/" + utildir.substr(9);
 			utildir += "tests/";
 
 			/* Populate "tests/" directory. */
@@ -354,42 +322,6 @@ main(int argc, char **argv)
 				testsdir + it->first + "_test.sh",
 				boost::filesystem::copy_option::overwrite_if_exists);
 			std::advance(it, 1);
-
-			/* Execute the generated test and note success/failure. */
-			if (stat(installdir.c_str(), &sb) || !S_ISDIR(sb.st_mode)) {
-				command = "sudo mkdir -p " + installdir;
-				if ((retval = system(command.c_str())) == -1) {
-					perror("system");
-					return EXIT_FAILURE;
-				} else if (retval) {
-					boost::filesystem::current_path(tooldir);
-					boost::filesystem::remove_all(utildir);
-					continue;
-				}
-			}
-
-			/* Install the test. */
-			chdir(utildir.c_str());
-			if ((retval = system("sudo make install")) == -1) {
-				perror("system");
-				return EXIT_FAILURE;
-			} else if (retval) {
-				boost::filesystem::current_path(tooldir);
-				boost::filesystem::remove_all(utildir);
-				continue;
-			}
-			boost::filesystem::current_path(tooldir);
-
-			/* Run the test. */
-			chdir(installdir.c_str());
-			if ((retval = system("kyua test")) == -1) {
-				perror("system");
-				return EXIT_FAILURE;
-			} else if (retval) {
-				boost::filesystem::current_path(tooldir);
-				boost::filesystem::remove_all(utildir);
-				continue;
-			}
 		}
 	} else {
 		for (const auto &it : groff::groff_map) {

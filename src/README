@@ -43,8 +43,3 @@ Instructions
 
   	make clean
   	make && make run
-
-ToDo
-~~~~
-The following features/functionalities are planned to be integrated -
-* [Batch mode] Appropriately update `BSD.tests.dist`.

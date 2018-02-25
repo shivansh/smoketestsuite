@@ -56,10 +56,9 @@ namespace utils {
 	};
 
 	/*
-	 * Temporary directory inside which the utility-specific
-	 * commands will be executed, and all the side effects
-	 * (core dumps, executables etc.) that are created will
-	 * be restricted in this directory.
+	 * Temporary directory inside which the utility-specific commands
+	 * will be executed, and all the side effects (core dumps, executables)
+	 * that are created will be sandboxed in this directory.
 	 */
 	extern const char *tmpdir;
 
