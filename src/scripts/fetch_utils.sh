@@ -31,7 +31,7 @@
 set -eu
 
 script_dir="$(dirname $0)"
-src="$(dirname $0)/../../../../"
+src="/"
 
 fetch_utils() {
 	cd "$src"
@@ -42,3 +42,6 @@ fetch_utils() {
 rm -f "$script_dir/utils_list"
 
 (fetch_utils) >> "$script_dir/utils_list"
+
+# Remove source directory from utils_list
+sed -i "" '/smoke\/src/d' "$script_dir/utils_list"
