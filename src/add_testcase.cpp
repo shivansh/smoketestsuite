@@ -65,11 +65,10 @@ addtestcase::KnownTestcase(std::string option,
 	}
 	test_script << "\n}\n\n";
 
-	/* Add body of the testcase. */
+	/* Add testcase body. */
 	test_script << testcase_name + "_body()\n{"
 		     + "\n\tatf_check -s exit:0 -o ";
 
-	/* Match the usage output if generated. */
 	if (!output.empty()) {
 		test_script << "inline:\"" + output + "\" ";
 	} else {
@@ -165,10 +164,7 @@ addtestcase::NoArgsTestcase(std::string util_with_section,
 		}
 		test_script << "\n}\n\n";
 	} else {
-		/*
-		 * The command ran successfully, hence we guessed
-		 * a correct usage for the utility under test.
-		 */
+		/* Successful execution implies the guessed usage is correct. */
 		if (!output.first.empty()) {
 			descr = "\"Verify that " + util_with_section + " executes "
 			      + "successfully and produces a valid \" \\\n\t\t\t"

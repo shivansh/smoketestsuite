@@ -43,8 +43,8 @@
 std::unordered_map<std::string, std::string> groff::groff_map;
 
 /*
- * Traverses the FreeBSD src tree looking for groff scripts for section
- * 1 and section 8 utilities and stores their location in a hashmap.
+ * Traverses the FreeBSD src tree looking for groff scripts for section 1 and
+ * section 8 utilities and stores their location in a hashmap.
  */
 int
 groff::FetchGroffScripts()
@@ -71,8 +71,8 @@ groff::FetchGroffScripts()
 	while (getline(file, utildir)) {
 		path = src + utildir + "/tests";
 		/*
-		 * Copy the groff script only if the utility does not
-		 * already have tests, i.e. the "tests" directory is absent.
+		 * Copy the groff script only if the utility does not already
+		 * have tests, i.e. the "tests" directory is absent.
 		 */
 		if (stat(path.c_str(), &sb) || !S_ISDIR(sb.st_mode)) {
 			path = src + utildir + "/";

@@ -83,8 +83,8 @@ generatetest::GenerateTest(std::string utility,
 	std::ofstream file;
 	std::pair<std::string, int> output;
 	std::unordered_set<std::string> annotation_set;
-	/* Number of options for which a testcase has been generated. */
-	int progress = 0;
+	int progress = 0;  /* Number of options for which a testcase has been
+			      generated. */
 	bool usage_output = false;  /* Tracks whether '$usage_output' variable is used. */
 
 	/* Read annotations and populate hash set "annotation_set". */
@@ -107,10 +107,10 @@ generatetest::GenerateTest(std::string utility,
 
 	/*
 	 * If a known option was encountered (i.e. `identified_opts` is
-	 * populated), produce a testcase to check the validity of the
-	 * result of that option. If no known option was encountered,
-	 * produce testcases to verify the correct (generated) usage
-	 * message when using the supported options incorrectly.
+	 * populated), produce a testcase to check the validity of the result
+	 * of that option. If no known option was encountered, produce
+	 * testcases to verify the correct (generated) usage message when using
+	 * the supported options incorrectly.
 	 */
 	for (const auto &i : identified_opts) {
 		command = utils::GenerateCommand(utility, i->value);
@@ -126,11 +126,12 @@ generatetest::GenerateTest(std::string utility,
 		testcase_list.append("\tatf_add_test_case " + i->value + "_flag\n");
 	}
 
-	/* Add testcases for the options whose usage is not yet known.
-	 * For the purpose of adding a "$usage_output" variable,
-	 * we choose the option which produces one.
-	 * TODO Avoid double executions of an option, i.e. one while
-	 * selecting usage message and another while generating testcase.
+	/*
+	 * Add testcases for the options whose usage is not yet known.  For the
+	 * purpose of adding a "$usage_output" variable, we choose the option
+	 * which produces one.
+	 * TODO Avoid double executions of an option, i.e. one while selecting
+	 * usage message and another while generating testcase.
 	 */
 	if (opt_def.opt_list.size() == 1) {
 		/* Check if the single option produces a usage message. */
@@ -143,8 +144,9 @@ generatetest::GenerateTest(std::string utility,
 	} else if (opt_def.opt_list.size() > 1) {
 		/*
 		 * Utility supports multiple options. In case the usage message
-		 * is consistent for atleast "two" options, we reduce duplication
-		 * by assigning a variable "usage_output" in the test script.
+		 * is consistent for atleast "two" options, we reduce
+		 * duplication by assigning a variable "usage_output" in the
+		 * test script.
 		 */
 		for (const auto &i : opt_def.opt_list) {
 			command = utils::GenerateCommand(utility, i);
@@ -166,8 +168,8 @@ generatetest::GenerateTest(std::string utility,
 	}
 
 	/*
-	 * Execute the utility with supported options, while
-	 * adding positive and negative testcases accordingly.
+	 * Execute the utility with supported options, while adding positive
+	 * and negative testcases accordingly.
 	 */
 	for (const auto &i : opt_def.opt_list) {
 		/* Ignore the option if it is annotated. */
@@ -206,8 +208,8 @@ generatetest::GenerateTest(std::string utility,
 	}
 
 	/*
-	 * Add a testcase under "no_arguments" for
-	 * running the utility without any arguments.
+	 * Add a testcase under "no_arguments" for running the utility without
+	 * any arguments.
 	 */
 	if (annotation_set.find("*") == annotation_set.end()) {
 		command = utils::GenerateCommand(utility, "");
@@ -240,15 +242,14 @@ main(int argc, char **argv)
 	bool batch_mode = false;
 	int batch_limit;  /* Number of tests to be generated in batch mode. */
 
-	/* Handle interrupts. */
 	signal(SIGINT, generatetest::IntHandler);
 
 	if (groff::FetchGroffScripts() == EXIT_FAILURE)
 		return EXIT_FAILURE;
 
 	/*
-	 * Create a temporary directory where all the side-effects
-	 * introduced by utility-specific commands are restricted.
+	 * Create a temporary directory where all the side-effects introduced
+	 * by utility-specific commands are restricted.
 	 */
 	boost::filesystem::create_directory(utils::tmpdir);
 
@@ -302,8 +303,8 @@ main(int argc, char **argv)
 		std::unordered_map<std::string, std::string>::iterator it;
 
 		/*
-		 * Generate tests for first "batch_limit" number of
-		 * utilities selected from "scripts/utils_list".
+		 * Generate tests for first "batch_limit" number of utilities
+		 * selected from "scripts/utils_list".
 		 */
 		it = groff::groff_map.begin();
 		while (batch_limit-- && it != groff::groff_map.end()) {

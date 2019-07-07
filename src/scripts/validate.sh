@@ -28,15 +28,6 @@
 
 # Script for validating side-effects of newly introduced changes.
 
-remote=origin
-
-git checkout testing
-if [ $? != 0 ]; then
-	git fetch && git checkout $remote/testing && git checkout -b testing
-fi
-
-git rebase master
-
 # Generate tests
 make
 echo 'y\n' | make run

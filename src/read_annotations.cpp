@@ -46,9 +46,9 @@ annotations::read_annotations(std::string utility,
 		if (!line.compare(0, 12, "no_arguments"))
 			annotation_set.insert("*");
 		/*
-		 * Add flag value for supported argument testcases
-		 * Doing so we ignore the "invalid_usage" testcase
-		 * as it is guaranteed to always succeed.
+		 * Add flag value for supported argument testcases. In doing so
+		 * we ignore the "invalid_usage" testcase as it is guaranteed
+		 * to always succeed.
 		 */
 		else if (!line.compare(2, 4, "flag"))
 			annotation_set.insert(line.substr(0, 1));
