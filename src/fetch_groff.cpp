@@ -78,11 +78,10 @@ groff::FetchGroffScripts()
 			path = src + utildir + "/";
 			utilname = utildir.substr(utildir.find_last_of("/") + 1);
 			if ((dir = opendir(path.c_str())) != NULL) {
-				/* Skip directory entry for "." and "..". */
-				ent = readdir(dir);
-				ent = readdir(dir);
 				while ((ent = readdir(dir)) != NULL) {
-					if (std::regex_match(ent->d_name, section)) {
+					if (!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, "..")) {
+						continue;
+					} else if (std::regex_match(ent->d_name, section)) {
 						groff_map[utilname] = path + ent->d_name;
 					}
 				}
