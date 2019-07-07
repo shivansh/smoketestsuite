@@ -28,8 +28,6 @@
 
 # Script for generating annotations based on generated tests.
 
-set -eu
-
 update_annotations() {
 	cd "$testdir" 2>/dev/null
 	report=$(kyua report)
